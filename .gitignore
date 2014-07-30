@@ -1,5 +1,5 @@
 node_modules
 .idea
 .DS_Store
-prober.js
-prober.js.map
+**.js
+**.js.map
