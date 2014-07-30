@@ -1,7 +1,7 @@
 
 
 // activate ES6 proxy proposal
-///<reference path="harmony-reflect.d.ts" />
+///<reference path="../harmony-reflect.d.ts" />
 import reflect = require('harmony-reflect');
 var unused = reflect.get;
 function proxy<T>(target: T, handler: any): T {
@@ -286,7 +286,7 @@ function getPrimitiveCandidate(oldVal: any) {
 
 // main function that probes f with the initial arguments args
 // args are modified as necessary, and the result it logged
-function driver(f, args) {
+function driver(f, args: any[]) {
 
     var origArgs = args
     args = clone(origArgs)
@@ -356,6 +356,11 @@ function defineProp(o, f, v) {
     return o[f]
 }
 
+function id(a, b) {
+    return b
+}
+
 driver(pop, [["a", "a"]])
 driver(push, [["a"], "b"])
 driver(defineProp, [{}, "field", 42])
+driver(id, ["a", "a"])
