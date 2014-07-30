@@ -1,9 +1,16 @@
 /// <reference path="util/assert.d.ts" />
 
+// activate ES6 proxy proposal
+import harmonyrefl = require('harmony-reflect');
+harmonyrefl;
+declare var Proxy: (target: any, handler: any) => any;
+
 import Util = require('./util/Util')
 import Data = require('./Data')
 import Recorder = require('./Recorder')
 import ansi = require('./util/Ansicolors')
+
+var print = Util.print
 
 function push(a, b) {
     return a.push(b);
@@ -22,8 +29,14 @@ function id(a, b) {
     return b
 }
 
-Util.print(Recorder.record(pop, [["a", "a"]]))
-Util.print(Recorder.record(push, [["a"], "b"]))
-Util.print(Recorder.record(defineProp, [{}, "field", 42]))
-Util.print(Recorder.record(id, ["a", "a"]))
-Util.print(ansi.red("green"))
+print(Recorder.record(pop, [["a", "a"]]))
+print(Recorder.record(push, [["a"], "b"]))
+print(Recorder.record(defineProp, [{}, "field", 42]))
+print(Recorder.record(id, ["a", "a"]))
+
+
+var a = [1,1,1,1];
+
+a.push = function (b) { return 1 }
+print(a.push(1))
+print(a)
