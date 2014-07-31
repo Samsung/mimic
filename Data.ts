@@ -1,4 +1,5 @@
-/// <reference path="util/assert.d.ts" />
+
+import Util = require('./util/Util')
 
 // abstract description of an access path that a method took to, say, modify a field
 export class AccessPath {
@@ -12,10 +13,10 @@ export class AccessPath {
         return false
     }
     eval(args: any[], oldArgs: any[]): any {
-        assert(false)
+        Util.assert(false)
     }
     update(args: any[], val: any): any {
-        assert(false)
+        Util.assert(false)
     }
 }
 
@@ -73,6 +74,51 @@ export class Old extends AccessPath {
     }
     update(args: any[], val: any): any {
         this.e.update(args, val)
+    }
+}
+
+export class Var extends AccessPath {
+    private static count = 0
+    name: string
+    constructor() {
+        super()
+        this.name = "n" + Var.count
+    }
+    toString() {
+        return this.name
+    }
+}
+
+export class Primitive extends AccessPath {
+    constructor(public val: any) {
+        super()
+        Util.assert(Util.isPrimitive(this.val))
+    }
+    toString() {
+        if (typeof this.val === "string") {
+            return "\"" + this.val + "\""
+        }
+        return this.val
+    }
+}
+
+export class Statement {
+
+}
+export class Assignment extends Statement {
+    constructor(public lhs: AccessPath, public rhs: AccessPath) {
+        super()
+    }
+    toString() {
+        return this.lhs.toString() + " = " + this.rhs.toString()
+    }
+}
+export class Return extends Statement {
+    constructor(public rhs: AccessPath) {
+        super()
+    }
+    toString() {
+        return "return " + this.rhs.toString()
     }
 }
 

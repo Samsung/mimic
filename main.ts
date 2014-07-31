@@ -11,6 +11,16 @@ import Recorder = require('./Recorder')
 import ansi = require('./util/Ansicolors')
 
 var print = Util.print
+var log = Util.log
+
+
+function run(f, args) {
+    Util.line()
+    print(ansi.green(Recorder.record(f, args).toString()))
+}
+
+
+// --------------------------
 
 function push(a, b) {
     return a.push(b);
@@ -29,14 +39,8 @@ function id(a, b) {
     return b
 }
 
-print(Recorder.record(pop, [["a", "a"]]))
-print(Recorder.record(push, [["a"], "b"]))
-print(Recorder.record(defineProp, [{}, "field", 42]))
-print(Recorder.record(id, ["a", "a"]))
+run(pop, [["a", "a"]])
+run(push, [["a"], "b"])
+run(defineProp, [{}, "field", 42])
+run(id, ["a", "a"])
 
-
-var a = [1,1,1,1];
-
-a.push = function (b) { return 1 }
-print(a.push(1))
-print(a)
