@@ -15,8 +15,11 @@ var log = Util.log
 
 
 function run(f, args) {
+    print("")
+    Util.line2()
+    var state = Recorder.record(f, args)
     Util.line()
-    print(ansi.green(Recorder.record(f, args).toString()))
+    print(ansi.green(state.toString()))
 }
 
 
@@ -39,8 +42,15 @@ function id(a, b) {
     return b
 }
 
+function f(o) {
+    o.f = o.g
+    o.h = o.g
+    return o.h
+}
+
 run(pop, [["a", "a"]])
 run(push, [["a"], "b"])
 run(defineProp, [{}, "field", 42])
 run(id, ["a", "a"])
+run(f, [{g: {}}])
 

@@ -13,6 +13,9 @@ export function print(s: any) {
 export function line(str?: any) {
     print("------------------------ " + (str || ""))
 }
+export function line2(str?: any) {
+    print("======================== " + (str || ""))
+}
 export function log(o: any) {
     print(util.inspect(o, { colors: true }))
 }

@@ -83,6 +83,7 @@ export class Var extends AccessPath {
     constructor() {
         super()
         this.name = "n" + Var.count
+        Var.count++
     }
     toString() {
         return this.name

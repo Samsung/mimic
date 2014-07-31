@@ -12,3 +12,6 @@ export function xterm(n: number): (s: string) => string {
         return '\033[38;5;'+n+'m' + s + '\033[0m'
     }
 }
+export function lightgrey(s: string) {
+    return xterm(240)(s);
+}

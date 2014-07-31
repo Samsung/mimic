@@ -1,4 +1,3 @@
-/// <reference path="util/assert.d.ts" />
 
 import Data = require('./Data')
 
@@ -10,6 +9,8 @@ declare var Reflect: any
 import Util = require('./util/Util')
 var log = Util.log
 var print = Util.print
+
+import ansi = require('./util/Ansicolors')
 
 export function record(f: (..._: any[]) => any, args: any[]) {
     var state = new State()
@@ -24,7 +25,6 @@ export function record(f: (..._: any[]) => any, args: any[]) {
         }
         state.setPath(iargs[i], new Data.Argument(i))
     }
-
     var res = f.apply(null, iargs);
 
     state.recordReturn(getAccessPath(state, res))
@@ -41,7 +41,7 @@ export class State {
     getPath(a: any): Data.AccessPath {
         var p = this.paths.get(a)
         if (p !== undefined) return p
-        return this.getPath(this.mapping.get(a))
+        return this.paths.get(this.mapping.get(a))
     }
     setPath(a: any, v: Data.AccessPath) {
         this.paths.set(a, v)
@@ -49,6 +49,9 @@ export class State {
     setMapping(o: any, p: any) {
         Util.assert(!this.mapping.has(o));
         this.mapping.set(o, p)
+    }
+    getMapping(o: any) {
+        return this.mapping.get(o)
     }
     recordAssignment(lhs: Data.AccessPath, rhs: Data.AccessPath) {
         this.trace.push(new Data.Assignment(lhs, rhs))
@@ -62,14 +65,15 @@ export class State {
 }
 
 function getAccessPath(state: State, v: any): Data.AccessPath {
-    if (Util.isPrimitive((v))) {
+    if (Util.isPrimitive(v)) {
         return new Data.Primitive(v)
     }
-    assert(state.getPath(v) !== undefined)
+    Util.assert(state.getPath(v) !== undefined)
     return state.getPath(v)
 }
 
 function proxify(state: State, o: any) {
+    if (state.getMapping(o) !== undefined) return state.getMapping(o)
     var common = function (target) {
         Util.assert(state.getPath(target) !== undefined, "target path undefined")
     }
@@ -78,7 +82,18 @@ function proxify(state: State, o: any) {
             common(target)
             // TODO handle properties that are somewhere else
             if (!(name in target) || target.hasOwnProperty(name)) {
-                //log(name)
+                var val = target[name];
+                if (Util.isPrimitive(val)) {
+                    return val;
+                } else {
+                    var variable = new Data.Var()
+                    var p = proxify(state, val)
+                    state.recordAssignment(variable, new Data.Field(state.getPath(target), name))
+                    state.setPath(p, variable)
+                    return p
+                }
+            } else {
+                print(ansi.lightgrey("ignoring access to '" + name + "'."))
             }
             return Reflect.get(target, name, receiver);
         },
