@@ -3,7 +3,7 @@ import Data = require('./Data')
 
 import harmonyrefl = require('harmony-reflect');
 harmonyrefl;
-declare var Proxy: (target: any, handler: any) => any;
+declare var Proxy: (target: Object, handler: Object) => Object;
 declare var Reflect: any
 
 import Util = require('./util/Util')
@@ -36,7 +36,7 @@ export class State {
     // maps objects to their last know valid access path
     private paths: Map<any, Data.AccessPath> = new Map<any, Data.AccessPath>()
     // map objects to their proxified object
-    private mapping: Map<any, any> = new Map<any, any>()
+    private mapping: Map<Object, Object> = new Map<Object, Object>()
     private trace: Data.Statement[] = []
     getPath(a: any): Data.AccessPath {
         var p = this.paths.get(a)
@@ -46,11 +46,11 @@ export class State {
     setPath(a: any, v: Data.AccessPath) {
         this.paths.set(a, v)
     }
-    setMapping(o: any, p: any) {
+    setMapping(o: Object, p: Object) {
         Util.assert(!this.mapping.has(o));
         this.mapping.set(o, p)
     }
-    getMapping(o: any) {
+    getMapping(o: Object) {
         return this.mapping.get(o)
     }
     recordAssignment(lhs: Data.AccessPath, rhs: Data.AccessPath) {
@@ -72,7 +72,7 @@ function getAccessPath(state: State, v: any): Data.AccessPath {
     return state.getPath(v)
 }
 
-function proxify(state: State, o: any) {
+function proxify(state: State, o: Object) {
     if (state.getMapping(o) !== undefined) return state.getMapping(o)
     var common = function (target) {
         Util.assert(state.getPath(target) !== undefined, "target path undefined")
