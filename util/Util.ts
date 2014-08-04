@@ -19,6 +19,9 @@ export function line2(str?: any) {
 export function log(o: any) {
     print(util.inspect(o, { colors: true }))
 }
+export function inspect(o: any): string {
+    return util.inspect(o)
+}
 export function isPrimitive(arg: any) {
     var type = typeof arg;
     return arg == null || (type != "object" && type != "function");

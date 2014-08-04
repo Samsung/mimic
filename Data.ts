@@ -122,6 +122,24 @@ export class Return extends Statement {
         return "return " + this.rhs.toString()
     }
 }
+export class DeleteProperty extends Statement {
+    constructor(public o: AccessPath, public f: string) {
+        super()
+    }
+    toString() {
+        return "delete " + this.o.toString() + "[\"" + this.f.toString() + "\"]"
+    }
+}
+export class DefineProperty extends Statement {
+    constructor(public o: AccessPath, public f: string, public v: any) {
+        super()
+    }
+    toString() {
+        return "Object.defineProperty(" + this.o.toString() +
+            ", \"" + this.f.toString() + "\", {value: " + this.v.toString() + "})"
+    }
+}
+
 
 // factory methods for access paths
 export function makeField(o: AccessPath, f: string) { return new Field(o, f) }
