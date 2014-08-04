@@ -119,7 +119,7 @@ function proxify(state: State, o: Object) {
             return Reflect.construct(target, args);
         },
         getOwnPropertyDescriptor: function(target, name) {
-            print(ignorec(".. unhandled call to getOwnPropertyDescriptor"))
+            print(ignorec(".. unhandled call to getOwnPropertyDescriptor for " + name + " on " + Util.inspect(target)))
             common(target)
             return Reflect.getOwnPropertyDescriptor(target, name);
         },

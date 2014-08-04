@@ -54,3 +54,18 @@ run(defineProp, [{}, "field", 42])
 run(id, ["a", "a"])
 run(f, [{g: {}}])
 
+
+/*
+Util.line()
+
+function f2(args) {
+    var n0 = args[0]["g"]
+    args[0]["f"] = n0
+    Object.defineProperty(args[0], "f", {value: n0})
+    var n1 = args[0]["g"]
+    args[0]["h"] = n1
+    Object.defineProperty(args[0], "h", {value: n1})
+    var n2 = args[0]["h"]
+    return n2
+}
+*/
