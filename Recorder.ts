@@ -23,28 +23,43 @@ export function record(f: (..._: any[]) => any, args: any[]) {
         } else {
             iargs[i] = proxify(state, args[i])
         }
-        state.setPath(iargs[i], new Data.Argument(i))
+        var ai = new Data.Argument(i)
+        state.setPath(iargs[i], ai)
+        state.addCandidate(iargs[i], ai)
     }
     var res = f.apply(null, iargs);
 
-    state.recordStatement(new Data.Return(getAccessPath(state, res)))
+    state.record(new Data.Return(getAccessPath(state, res)))
 
     return state
 }
 
 export class State {
     // maps objects to their last know valid access path
-    private paths: Map<any, Data.AccessPath> = new Map<any, Data.AccessPath>()
+    private paths: Map<any, Data.Expr> = new Map<any, Data.Expr>()
+    // maps any value to a set of potential access paths
+    private candidates: Map<any, Data.Expr[]> = new Map<any, Data.Expr[]>()
     // map objects to their proxified object
     private mapping: Map<Object, Object> = new Map<Object, Object>()
-    private trace: Data.Statement[] = []
-    getPath(a: any): Data.AccessPath {
+    private trace: Data.Stmt[] = []
+    getPath(a: any): Data.Expr {
         var p = this.paths.get(a)
         if (p !== undefined) return p
         return this.paths.get(this.mapping.get(a))
     }
-    setPath(a: any, v: Data.AccessPath) {
+    setPath(a: any, v: Data.Expr) {
         this.paths.set(a, v)
+    }
+    getCandidates(a: any): Data.Expr[] {
+        var c = this.candidates.get(a) || []
+        c = c.slice(0)
+        if (Util.isPrimitive((a))) {
+            c.push(new Data.Const(a, null))
+        }
+        return c
+    }
+    addCandidate(a: any, v: Data.Expr) {
+        this.candidates.set(a, [v].concat(this.getCandidates(a) || []))
     }
     setMapping(o: Object, p: Object) {
         Util.assert(!this.mapping.has(o));
@@ -53,10 +68,7 @@ export class State {
     getMapping(o: Object) {
         return this.mapping.get(o)
     }
-    recordAssignment(lhs: Data.AccessPath, rhs: Data.AccessPath) {
-        this.trace.push(new Data.Assignment(lhs, rhs))
-    }
-    recordStatement(stmt: Data.Statement) {
+    record(stmt: Data.Stmt) {
         this.trace.push(stmt)
     }
     toString() {
@@ -64,9 +76,9 @@ export class State {
     }
 }
 
-function getAccessPath(state: State, v: any): Data.AccessPath {
+function getAccessPath(state: State, v: any): Data.Expr {
     if (Util.isPrimitive(v)) {
-        return new Data.Primitive(v)
+        return new Data.Const(v, state.getCandidates(v))
     }
     Util.assert(state.getPath(v) !== undefined)
     return state.getPath(v)
@@ -81,26 +93,35 @@ function proxify(state: State, o: Object) {
     var Handler = {
         get: function(target, name, receiver) {
             common(target)
-            // TODO handle properties that are somewhere else
             if (!(name in target) || target.hasOwnProperty(name)) {
                 var val = target[name];
+                var field = new Data.Field(state.getPath(target), name)
+                state.addCandidate(val, field)
                 if (Util.isPrimitive(val)) {
                     return val;
                 } else {
                     var variable = new Data.Var()
                     var p = proxify(state, val)
-                    state.recordAssignment(variable, new Data.Field(state.getPath(target), name))
+                    var ass = new Data.Assign(variable, field, true)
+                    state.record(ass)
                     state.setPath(p, variable)
                     return p
                 }
             } else {
+                // TODO handle properties that are somewhere else
                 print(ignorec("ignoring access to '" + name + "'."))
             }
             return Reflect.get(target, name, receiver);
         },
         set: function(target, name, value, receiver) {
             common(target)
-            state.recordAssignment(new Data.Field(state.getPath(target), name), getAccessPath(state, value))
+            // TODO: record ALL candidate paths (maybe?)
+            var field = new Data.Field(state.getPath(target), name);
+            var p = getAccessPath(state, value);
+            var ass = new Data.Assign(field, p)
+            state.record(ass)
+            state.addCandidate(value, field)
+            state.setPath(value, p)
             return Reflect.set(target, name, value, receiver);
         },
         has: function(target, name) {
@@ -126,7 +147,9 @@ function proxify(state: State, o: Object) {
         defineProperty: function(target, name, desc) {
             common(target)
             if ("value" in desc) {
-                state.recordStatement(new Data.DefineProperty(getAccessPath(state, o), name, getAccessPath(state, desc.value)))
+                // TODO
+                print(ignorec(".. unhandled call to defineProperty (ignore for now)"))
+                //state.record(new Data.DefineProp(getAccessPath(state, o), name, getAccessPath(state, desc.value)))
             } else {
                 print(ignorec(".. unhandled call to defineProperty (unhandled type of descriptor)"))
             }
@@ -149,7 +172,7 @@ function proxify(state: State, o: Object) {
         },
         deleteProperty: function(target, name) {
             common(target)
-            state.recordStatement(new Data.DeleteProperty(getAccessPath(state, o), name))
+            state.record(new Data.DeleteProp(getAccessPath(state, o), name))
             return Reflect.deleteProperty(target, name);
         },
         enumerate: function(target) {

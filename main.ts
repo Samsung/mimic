@@ -42,17 +42,29 @@ function id(a, b) {
     return b
 }
 
-function f(o) {
+function f2(o) {
     o.f = o.g
     o.h = o.g
     return o.h
 }
 
-run(pop, [["a", "a"]])
+/*run(pop, [["a", "a"]])
 run(push, [["a"], "b"])
 run(defineProp, [{}, "field", 42])
 run(id, ["a", "a"])
-run(f, [{g: {}}])
+run(f2, [{g: {}}])*/
+
+
+
+function f(o, a, b) {
+    o.f = a
+    return b
+}
+
+run(f, [{}, "a", "a"])
+run(f, [{}, "a", "b"])
+run(f, [{}, "b", "a"])
+
 
 
 /*

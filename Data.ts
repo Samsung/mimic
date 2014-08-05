@@ -1,16 +1,16 @@
 
 import Util = require('./util/Util')
 
+export enum ExprType {
+    Field,
+    Arg,
+    Var,
+    Const
+}
+
 // abstract description of an access path that a method took to, say, modify a field
-export class AccessPath {
-    isField(): boolean {
-        return false
-    }
-    isArgument(): boolean {
-        return false
-    }
-    isOld(): boolean {
-        return false
+export class Expr {
+    constructor(public type: ExprType) {
     }
     eval(args: any[], oldArgs: any[]): any {
         Util.assert(false)
@@ -21,15 +21,12 @@ export class AccessPath {
 }
 
 // access path through a field
-export class Field extends AccessPath {
-    constructor(public o: AccessPath, public f: string) {
-        super()
+export class Field extends Expr {
+    constructor(public o: Expr, public f: string) {
+        super(ExprType.Field)
     }
     toString() {
         return this.o.toString() + "[\"" + this.f + "\"]"
-    }
-    isField() {
-        return true
     }
     eval(args: any[], oldArgs: any[]): any {
         return this.o.eval(args, oldArgs)[this.f]
@@ -40,15 +37,12 @@ export class Field extends AccessPath {
 }
 
 // access path by looking at the ith argument
-export class Argument extends AccessPath {
+export class Argument extends Expr {
     constructor(public i: number) {
-        super()
+        super(ExprType.Arg)
     }
     toString() {
         return "args[" + this.i + "]"
-    }
-    isArgument() {
-        return true
     }
     eval(args: any[], oldArgs: any[]): any {
         return args[this.i]
@@ -58,30 +52,11 @@ export class Argument extends AccessPath {
     }
 }
 
-// access to e in the function pre-state
-export class Old extends AccessPath {
-    constructor(public e: AccessPath) {
-        super()
-    }
-    toString() {
-        return "old(" + this.e.toString() + ")"
-    }
-    isOld() {
-        return true
-    }
-    eval(args: any[], oldArgs: any[]): any {
-        return this.e.eval(oldArgs, oldArgs)
-    }
-    update(args: any[], val: any): any {
-        this.e.update(args, val)
-    }
-}
-
-export class Var extends AccessPath {
+export class Var extends Expr {
     private static count = 0
     name: string
     constructor() {
-        super()
+        super(ExprType.Var)
         this.name = "n" + Var.count
         Var.count++
     }
@@ -90,9 +65,10 @@ export class Var extends AccessPath {
     }
 }
 
-export class Primitive extends AccessPath {
-    constructor(public val: any) {
-        super()
+// a primitive value
+export class Const extends Expr {
+    constructor(public val: any, public candidates: Expr[]) {
+        super(ExprType.Const)
         Util.assert(Util.isPrimitive(this.val))
     }
     toString() {
@@ -103,50 +79,60 @@ export class Primitive extends AccessPath {
     }
 }
 
-export class Statement {
-
+export enum StmtType {
+    Assign,
+    Return,
+    DeleteProp,
+    DefineProp,
+    VarDecl,
 }
-export class Assignment extends Statement {
-    constructor(public lhs: AccessPath, public rhs: AccessPath) {
-        super()
+
+export class Stmt {
+    constructor(public type: StmtType) {
+    }
+}
+export class Assign extends Stmt {
+    constructor(public lhs: Expr, public rhs: Expr, public decl: boolean = false) {
+        super(StmtType.Assign)
     }
     toString() {
-        return this.lhs.toString() + " = " + this.rhs.toString()
+        var prefix = ""
+        if (this.decl) {
+            prefix = "var "
+        }
+        return prefix + this.lhs.toString() + " = " + this.rhs.toString()
     }
 }
-export class Return extends Statement {
-    constructor(public rhs: AccessPath) {
-        super()
+export class Return extends Stmt {
+    constructor(public rhs: Expr) {
+        super(StmtType.Return)
     }
     toString() {
         return "return " + this.rhs.toString()
     }
 }
-export class DeleteProperty extends Statement {
-    constructor(public o: AccessPath, public f: string) {
-        super()
+export class DeleteProp extends Stmt {
+    constructor(public o: Expr, public f: string) {
+        super(StmtType.DeleteProp)
     }
     toString() {
         return "delete " + this.o.toString() + "[\"" + this.f.toString() + "\"]"
     }
 }
-export class DefineProperty extends Statement {
-    constructor(public o: AccessPath, public f: string, public v: any) {
-        super()
+export class DefineProp extends Stmt {
+    constructor(public o: Expr, public f: string, public v: any) {
+        super(StmtType.DefineProp)
     }
     toString() {
         return "Object.defineProperty(" + this.o.toString() +
             ", \"" + this.f.toString() + "\", {value: " + this.v.toString() + "})"
     }
 }
-
-
-// factory methods for access paths
-export function makeField(o: AccessPath, f: string) { return new Field(o, f) }
-export function makeArgument(i: number) { return new Argument(i) }
-export function makeOld(e: AccessPath) {
-    if (e.isArgument() === true || e.isOld() === true) {
-        return e
+export class VarDecl extends Stmt {
+    constructor(public v: Var) {
+        super(StmtType.VarDecl)
     }
-    return new Old(e)
+    toString() {
+        return "var " + this.v.name
+    }
 }
