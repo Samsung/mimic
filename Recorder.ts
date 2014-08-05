@@ -60,6 +60,7 @@ export class State {
         if (Util.isPrimitive(a)) {
             c.push(new Data.Const(a, null))
         }
+        print(c)
         return c
     }
     addCandidate(a: any, v: Data.Expr) {
