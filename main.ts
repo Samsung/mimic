@@ -48,11 +48,11 @@ function f2(o) {
     return o.h
 }
 
-/*run(pop, [["a", "a"]])
+run(pop, [["a", "a"]])
 run(push, [["a"], "b"])
 run(defineProp, [{}, "field", 42])
 run(id, ["a", "a"])
-run(f2, [{g: {}}])*/
+run(f2, [{g: {}}])
 
 
 
@@ -67,17 +67,5 @@ run(f, [{}, "b", "a"])
 
 
 
-/*
-Util.line()
-
-function f2(args) {
-    var n0 = args[0]["g"]
-    args[0]["f"] = n0
-    Object.defineProperty(args[0], "f", {value: n0})
-    var n1 = args[0]["g"]
-    args[0]["h"] = n1
-    Object.defineProperty(args[0], "h", {value: n1})
-    var n2 = args[0]["h"]
-    return n2
-}
-*/
+var s = Recorder.record(f, [{}, "a", "a"])
+print(Recorder.generateCandidates(s))

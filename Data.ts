@@ -136,3 +136,16 @@ export class VarDecl extends Stmt {
         return "var " + this.v.name
     }
 }
+
+
+
+export class Program {
+    static Empty = new Program([])
+    public stmts: Stmt[]
+    constructor(stmts: Stmt[]) {
+        this.stmts = stmts.slice(0)
+    }
+    toString() {
+        return this.stmts.join("\n")
+    }
+}

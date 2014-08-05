@@ -35,25 +35,29 @@ export function record(f: (..._: any[]) => any, args: any[]) {
 }
 
 export class State {
-    // maps objects to their last know valid access path
-    private paths: Map<any, Data.Expr> = new Map<any, Data.Expr>()
-    // maps any value to a set of potential access paths
+    // maps objects to an expression that can be used to access it
+    private exprs: Map<any, Data.Expr> = new Map<any, Data.Expr>()
+    // maps any value to a set of potential expressions that might be the
+    // source of that value. for primitive, there is uncertainty in whether
+    // these expressions really were the source, or whether they are the same
+    // just by coincidence
     private candidates: Map<any, Data.Expr[]> = new Map<any, Data.Expr[]>()
     // map objects to their proxified object
     private mapping: Map<Object, Object> = new Map<Object, Object>()
-    private trace: Data.Stmt[] = []
+    public trace: Data.Stmt[] = []
     getPath(a: any): Data.Expr {
-        var p = this.paths.get(a)
+        Util.assert(!Util.isPrimitive(a))
+        var p = this.exprs.get(a)
         if (p !== undefined) return p
-        return this.paths.get(this.mapping.get(a))
+        return this.exprs.get(this.mapping.get(a))
     }
     setPath(a: any, v: Data.Expr) {
-        this.paths.set(a, v)
+        this.exprs.set(a, v)
     }
     getCandidates(a: any): Data.Expr[] {
         var c = this.candidates.get(a) || []
         c = c.slice(0)
-        if (Util.isPrimitive((a))) {
+        if (Util.isPrimitive(a)) {
             c.push(new Data.Const(a, null))
         }
         return c
@@ -72,7 +76,7 @@ export class State {
         this.trace.push(stmt)
     }
     toString() {
-        return this.trace.join("\n")
+        return "State:\n  " + this.trace.join("\n  ")
     }
 }
 
@@ -199,4 +203,77 @@ function proxify(state: State, o: Object) {
     var p = Proxy(o, Handler)
     state.setMapping(o, p)
     return p
+}
+
+// given a trace, generate all possible candidate implementations
+// for the primitive values that occur
+export function generateCandidates(state: State): Data.Program[] {
+    return generateCandidatePrograms(state, state.trace)
+}
+
+function generateCandidatePrograms(state: State, stmts: Data.Stmt[]): Data.Program[] {
+    var res = []
+
+    if (stmts.length === 0) return []
+    var head = stmts[0]
+    var tail = stmts.slice(1)
+
+    var heads = generateCandidateStmts(state, head)
+    var tails = generateCandidatePrograms(state, tail)
+    heads.map((s) => {
+        return tails.map((p) => {
+            return new Data.Program([s].concat(p.stmts))
+        })
+    }).forEach((r) => {
+        res.push(r)
+    })
+
+    return res
+}
+
+function generateCandidateStmts(state: State, stmt: Data.Stmt): Data.Stmt[] {
+    var res = []
+    var s
+    switch (stmt.type) {
+        case Data.StmtType.Assign:
+            s = <Data.Assign>stmt
+            var rhss = generateCandidateExprs(state, s.rhs)
+            var lhss = generateCandidateExprs(state, s.lhs)
+            lhss.forEach((e1) => {
+                rhss.forEach((e2) => {
+                    res.push(new Data.Assign(e1, e2))
+                })
+            })
+            break
+        case Data.StmtType.Return:
+            s = <Data.Return>stmt
+            generateCandidateExprs(state, s.rhs).forEach((e) => {
+                res.push(new Data.Return(e))
+            })
+            break
+        default: Util.assert(false, "unknown type "+stmt.type)
+    }
+    return res
+}
+function generateCandidateExprs(state: State, expr: Data.Expr): Data.Expr[] {
+    var res = []
+    var e
+    switch (expr.type) {
+        case Data.ExprType.Field:
+            e = <Data.Field>expr
+            var os = generateCandidateExprs(state, e.o)
+            os.forEach((o) => {
+                res.push(new Data.Field(o, e.f))
+            })
+            break
+        case Data.ExprType.Const:
+            res = state.getCandidates(expr)
+            break
+        case Data.ExprType.Arg:
+            res.push(expr)
+            break
+        default:
+            Util.assert(false, "unknown type "+expr.type)
+    }
+    return res
 }
