@@ -56,13 +56,11 @@ run(id, ["a", "a"])
 run(f2, [{g: {}}])
 
 
-
+/*
 function f(o, a, b) {
     o.f = a
     return b
 }
-
-
 var s = Recorder.record(f, [{}, "a", "a"])
 var candidates = Recorder.generateCandidates(s);
 log(candidates.length)
@@ -80,3 +78,27 @@ candidates = candidates.filter((c) => {
 log(candidates.length)
 
 print(candidates.join("\n\n"))
+*/
+
+function f(o, m, a) {
+    o.f = a
+    return m.g
+}
+var s = Recorder.record(f, [{}, {g: "a"}, "a"])
+var candidates = Recorder.generateCandidates(s);
+log(candidates.length)
+candidates = candidates.filter((c) => {
+    return Verifier.isModel(c, f, [{}, {g: "a"}, "a"])
+})
+log(candidates.length)
+candidates = candidates.filter((c) => {
+    return Verifier.isModel(c, f, [{}, {g: "a"}, "b"])
+})
+log(candidates.length)
+candidates = candidates.filter((c) => {
+    return Verifier.isModel(c, f, [{}, {g: "b"}, "a"])
+})
+log(candidates.length)
+
+print(candidates.join("\n\n"))
+
