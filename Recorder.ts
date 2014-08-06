@@ -15,6 +15,8 @@ import ansi = require('./util/Ansicolors')
 export function record(f: (..._: any[]) => any, args: any[]) {
     var state = new State()
 
+    args = Util.clone(args)
+
     // instrument args
     var iargs = []
     for (var i = 0; i < args.length; i++) {
@@ -34,27 +36,6 @@ export function record(f: (..._: any[]) => any, args: any[]) {
     return state
 }
 
-export class Trace {
-    constructor(public stmts: Data.Stmt[]) {
-    }
-    extend(s: Data.Stmt) {
-        this.stmts.push(s)
-    }
-    toString() {
-        return "Trace:\n  " + this.stmts.join("\n  ")
-    }
-    equals(o) {
-        if (!(o instanceof Trace))
-            return false
-        if (o.stmts.length !== this.stmts.length)
-            return false
-        for (var i = 0; i < o.stmts.length; i++) {
-            if (!o.stmts[i].equals(this.stmts[i]))
-                return false
-        }
-        return true
-    }
-}
 export class State {
     // maps objects to an expression that can be used to access it
     private exprs: Map<any, Data.Expr> = new Map<any, Data.Expr>()
@@ -65,7 +46,7 @@ export class State {
     private candidates: Map<any, Data.Expr[]> = new Map<any, Data.Expr[]>()
     // map objects to their proxified object
     private mapping: Map<Object, Object> = new Map<Object, Object>()
-    public trace: Trace = new Trace([])
+    public trace: Data.Trace = new Data.Trace([])
     getPath(a: any): Data.Expr {
         Util.assert(!Util.isPrimitive(a))
         var p = this.exprs.get(a)
@@ -101,6 +82,7 @@ export class State {
     }
 }
 
+
 function getAccessPath(state: State, v: any): Data.Expr {
     if (Util.isPrimitive(v)) {
         return new Data.Const(v, state.getCandidates(v))
@@ -114,7 +96,8 @@ function proxify(state: State, o: Object) {
     var common = function (target) {
         Util.assert(state.getPath(target) !== undefined, "target path undefined")
     }
-    var ignorec = ansi.lightgrey
+    var ignorec = (a: any) => print(ansi.lightgrey(a))
+    ignorec = (a: any) => a
     var Handler = {
         get: function(target, name, receiver) {
             common(target)
@@ -134,7 +117,7 @@ function proxify(state: State, o: Object) {
                 }
             } else {
                 // TODO handle properties that are somewhere else
-                print(ignorec("ignoring access to '" + name + "'."))
+                ignorec("ignoring access to '" + name + "'.")
             }
             return Reflect.get(target, name, receiver);
         },
@@ -151,21 +134,21 @@ function proxify(state: State, o: Object) {
         },
         has: function(target, name) {
             common(target)
-            print(ignorec(".. unhandled call to has"))
+            ignorec(".. unhandled call to has")
             return Reflect.has(target, name);
         },
         apply: function(target, receiver, args) {
-            print(ignorec(".. unhandled call to apply"))
+            ignorec(".. unhandled call to apply")
             common(target)
             return Reflect.apply(target, receiver, args);
         },
         construct: function(target, args) {
-            print(ignorec(".. unhandled call to construct"))
+            ignorec(".. unhandled call to construct")
             common(target)
             return Reflect.construct(target, args);
         },
         getOwnPropertyDescriptor: function(target, name) {
-            print(ignorec(".. unhandled call to getOwnPropertyDescriptor for " + name + " on " + Util.inspect(target)))
+            ignorec(".. unhandled call to getOwnPropertyDescriptor for " + name + " on " + Util.inspect(target))
             common(target)
             return Reflect.getOwnPropertyDescriptor(target, name);
         },
@@ -173,25 +156,25 @@ function proxify(state: State, o: Object) {
             common(target)
             if ("value" in desc) {
                 // TODO
-                print(ignorec(".. unhandled call to defineProperty (ignore for now)"))
+                ignorec(".. unhandled call to defineProperty (ignore for now)")
                 //state.record(new Data.DefineProp(getAccessPath(state, o), name, getAccessPath(state, desc.value)))
             } else {
-                print(ignorec(".. unhandled call to defineProperty (unhandled type of descriptor)"))
+                ignorec(".. unhandled call to defineProperty (unhandled type of descriptor)")
             }
             return Reflect.defineProperty(target, name, desc);
         },
         getOwnPropertyNames: function(target) {
-            print(ignorec(".. unhandled call to getOwnPropertyNames"))
+            ignorec(".. unhandled call to getOwnPropertyNames")
             common(target)
             return Reflect.getOwnPropertyNames(target);
         },
         getPrototypeOf: function(target) {
-            print(ignorec(".. unhandled call to getPrototypeOf"))
+            ignorec(".. unhandled call to getPrototypeOf")
             common(target)
             return Reflect.getPrototypeOf(target);
         },
         setPrototypeOf: function(target, newProto) {
-            print(ignorec(".. unhandled call to setPrototypeOf"))
+            ignorec(".. unhandled call to setPrototypeOf")
             common(target)
             return Reflect.setPrototypeOf(target, newProto);
         },
@@ -201,22 +184,22 @@ function proxify(state: State, o: Object) {
             return Reflect.deleteProperty(target, name);
         },
         enumerate: function(target) {
-            print(ignorec(".. unhandled call to enumerate"))
+            ignorec(".. unhandled call to enumerate")
             common(target)
             return Reflect.enumerate(target);
         },
         preventExtensions: function(target) {
-            print(ignorec(".. unhandled call to preventExtensions"))
+            ignorec(".. unhandled call to preventExtensions")
             common(target)
             return Reflect.preventExtensions(target);
         },
         isExtensible: function(target) {
-            print(ignorec(".. unhandled call to isExtensible on "+Util.inspect(target)))
+            ignorec(".. unhandled call to isExtensible on "+Util.inspect(target))
             common(target)
             return Reflect.isExtensible(target);
         },
         ownKeys: function(target) {
-            print(ignorec(".. unhandled call to ownKeys"))
+            ignorec(".. unhandled call to ownKeys")
             common(target)
             return Reflect.ownKeys(target);
         }

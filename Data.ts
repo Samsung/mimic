@@ -183,3 +183,27 @@ export class Program {
         return this.stmts.join("\n")
     }
 }
+
+
+
+export class Trace {
+    constructor(public stmts: Stmt[]) {
+    }
+    extend(s: Stmt) {
+        this.stmts.push(s)
+    }
+    toString() {
+        return "Trace:\n  " + this.stmts.join("\n  ")
+    }
+    equals(o) {
+        if (!(o instanceof Trace))
+            return false
+        if (o.stmts.length !== this.stmts.length)
+            return false
+        for (var i = 0; i < o.stmts.length; i++) {
+            if (!o.stmts[i].equals(this.stmts[i]))
+                return false
+        }
+        return true
+    }
+}

@@ -48,3 +48,36 @@ export function indexOfEquals<T>(a: T[], item: T, start: number = 0): number {
     j--
     return (j === count) ? -1 : j
 }
+// non-ideal clone method
+// taken from: http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
+export function clone<T>(obj: T): T {
+    // Handle the 3 simple types, and null or undefined
+    if (null == obj || "object" != typeof obj) return obj;
+
+    // Handle Date
+    if (obj instanceof Date) {
+        var copy1 = new Date();
+        copy1.setTime((<Date> <any> obj).getTime());
+        return <T> <any> copy1;
+    }
+
+    // Handle Array
+    if (obj instanceof Array) {
+        var copy2 = [];
+        for (var i = 0, len = (<any> obj).length; i < len; i++) {
+            copy2[i] = clone(obj[i]);
+        }
+        return <T> <any> copy2;
+    }
+
+    // Handle Object
+    if (obj instanceof Object) {
+        var copy3 = {};
+        for (var attr in obj) {
+            if (obj.hasOwnProperty(attr)) copy3[attr] = clone(obj[attr]);
+        }
+        return <T> <any> copy3;
+    }
+
+    throw new Error("Unable to copy obj! Its type isn't supported.");
+}

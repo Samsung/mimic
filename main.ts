@@ -62,17 +62,21 @@ function f(o, a, b) {
     return b
 }
 
-run(f, [{}, "a", "a"])
-run(f, [{}, "a", "b"])
-run(f, [{}, "b", "a"])
 
-
-var args = [{}, "a", "a"]
-var s = Recorder.record(f, args)
+var s = Recorder.record(f, [{}, "a", "a"])
 var candidates = Recorder.generateCandidates(s);
+log(candidates.length)
+candidates = candidates.filter((c) => {
+    return Verifier.isModel(c, f, [{}, "a", "a"])
+})
+log(candidates.length)
 candidates = candidates.filter((c) => {
     return Verifier.isModel(c, f, [{}, "a", "b"])
 })
+log(candidates.length)
+candidates = candidates.filter((c) => {
+    return Verifier.isModel(c, f, [{}, "b", "a"])
+})
+log(candidates.length)
 
-print(candidates.length)
-//print(candidates.join("\n\n"))
+print(candidates.join("\n\n"))
