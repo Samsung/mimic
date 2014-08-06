@@ -34,6 +34,13 @@ export function record(f: (..._: any[]) => any, args: any[]) {
     return state
 }
 
+export class Trace {
+    constructor(public stmts: Data.Stmt[]) {
+    }
+    extend(s: Data.Stmt) {
+        this.stmts.push(s)
+    }
+}
 export class State {
     // maps objects to an expression that can be used to access it
     private exprs: Map<any, Data.Expr> = new Map<any, Data.Expr>()
@@ -44,7 +51,7 @@ export class State {
     private candidates: Map<any, Data.Expr[]> = new Map<any, Data.Expr[]>()
     // map objects to their proxified object
     private mapping: Map<Object, Object> = new Map<Object, Object>()
-    public trace: Data.Stmt[] = []
+    public trace: Trace = new Trace([])
     getPath(a: any): Data.Expr {
         Util.assert(!Util.isPrimitive(a))
         var p = this.exprs.get(a)
@@ -73,10 +80,10 @@ export class State {
         return this.mapping.get(o)
     }
     record(stmt: Data.Stmt) {
-        this.trace.push(stmt)
+        this.trace.extend(stmt)
     }
     toString() {
-        return "State:\n  " + this.trace.join("\n  ")
+        return "State:\n  " + this.trace.stmts.join("\n  ")
     }
 }
 
@@ -208,7 +215,7 @@ function proxify(state: State, o: Object) {
 // given a trace, generate all possible candidate implementations
 // for the primitive values that occur
 export function generateCandidates(state: State): Data.Program[] {
-    return generateCandidatePrograms(state, state.trace)
+    return generateCandidatePrograms(state, state.trace.stmts)
 }
 
 function generateCandidatePrograms(state: State, stmts: Data.Stmt[]): Data.Program[] {
