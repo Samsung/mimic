@@ -18,6 +18,9 @@ export class Expr {
     update(args: any[], val: any): any {
         Util.assert(false)
     }
+    equals(o) {
+        return o instanceof Expr && o === this
+    }
 }
 
 // access path through a field
@@ -33,6 +36,9 @@ export class Field extends Expr {
     }
     update(args: any[], val: any): any {
         this.o.eval(args, args)[this.f] = val
+    }
+    equals(o) {
+        return o instanceof Field && o.f === this.f && o.o.equals(this.o)
     }
 }
 
@@ -50,6 +56,9 @@ export class Argument extends Expr {
     update(args: any[], val: any): any {
         args[this.i] = val;
     }
+    equals(o) {
+        return o instanceof Argument && o.i === this.i
+    }
 }
 
 export class Var extends Expr {
@@ -62,6 +71,9 @@ export class Var extends Expr {
     }
     toString() {
         return this.name
+    }
+    equals(o) {
+        return o instanceof Var && o.name === this.name
     }
 }
 
@@ -76,6 +88,9 @@ export class Const extends Expr {
             return "\"" + this.val + "\""
         }
         return this.val
+    }
+    equals(o) {
+        return o instanceof Const && o.val === this.val
     }
 }
 

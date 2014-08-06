@@ -31,3 +31,20 @@ export function assert(condition: any, message?: string) {
         throw (message || "Assertion failed") + "\n" + console.trace()
     }
 }
+export function dedup<T>(a: T[]): T[] {
+    return a.filter(function(elem, pos) {
+        return a.indexOf(elem) == pos;
+    })
+}
+export function dedup2<T>(a: T[]): T[] {
+    return a.filter(function(elem, pos) {
+        return indexOfEquals(a, elem) == pos;
+    })
+}
+export function indexOfEquals<T>(a: T[], item: T, start: number = 0): number {
+    var j = start
+    var count = a.length
+    while (!a[j++].equals(item) && j < count) {}
+    j--
+    return (j === count) ? -1 : j
+}

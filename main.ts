@@ -68,4 +68,5 @@ run(f, [{}, "b", "a"])
 
 
 var s = Recorder.record(f, [{}, "a", "a"])
-print(Recorder.generateCandidates(s))
+var candidates = Recorder.generateCandidates(s);
+print(candidates.join("\n\n"))

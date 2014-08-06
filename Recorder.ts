@@ -60,8 +60,7 @@ export class State {
         if (Util.isPrimitive(a)) {
             c.push(new Data.Const(a, null))
         }
-        print(c)
-        return c
+        return Util.dedup2(c)
     }
     addCandidate(a: any, v: Data.Expr) {
         this.candidates.set(a, [v].concat(this.getCandidates(a) || []))
@@ -221,12 +220,16 @@ function generateCandidatePrograms(state: State, stmts: Data.Stmt[]): Data.Progr
 
     var heads = generateCandidateStmts(state, head)
     var tails = generateCandidatePrograms(state, tail)
-    heads.map((s) => {
-        return tails.map((p) => {
-            return new Data.Program([s].concat(p.stmts))
-        })
-    }).forEach((r) => {
-        res.push(r)
+    Util.line()
+    heads.forEach((s) => {
+        if (tails.length === 0) {
+            res.push(new Data.Program([s]))
+        }
+        else {
+            tails.forEach((p) => {
+                res.push(new Data.Program([s].concat(p.stmts)))
+            })
+        }
     })
 
     return res
@@ -268,7 +271,8 @@ function generateCandidateExprs(state: State, expr: Data.Expr): Data.Expr[] {
             })
             break
         case Data.ExprType.Const:
-            res = state.getCandidates(expr)
+            e = <Data.Const>expr
+            res = state.getCandidates(e.val)
             break
         case Data.ExprType.Arg:
             res.push(expr)
