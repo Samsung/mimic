@@ -8,6 +8,7 @@ declare var Proxy: (target: any, handler: any) => any;
 import Util = require('./util/Util')
 import Data = require('./Data')
 import Recorder = require('./Recorder')
+import Verifier = require('./Verifier')
 import ansi = require('./util/Ansicolors')
 
 var print = Util.print
@@ -66,7 +67,12 @@ run(f, [{}, "a", "b"])
 run(f, [{}, "b", "a"])
 
 
-
-var s = Recorder.record(f, [{}, "a", "a"])
+var args = [{}, "a", "a"]
+var s = Recorder.record(f, args)
 var candidates = Recorder.generateCandidates(s);
-print(candidates.join("\n\n"))
+candidates = candidates.filter((c) => {
+    return Verifier.isModel(c, f, [{}, "a", "b"])
+})
+
+print(candidates.length)
+//print(candidates.join("\n\n"))

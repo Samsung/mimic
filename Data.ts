@@ -18,8 +18,9 @@ export class Expr {
     update(args: any[], val: any): any {
         Util.assert(false)
     }
-    equals(o) {
-        return o instanceof Expr && o === this
+    equals(o): boolean {
+        Util.assert(false)
+        return false
     }
 }
 
@@ -48,7 +49,7 @@ export class Argument extends Expr {
         super(ExprType.Arg)
     }
     toString() {
-        return "args[" + this.i + "]"
+        return "arguments[" + this.i + "]"
     }
     eval(args: any[], oldArgs: any[]): any {
         return args[this.i]
@@ -56,7 +57,7 @@ export class Argument extends Expr {
     update(args: any[], val: any): any {
         args[this.i] = val;
     }
-    equals(o) {
+    equals(o): boolean {
         return o instanceof Argument && o.i === this.i
     }
 }
@@ -72,7 +73,7 @@ export class Var extends Expr {
     toString() {
         return this.name
     }
-    equals(o) {
+    equals(o): boolean {
         return o instanceof Var && o.name === this.name
     }
 }
@@ -89,7 +90,7 @@ export class Const extends Expr {
         }
         return this.val
     }
-    equals(o) {
+    equals(o): boolean {
         return o instanceof Const && o.val === this.val
     }
 }
@@ -105,6 +106,10 @@ export enum StmtType {
 export class Stmt {
     constructor(public type: StmtType) {
     }
+    equals(o): boolean {
+        Util.assert(false)
+        return false
+    }
 }
 export class Assign extends Stmt {
     constructor(public lhs: Expr, public rhs: Expr, public decl: boolean = false) {
@@ -117,6 +122,9 @@ export class Assign extends Stmt {
         }
         return prefix + this.lhs.toString() + " = " + this.rhs.toString()
     }
+    equals(o) {
+        return o instanceof Assign && o.lhs.equals(this.lhs) && o.rhs.equals(this.rhs)
+    }
 }
 export class Return extends Stmt {
     constructor(public rhs: Expr) {
@@ -125,6 +133,9 @@ export class Return extends Stmt {
     toString() {
         return "return " + this.rhs.toString()
     }
+    equals(o) {
+        return o instanceof Return && o.rhs.equals(this.rhs)
+    }
 }
 export class DeleteProp extends Stmt {
     constructor(public o: Expr, public f: string) {
@@ -132,6 +143,9 @@ export class DeleteProp extends Stmt {
     }
     toString() {
         return "delete " + this.o.toString() + "[\"" + this.f.toString() + "\"]"
+    }
+    equals(o) {
+        return o instanceof DeleteProp && o.o.equals(this.o) && o.f === this.f
     }
 }
 export class DefineProp extends Stmt {
@@ -142,6 +156,9 @@ export class DefineProp extends Stmt {
         return "Object.defineProperty(" + this.o.toString() +
             ", \"" + this.f.toString() + "\", {value: " + this.v.toString() + "})"
     }
+    equals(o) {
+        return o instanceof DefineProp && o.o.equals(this.o) && o.f === this.f && o.v === this.v
+    }
 }
 export class VarDecl extends Stmt {
     constructor(public v: Var) {
@@ -150,8 +167,10 @@ export class VarDecl extends Stmt {
     toString() {
         return "var " + this.v.name
     }
+    equals(o): boolean {
+        return o instanceof VarDecl && o.v.equals(this.v)
+    }
 }
-
 
 
 export class Program {
