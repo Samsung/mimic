@@ -16,11 +16,12 @@ var log = Util.log
 
 
 function run(f, args) {
+
     print("")
-    Util.line2()
     var state = Recorder.record(f, args)
     Util.line()
     print(ansi.green(state.toString()))
+    Util.line2()
 }
 
 
@@ -81,24 +82,26 @@ print(candidates.join("\n\n"))
 */
 
 function f(o, m, a) {
-    o.f = a
-    return m.g
+    o.f = m
+    m.g = a
+    o.f2 = m.f
+    return 1
 }
-var s = Recorder.record(f, [{}, {g: "a"}, "a"])
+var s = Recorder.record(f, [{}, {g: "a", f: {}}, "a"])
+print(s)
 var candidates = Recorder.generateCandidates(s);
 log(candidates.length)
 candidates = candidates.filter((c) => {
-    return Verifier.isModel(c, f, [{}, {g: "a"}, "a"])
+    return Verifier.isModel(c, f, [{}, {g: "a", f: {}}, "a"])
 })
 log(candidates.length)
 candidates = candidates.filter((c) => {
-    return Verifier.isModel(c, f, [{}, {g: "a"}, "b"])
+    return Verifier.isModel(c, f, [{}, {g: "a", f: {}}, "b"])
 })
 log(candidates.length)
 candidates = candidates.filter((c) => {
-    return Verifier.isModel(c, f, [{}, {g: "b"}, "a"])
+    return Verifier.isModel(c, f, [{}, {g: "b", f: {}}, "a"])
 })
 log(candidates.length)
 
 print(candidates.join("\n\n"))
-

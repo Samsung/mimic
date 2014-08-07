@@ -2,15 +2,29 @@
 import Util = require('./util/Util')
 
 export enum ExprType {
-    Field,
+    Field = 1000, // make sure these don't collide with other types
     Arg,
     Var,
     Const
 }
 
-// abstract description of an access path that a method took to, say, modify a field
-export class Expr {
+export class Node {
+    type: any
+    /* Returns all direct child nodes (of type Node) */
+    children(): Node[] {
+        Util.assert(false)
+        return []
+    }
+    /* Returns all direct children (that are somehow relevant for equality) */
+    anychildren(): any[] {
+        Util.assert(false)
+        return []
+    }
+}
+
+export class Expr extends Node {
     constructor(public type: ExprType) {
+        super()
     }
     eval(args: any[], oldArgs: any[]): any {
         Util.assert(false)
@@ -23,6 +37,28 @@ export class Expr {
         return false
     }
 }
+
+/*
+skeleton for pattern match:
+
+var e
+switch (expr.type) {
+    case Data.ExprType.Field:
+        e = <Data.Field>expr
+        break
+    case Data.ExprType.Const:
+        e = <Data.Const>expr
+        break
+    case Data.ExprType.Arg:
+        e = <Data.Arg>expr
+        break
+    case Data.ExprType.Var:
+        e = <Data.Var>expr
+        break
+    default:
+        Util.assert(false, "unknown type "+expr.type)
+}
+*/
 
 // access path through a field
 export class Field extends Expr {
@@ -40,6 +76,14 @@ export class Field extends Expr {
     }
     equals(o) {
         return o instanceof Field && o.f === this.f && o.o.equals(this.o)
+    }
+    children(): Node[] {
+        return [this.o]
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        res = res.concat([this.f])
+        return res
     }
 }
 
@@ -60,6 +104,14 @@ export class Argument extends Expr {
     equals(o): boolean {
         return o instanceof Argument && o.i === this.i
     }
+    children(): Node[] {
+        return []
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        res = res.concat([this.i])
+        return res
+    }
 }
 
 export class Var extends Expr {
@@ -75,6 +127,14 @@ export class Var extends Expr {
     }
     equals(o): boolean {
         return o instanceof Var && o.name === this.name
+    }
+    children(): Node[] {
+        return []
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        res = res.concat([this.name])
+        return res
     }
 }
 
@@ -93,37 +153,87 @@ export class Const extends Expr {
     equals(o): boolean {
         return o instanceof Const && o.val === this.val
     }
+    children(): Node[] {
+        return []
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        res = res.concat([this.val])
+        return res
+    }
 }
 
 export enum StmtType {
-    Assign,
+    Assign = 2000,
     Return,
     DeleteProp,
     DefineProp,
     VarDecl,
 }
 
-export class Stmt {
+export class Stmt extends Node {
     constructor(public type: StmtType) {
+        super()
     }
     equals(o): boolean {
         Util.assert(false)
         return false
     }
+    /*visit(f: (s: Stmt) => any) {
+        if (f(this) !== false) {
+            var cs = this.children()
+            for (var i = 0; i < cs.length; i++) {
+                cs[i].visit(f)
+            }
+        }
+    }*/
 }
+
+/*
+ skeleton for pattern match:
+
+var s
+switch (stmt.type) {
+    case Data.StmtType.Assign:
+        e = <Data.Assign>stmt
+        break
+    case Data.StmtType.DefineProp:
+        e = <Data.DefineProp>stmt
+        break
+    case Data.StmtType.DeleteProp:
+        e = <Data.DeleteProp>stmt
+        break
+    case Data.StmtType.Return:
+        e = <Data.Return>stmt
+        break
+    case Data.StmtType.VarDecl:
+        e = <Data.VarDecl>stmt
+        break
+    default:
+        Util.assert(false, "unknown type "+expr.type)
+}
+*/
+
 export class Assign extends Stmt {
-    constructor(public lhs: Expr, public rhs: Expr, public decl: boolean = false) {
+    constructor(public lhs: Expr, public rhs: Expr, public isDecl: boolean = false) {
         super(StmtType.Assign)
     }
     toString() {
         var prefix = ""
-        if (this.decl) {
+        if (this.isDecl) {
             prefix = "var "
         }
         return prefix + this.lhs.toString() + " = " + this.rhs.toString()
     }
     equals(o) {
         return o instanceof Assign && o.lhs.equals(this.lhs) && o.rhs.equals(this.rhs)
+    }
+    children(): Node[] {
+        return [this.lhs, this.rhs]
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
     }
 }
 export class Return extends Stmt {
@@ -136,6 +246,13 @@ export class Return extends Stmt {
     equals(o) {
         return o instanceof Return && o.rhs.equals(this.rhs)
     }
+    children(): Node[] {
+        return [this.rhs]
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
+    }
 }
 export class DeleteProp extends Stmt {
     constructor(public o: Expr, public f: string) {
@@ -146,6 +263,14 @@ export class DeleteProp extends Stmt {
     }
     equals(o) {
         return o instanceof DeleteProp && o.o.equals(this.o) && o.f === this.f
+    }
+    children(): Node[] {
+        return [this.o]
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        res = res.concat([this.f])
+        return res
     }
 }
 export class DefineProp extends Stmt {
@@ -159,6 +284,14 @@ export class DefineProp extends Stmt {
     equals(o) {
         return o instanceof DefineProp && o.o.equals(this.o) && o.f === this.f && o.v === this.v
     }
+    children(): Node[] {
+        return [this.o]
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        res = res.concat([this.f, this.v])
+        return res
+    }
 }
 export class VarDecl extends Stmt {
     constructor(public v: Var) {
@@ -169,6 +302,13 @@ export class VarDecl extends Stmt {
     }
     equals(o): boolean {
         return o instanceof VarDecl && o.v.equals(this.v)
+    }
+    children(): Node[] {
+        return [this.v]
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
     }
 }
 

@@ -224,7 +224,6 @@ function generateCandidatePrograms(state: State, stmts: Data.Stmt[]): Data.Progr
 
     var heads = generateCandidateStmts(state, head)
     var tails = generateCandidatePrograms(state, tail)
-    Util.line()
     heads.forEach((s) => {
         if (tails.length === 0) {
             res.push(new Data.Program([s]))
@@ -280,6 +279,10 @@ function generateCandidateExprs(state: State, expr: Data.Expr): Data.Expr[] {
             break
         case Data.ExprType.Arg:
             res.push(expr)
+            break
+        case Data.ExprType.Var:
+            e = <Data.Var>expr
+            res.push(e)
             break
         default:
             Util.assert(false, "unknown type "+expr.type)
