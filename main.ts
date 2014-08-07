@@ -83,7 +83,7 @@ print(candidates.join("\n\n"))
 
 function f(o, m, a) {
     o.f = m
-    m.g = a
+    m[a] = a
     o.f2 = m.f
     return 1
 }

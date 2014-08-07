@@ -62,27 +62,26 @@ switch (expr.type) {
 
 // access path through a field
 export class Field extends Expr {
-    constructor(public o: Expr, public f: string) {
+    constructor(public o: Expr, public f: Expr) {
         super(ExprType.Field)
     }
     toString() {
-        return this.o.toString() + "[\"" + this.f + "\"]"
+        return this.o.toString() + "[" + this.f.toString() + "]"
     }
     eval(args: any[], oldArgs: any[]): any {
         return this.o.eval(args, oldArgs)[this.f]
     }
     update(args: any[], val: any): any {
-        this.o.eval(args, args)[this.f] = val
+        this.o.eval(args, args)[this.f.toString()] = val
     }
     equals(o) {
-        return o instanceof Field && o.f === this.f && o.o.equals(this.o)
+        return o instanceof Field && o.f.equals(this.f) && o.o.equals(this.o)
     }
     children(): Node[] {
-        return [this.o]
+        return [this.o, this.f]
     }
     anychildren(): any[] {
         var res: any[] = this.children()
-        res = res.concat([this.f])
         return res
     }
 }

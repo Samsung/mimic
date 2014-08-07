@@ -99,11 +99,11 @@ function proxify(state: State, o: Object) {
     var ignorec = (a: any) => print(ansi.lightgrey(a))
     ignorec = (a: any) => a
     var Handler = {
-        get: function(target, name, receiver) {
+        get: function(target, name: string, receiver) {
             common(target)
             if (!(name in target) || target.hasOwnProperty(name)) {
                 var val = target[name];
-                var field = new Data.Field(state.getPath(target), name)
+                var field = new Data.Field(state.getPath(target), new Data.Const(name, null))
                 state.addCandidate(val, field)
                 if (Util.isPrimitive(val)) {
                     return val;
@@ -121,10 +121,10 @@ function proxify(state: State, o: Object) {
             }
             return Reflect.get(target, name, receiver);
         },
-        set: function(target, name, value, receiver) {
+        set: function(target, name: string, value, receiver) {
             common(target)
             // TODO: record ALL candidate paths (maybe?)
-            var field = new Data.Field(state.getPath(target), name);
+            var field = new Data.Field(state.getPath(target), new Data.Const(name, null));
             var p = getAccessPath(state, value);
             var ass = new Data.Assign(field, p)
             state.record(ass)
@@ -132,7 +132,7 @@ function proxify(state: State, o: Object) {
             state.setPath(value, p)
             return Reflect.set(target, name, value, receiver);
         },
-        has: function(target, name) {
+        has: function(target, name: string) {
             common(target)
             ignorec(".. unhandled call to has")
             return Reflect.has(target, name);
@@ -147,12 +147,12 @@ function proxify(state: State, o: Object) {
             common(target)
             return Reflect.construct(target, args);
         },
-        getOwnPropertyDescriptor: function(target, name) {
+        getOwnPropertyDescriptor: function(target, name: string) {
             ignorec(".. unhandled call to getOwnPropertyDescriptor for " + name + " on " + Util.inspect(target))
             common(target)
             return Reflect.getOwnPropertyDescriptor(target, name);
         },
-        defineProperty: function(target, name, desc) {
+        defineProperty: function(target, name: string, desc) {
             common(target)
             if ("value" in desc) {
                 // TODO
@@ -178,7 +178,7 @@ function proxify(state: State, o: Object) {
             common(target)
             return Reflect.setPrototypeOf(target, newProto);
         },
-        deleteProperty: function(target, name) {
+        deleteProperty: function(target, name: string) {
             common(target)
             state.record(new Data.DeleteProp(getAccessPath(state, o), name))
             return Reflect.deleteProperty(target, name);
@@ -269,8 +269,11 @@ function generateCandidateExprs(state: State, expr: Data.Expr): Data.Expr[] {
         case Data.ExprType.Field:
             e = <Data.Field>expr
             var os = generateCandidateExprs(state, e.o)
+            var fs = generateCandidateExprs(state, e.f)
             os.forEach((o) => {
-                res.push(new Data.Field(o, e.f))
+                fs.forEach((f) => {
+                    res.push(new Data.Field(o, f))
+                })
             })
             break
         case Data.ExprType.Const:
