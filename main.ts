@@ -127,6 +127,7 @@ function infer(f, args) {
 function f(obj1, obj2, str, int) {
     obj1.a = obj2
     obj2[str] = obj2.g
+    obj2[str] = "b"
     obj1.f2 = obj2.f
     return 0
 }
