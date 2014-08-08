@@ -69,10 +69,10 @@ export class Field extends Expr {
         return this.o.toString() + "[" + this.f.toString() + "]"
     }
     eval(args: any[]): any {
-        return this.o.eval(args)[this.f]
+        return this.o.eval(args)[this.f.eval(args)]
     }
     update(args: any[], val: any): any {
-        this.o.eval(args)[this.f.toString()] = val
+        this.o.eval(args)[this.f.eval(args)] = val
     }
     equals(o) {
         return o instanceof Field && o.f.equals(this.f) && o.o.equals(this.o)

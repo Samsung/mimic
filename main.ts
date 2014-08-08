@@ -97,7 +97,7 @@ function infer(f, args) {
     var candidates = Recorder.generateCandidates(s);
     status("generated " + candidates.length + " candidate implementations based on this trace.")
 
-    var inputs = InputGenerator.generateInputs(s, args);
+    var inputs = InputGenerator.generateInputs(s, args)
     inputs.forEach((a) => {
         log(a, false)
     })

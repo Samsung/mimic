@@ -35,11 +35,12 @@ export function generateInputs(state: Recorder.State, args: any[]): any[][] {
         if (ps.length === 0) return [args]
         var res: any[][] = []
         var p = ps[0]
-        var init = p.eval(args)
-        var vals = generate(init, 3)
         var rest = helper(ps.slice(1))
         for (var j = 0; j < rest.length; j++) {
             var r = rest[j]
+            var init = p.eval(r)
+            var vals = generate(init, 3)
+            Util.assert(vals.length > 0)
             for (var i = 0; i < vals.length; i++) {
                 var nr = Util.clone(r)
                 p.update(nr, vals[i])
