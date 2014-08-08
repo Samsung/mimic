@@ -8,6 +8,7 @@ declare var Proxy: (target: any, handler: any) => any;
 import Util = require('./util/Util')
 import Data = require('./Data')
 import Recorder = require('./Recorder')
+import InputGenerator = require('./InputGenerator')
 import Verifier = require('./Verifier')
 import ansi = require('./util/Ansicolors')
 
@@ -26,7 +27,7 @@ function run(f, args) {
 
 
 // --------------------------
-
+/*
 function push(a, b) {
     return a.push(b);
 }
@@ -55,7 +56,7 @@ run(push, [["a"], "b"])
 run(defineProp, [{}, "field", 42])
 run(id, ["a", "a"])
 run(f2, [{g: {}}])
-
+*/
 
 /*
 function f(o, a, b) {
@@ -81,27 +82,54 @@ log(candidates.length)
 print(candidates.join("\n\n"))
 */
 
-function f(o, m, a) {
-    o.f = m
-    m[a] = a
-    o.f2 = m.f
-    return 1
-}
-var s = Recorder.record(f, [{}, {g: "a", f: {}}, "a"])
-print(s)
-var candidates = Recorder.generateCandidates(s);
-log(candidates.length)
-candidates = candidates.filter((c) => {
-    return Verifier.isModel(c, f, [{}, {g: "a", f: {}}, "a"])
-})
-log(candidates.length)
-candidates = candidates.filter((c) => {
-    return Verifier.isModel(c, f, [{}, {g: "a", f: {}}, "b"])
-})
-log(candidates.length)
-candidates = candidates.filter((c) => {
-    return Verifier.isModel(c, f, [{}, {g: "b", f: {}}, "a"])
-})
-log(candidates.length)
+function infer(f, args) {
+    var status = (s) => print(ansi.green(s))
 
-print(candidates.join("\n\n"))
+    status("the function to be processed is:")
+    print(f.toString())
+    status("initial set of arguments")
+    log(args, false)
+
+    status("recording an initial trace: ")
+    var s = Recorder.record(f, args)
+    print(s.trace)
+
+    var candidates = Recorder.generateCandidates(s);
+    status("generated " + candidates.length + " candidate implementations based on this trace.")
+
+    var inputs = InputGenerator.generateInputs(s, args);
+    inputs.forEach((a) => {
+        log(a, false)
+    })
+    status("generated " + inputs.length + " inputs based on this trace.")
+
+    status("running validation for candidates. remaining candidates:")
+    Util.printnln(candidates.length + " ")
+    for (var i = 0; i < inputs.length; i++) {
+        candidates = candidates.filter((c) => {
+            return Verifier.isModel(c, f, inputs[i])
+        })
+        Util.printnln(candidates.length + " ")
+    }
+    print("")
+
+    if (candidates.length === 0) {
+        status("no candidate left :(")
+    } else if (candidates.length === 1) {
+        status("one candidate program left:")
+        print(candidates[0])
+    } else {
+        status(candidates.length + " many candidates left:")
+        print(candidates.join("\n\n"))
+    }
+}
+
+function f(o, m, s, i) {
+    o.a = m
+    m[s] = m.g
+    o.f2 = m.f
+    return 0
+}
+var args = [{}, {g: "a", f: {}}, "a", 0]
+
+infer(f, args)

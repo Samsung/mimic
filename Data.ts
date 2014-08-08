@@ -26,7 +26,7 @@ export class Expr extends Node {
     constructor(public type: ExprType) {
         super()
     }
-    eval(args: any[], oldArgs: any[]): any {
+    eval(args: any[]): any {
         Util.assert(false)
     }
     update(args: any[], val: any): any {
@@ -68,11 +68,11 @@ export class Field extends Expr {
     toString() {
         return this.o.toString() + "[" + this.f.toString() + "]"
     }
-    eval(args: any[], oldArgs: any[]): any {
-        return this.o.eval(args, oldArgs)[this.f]
+    eval(args: any[]): any {
+        return this.o.eval(args)[this.f]
     }
     update(args: any[], val: any): any {
-        this.o.eval(args, args)[this.f.toString()] = val
+        this.o.eval(args)[this.f.toString()] = val
     }
     equals(o) {
         return o instanceof Field && o.f.equals(this.f) && o.o.equals(this.o)
@@ -94,7 +94,7 @@ export class Argument extends Expr {
     toString() {
         return "arguments[" + this.i + "]"
     }
-    eval(args: any[], oldArgs: any[]): any {
+    eval(args: any[]): any {
         return args[this.i]
     }
     update(args: any[], val: any): any {
@@ -148,6 +148,12 @@ export class Const extends Expr {
             return "\"" + this.val + "\""
         }
         return this.val
+    }
+    eval(args: any[]): any {
+        return this.val
+    }
+    update(args: any[], val: any): any {
+        Util.assert(false, "cannot update constant")
     }
     equals(o): boolean {
         return o instanceof Const && o.val === this.val

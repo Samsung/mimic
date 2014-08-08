@@ -27,6 +27,7 @@ export function record(f: (..._: any[]) => any, args: any[]) {
         }
         var ai = new Data.Argument(i)
         state.setPath(iargs[i], ai)
+        state.addPrestate(iargs[i], ai)
         state.addCandidate(iargs[i], ai)
     }
     var res = f.apply(null, iargs);
@@ -47,6 +48,28 @@ export class State {
     // map objects to their proxified object
     private mapping: Map<Object, Object> = new Map<Object, Object>()
     public trace: Data.Trace = new Data.Trace([])
+    // all prestate expressions that are read
+    private readPrestateObj: Map<any, Data.Expr> = new Map<any, Data.Expr>()
+    private readPrestate: Data.Expr[] = []
+    addPrestate(a: any, e: Data.Expr) {
+        if (Util.isPrimitive(a)) {
+            this.readPrestate.push(e)
+        } else {
+            this.readPrestate.push(e)
+            this.readPrestateObj.set(a, e)
+        }
+    }
+    hasPrestate(a: any) {
+        return this.readPrestateObj.has(this.mapping.get(a))
+    }
+    getPrestate(a: any) {
+        return this.readPrestateObj.get(this.mapping.get(a))
+    }
+    getPrestates() {
+        var res = this.readPrestate.slice(0)
+        //this.readPrestateObj.forEach((v, k) => res.push(v))
+        return Util.dedup2(res)
+    }
     getPath(a: any): Data.Expr {
         Util.assert(!Util.isPrimitive(a))
         var p = this.exprs.get(a)
@@ -105,6 +128,12 @@ function proxify(state: State, o: Object) {
                 var val = target[name];
                 var field = new Data.Field(state.getPath(target), new Data.Const(name, null))
                 state.addCandidate(val, field)
+                //log("reading " + name + " and got " + val)
+                if (state.hasPrestate(target)) {
+                    // we cannot use "field" directly, because that is only valid in the current state
+                    // however, here we need an expression that is valid in the prestate
+                    state.addPrestate(val, new Data.Field(state.getPrestate(target), new Data.Const(name, null)))
+                }
                 if (Util.isPrimitive(val)) {
                     return val;
                 } else {
