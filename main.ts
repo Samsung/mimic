@@ -98,10 +98,10 @@ function infer(f, args) {
     status("generated " + candidates.length + " candidate implementations based on this trace.")
 
     var inputs = InputGenerator.generateInputs(s, args)
+    status("generated " + inputs.length + " inputs based on this trace.")
     inputs.forEach((a) => {
         log(a, false)
     })
-    status("generated " + inputs.length + " inputs based on this trace.")
 
     status("running validation for candidates. remaining candidates:")
     Util.printnln(candidates.length + " ")
@@ -124,10 +124,10 @@ function infer(f, args) {
     }
 }
 
-function f(o, m, s, i) {
-    o.a = m
-    m[s] = m.g
-    o.f2 = m.f
+function f(obj1, obj2, str, int) {
+    obj1.a = obj2
+    obj2[str] = obj2.g
+    obj1.f2 = obj2.f
     return 0
 }
 var args = [{}, {g: "a", f: {}}, "a", 0]
