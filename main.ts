@@ -133,4 +133,44 @@ function f(obj1, obj2, str, int) {
 }
 var args = [{}, {g: "a", f: {}}, "a", 0]
 
-infer(f, args)
+//infer(f, args)
+
+
+
+
+var p = Recorder.proxifyWithLogger([])
+
+p.pop()
+print(Recorder.record((a) => a.pop(), [[]]).trace)
+Util.line()
+p.push("a")
+print(Recorder.record((a) => a.push("a"), [[]]).trace)
+Util.line()
+p.pop()
+print(Recorder.record((a) => a.pop(), [["a"]]).trace)
+Util.line()
+print(Recorder.record((a) => a.pop(), [["b", "c"]]).trace)
+Util.line()
+
+p = Recorder.proxifyWithLogger(["a"])
+function pop(a) {
+    var l = a.length
+    if (l == 0) return undefined
+    var r = a[l-1]
+    delete a[l-1]
+    return r
+}
+pop(p)
+
+
+
+
+
+
+
+
+
+
+
+
+

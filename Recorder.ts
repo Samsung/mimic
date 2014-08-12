@@ -238,6 +238,100 @@ function proxify(state: State, o: Object) {
     return p
 }
 
+export function proxifyWithLogger<T>(o: T): T {
+    var common = function (target) {
+    }
+    var logaccess = (a: any) => print(ansi.lightgrey(a))
+    var Handler = {
+        get: function(target, name: string, receiver) {
+            common(target)
+            var value = Reflect.get(target, name, receiver);
+            var s = "get of " + name;
+            if (Util.isPrimitive(value)) {
+                s += " (yields " + value + ")"
+            }
+            logaccess(s)
+            return value;
+        },
+        set: function(target, name: string, value, receiver) {
+            common(target)
+            var s = "set of " + name;
+            if (Util.isPrimitive(value)) {
+                s += " (with value " + value + ")"
+            }
+            logaccess(s)
+            return Reflect.set(target, name, value, receiver);
+        },
+        has: function(target, name: string) {
+            common(target)
+            logaccess("has of " + name)
+            return Reflect.has(target, name);
+        },
+        apply: function(target, receiver, args) {
+            logaccess("apply")
+            common(target)
+            return Reflect.apply(target, receiver, args);
+        },
+        construct: function(target, args) {
+            logaccess("construct")
+            common(target)
+            return Reflect.construct(target, args);
+        },
+        getOwnPropertyDescriptor: function(target, name: string) {
+            logaccess("getOwnPropertyDescriptor for " + name)
+            common(target)
+            return Reflect.getOwnPropertyDescriptor(target, name);
+        },
+        defineProperty: function(target, name: string, desc) {
+            common(target)
+            logaccess("defineProperty for " + name)
+            return Reflect.defineProperty(target, name, desc);
+        },
+        getOwnPropertyNames: function(target) {
+            logaccess("getOwnPropertyNames")
+            common(target)
+            return Reflect.getOwnPropertyNames(target);
+        },
+        getPrototypeOf: function(target) {
+            logaccess("getPrototypeOf")
+            common(target)
+            return Reflect.getPrototypeOf(target);
+        },
+        setPrototypeOf: function(target, newProto) {
+            logaccess("setPrototypeOf")
+            common(target)
+            return Reflect.setPrototypeOf(target, newProto);
+        },
+        deleteProperty: function(target, name: string) {
+            common(target)
+            logaccess("deleteProperty for " + name)
+            return Reflect.deleteProperty(target, name);
+        },
+        enumerate: function(target) {
+            logaccess("enumerate")
+            common(target)
+            return Reflect.enumerate(target);
+        },
+        preventExtensions: function(target) {
+            logaccess("preventExtensions")
+            common(target)
+            return Reflect.preventExtensions(target);
+        },
+        isExtensible: function(target) {
+            logaccess("isExtensible")
+            common(target)
+            return Reflect.isExtensible(target);
+        },
+        ownKeys: function(target) {
+            logaccess("ownKeys")
+            common(target)
+            return Reflect.ownKeys(target);
+        }
+    }
+    var p = Proxy(o, Handler)
+    return <T>p
+}
+
 // given a trace, generate all possible candidate implementations
 // for the primitive values that occur
 export function generateCandidates(state: State): Data.Program[] {
