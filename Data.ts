@@ -187,6 +187,7 @@ export class Const extends Expr {
 export enum StmtType {
     Assign = 2000,
     Return,
+    Throw,
     DeleteProp,
     DefineProp,
     VarDecl,
@@ -279,6 +280,27 @@ export class Return extends Stmt {
     }
     toSkeleton(): string {
         return "ret " + this.rhs.toSkeleton()
+    }
+}
+export class Throw extends Stmt {
+    constructor(public rhs: Expr) {
+        super(StmtType.Throw)
+    }
+    toString() {
+        return "throw " + this.rhs.toString()
+    }
+    equals(o) {
+        return o instanceof Throw && o.rhs.equals(this.rhs)
+    }
+    children(): Node[] {
+        return [this.rhs]
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
+    }
+    toSkeleton(): string {
+        return "throw " + this.rhs.toSkeleton()
     }
 }
 export class DeleteProp extends Stmt {

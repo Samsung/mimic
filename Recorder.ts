@@ -12,7 +12,7 @@ var print = Util.print
 
 import ansi = require('./util/Ansicolors')
 
-export function record(f: (..._: any[]) => any, args: any[]) {
+export function record(f: (..._: any[]) => any, args: any[]): State {
     var state = new State()
 
     args = Util.clone(args)
@@ -30,9 +30,12 @@ export function record(f: (..._: any[]) => any, args: any[]) {
         state.addPrestate(iargs[i], ai)
         state.addCandidate(iargs[i], ai)
     }
-    var res = f.apply(null, iargs);
-
-    state.record(new Data.Return(getAccessPath(state, res)))
+    try {
+        var res = f.apply(null, iargs);
+        state.record(new Data.Return(getAccessPath(state, res)))
+    } catch (e) {
+        state.record(new Data.Throw(getAccessPath(state, e)))
+    }
 
     return state
 }

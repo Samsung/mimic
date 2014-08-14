@@ -258,6 +258,18 @@ function traceDistance(real: Data.Trace, candidate: Data.Trace): number[] {
 }
 
 
+function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
+    return null
+}
+
+
+
+var s = Recorder.record((() => {
+    throw "noop"
+}), [])
+
+print(s)
+
 
 print(p1.toSkeleton().join("\n"))
 print(p2.toSkeleton().join("\n"))
