@@ -246,19 +246,24 @@ function traceDistance(real: Data.Trace, candidate: Data.Trace): number[] {
 }
 
 /* Returns a random number in [min,max), or [0,min) if max is not specified. */
-function rand(min: number, max?: number): number {
+function randInt(min: number, max?: number): number {
     if (max == null) {
         max = min;
         min = 0;
     }
     return min + Math.floor(Math.random() * (max - min));
 }
+/* Returns a random element from an array. */
+function randArr<T>(arr: T[]): T {
+    if (arr.length === 0) throw new TypeError
+    return arr[randInt(arr.length)]
+}
 
 function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
     var stmts = p.stmts.slice(0)
 
     // randomly choose a statement
-    var si = rand(stmts.length)
+    var si = randInt(stmts.length)
     // all possible transformations (they return false if they cannot be applied)
     var options = [
         () => { // remove this statement
@@ -273,7 +278,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
         () => { // swap with another statement
             if (stmts.length < 2) return false
             var si2
-            while ((si2 = rand(stmts.length)) === si) {}
+            while ((si2 = randInt(stmts.length)) === si) {}
             var t = stmts[si]
             stmts[si] = stmts[si2]
             stmts[si2] = t
@@ -285,7 +290,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
         },
     ]
     // randomly choose an action (and execute it)
-    while (!options[rand(options.length)]()) {}
+    while (!randArr(options)()) {}
 
     return new Data.Program(stmts)
 }
@@ -294,38 +299,43 @@ function randomStmt(state: Recorder.State): Data.Stmt {
         () => {
             return new Data.Return(randomExpr(state))
         },
+        () => {
+            return new Data.Assign(randomExpr(state, {lhs: true}), randomExpr(state))
+        },
     ]
-    return options[rand(options.length)]()
+    return randArr(options)()
 }
-function randomExpr(state: Recorder.State): Data.Expr {
+function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
     var options = [
         () => {
             // random new constant
-            return new Data.Const(rand(20)-10)
+            return new Data.Const(randInt(20)-10)
         },
         () => {
             // random candidate expression
             var ps = state.getPrestates();
             if (ps.length === 0) return undefined
-            return  ps[rand(ps.length)]
+            return ps[randInt(ps.length)]
         }
     ]
+    // filter out bad expressions
+    var filter = (e: Data.Expr) => {
+        if ("lhs" in args && args.lhs === true) {
+            if ([Data.ExprType.Field, Data.ExprType.Var].indexOf(e.type) === -1) {
+                return undefined
+            }
+        }
+        return e
+    }
     var res
-    while ((res = options[rand(options.length)]()) === undefined) {}
+    while ((res = filter(randArr(options)())) === undefined) {}
     return res
 }
 
 
-var stmts = [
-    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("g")), new Data.Const(1)),
-    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("f")), new Data.Const(1)),
-    <Data.Stmt>new Data.Return(new Data.Const(200)),
-]
 var state = Recorder.record(f, args)
-var p = new Data.Program(stmts)
-
-var state = null
-for (var i = 0; i < 3; i++) {
+var p = new Data.Program(state.trace.stmts)
+for (var i = 0; i < 20; i++) {
     print(randomChange(state, p))
     Util.line()
 }
