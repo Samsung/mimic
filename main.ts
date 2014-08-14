@@ -171,18 +171,6 @@ function get_diff(a, b) {
     return new difflib.SequenceMatcher(a, b).get_opcodes()
 }
 
-
-var p1 = new Data.Trace([
-    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("g")), new Data.Const(1)),
-    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("f")), new Data.Const(1)),
-    <Data.Stmt>new Data.Return(new Data.Const(200)),
-])
-var p2 = new Data.Trace([
-    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("f")), new Data.Const(2)),
-    <Data.Stmt>new Data.Return(new Data.Const(200)),
-])
-
-
 var DISTANCE_NORM = 100000
 function stmtDistance(real: Data.Stmt, candidate: Data.Stmt) {
     Util.assert(real.type === candidate.type)
@@ -257,18 +245,102 @@ function traceDistance(real: Data.Trace, candidate: Data.Trace): number[] {
     return [skeletonDiff, nonSkeletonDiff]
 }
 
+/* Returns a random number in [min,max), or [0,min) if max is not specified. */
+function rand(min: number, max?: number): number {
+    if (max == null) {
+        max = min;
+        min = 0;
+    }
+    return min + Math.floor(Math.random() * (max - min));
+}
 
 function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
-    return null
+    var stmts = p.stmts.slice(0)
+
+    // randomly choose a statement
+    var si = rand(stmts.length)
+    // all possible transformations (they return false if they cannot be applied)
+    var options = [
+        () => { // remove this statement
+            if (stmts.length < 1) return false
+            stmts.splice(si, 1)
+            return true
+        },
+        () => { // insert a new statement
+            stmts.splice(si, 0, randomStmt(state))
+            return true
+        },
+        () => { // swap with another statement
+            if (stmts.length < 2) return false
+            var si2
+            while ((si2 = rand(stmts.length)) === si) {}
+            var t = stmts[si]
+            stmts[si] = stmts[si2]
+            stmts[si2] = t
+            return true
+        },
+        () => { // modify an existing statement
+            if (stmts.length < 1) return false
+            return false
+        },
+    ]
+    // randomly choose an action (and execute it)
+    while (!options[rand(options.length)]()) {}
+
+    return new Data.Program(stmts)
+}
+function randomStmt(state: Recorder.State): Data.Stmt {
+    var options = [
+        () => {
+            return new Data.Return(randomExpr(state))
+        },
+    ]
+    return options[rand(options.length)]()
+}
+function randomExpr(state: Recorder.State): Data.Expr {
+    var options = [
+        () => {
+            // random new constant
+            return new Data.Const(rand(20)-10)
+        },
+        () => {
+            // random candidate expression
+            var ps = state.getPrestates();
+            if (ps.length === 0) return undefined
+            return  ps[rand(ps.length)]
+        }
+    ]
+    var res
+    while ((res = options[rand(options.length)]()) === undefined) {}
+    return res
 }
 
 
+var stmts = [
+    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("g")), new Data.Const(1)),
+    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("f")), new Data.Const(1)),
+    <Data.Stmt>new Data.Return(new Data.Const(200)),
+]
+var state = Recorder.record(f, args)
+var p = new Data.Program(stmts)
 
-var s = Recorder.record((() => {
-    throw "noop"
-}), [])
+var state = null
+for (var i = 0; i < 3; i++) {
+    print(randomChange(state, p))
+    Util.line()
+}
 
-print(s)
+
+/*
+var p1 = new Data.Trace([
+    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("g")), new Data.Const(1)),
+    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("f")), new Data.Const(1)),
+    <Data.Stmt>new Data.Return(new Data.Const(200)),
+])
+var p2 = new Data.Trace([
+    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("f")), new Data.Const(2)),
+    <Data.Stmt>new Data.Return(new Data.Const(200)),
+])
 
 
 print(p1.toSkeleton().join("\n"))
@@ -277,3 +349,4 @@ print(p2.toSkeleton().join("\n"))
 //print(get_diff(p1.toSkeleton(), p2.toSkeleton()).join("\n"))
 
 print(traceDistance(p1, p2))
+*/
