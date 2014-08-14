@@ -164,33 +164,104 @@ function pop(a) {
 }
 pop(p)
 
-
-
-var base = difflib.stringAsLines("ab\ncd\ndef\neq");
-var newtxt = difflib.stringAsLines("a\ncd\ndefg\neq\nadd");
-
-// create a SequenceMatcher instance that diffs the two sets of lines
-var sm = new difflib.SequenceMatcher(base, newtxt);
-
-// get the opcodes from the SequenceMatcher instance
-// opcodes is a list of 3-tuples describing what changes should be made to the base text
-// in order to yield the new text
-var opcodes = sm.get_opcodes();
-
-log(opcodes)
 */
 
-var n = "arguments[0]['a'] = 0; return 2;"
-for (var i = 0; i < 100000; i++) {
-    n = "arguments[0]['a'] = 0;" + n;
-    if (i % 100 == 0) {
-        n = "arguments[0]['a'] = 0; return 2;"
-    }
-    var ff = function (...a: any[]): any {
-        return Function(n).apply(null, a)
-    }
-    var o = {a:2}
-    ff(o)
+
+function get_diff(a, b) {
+    return new difflib.SequenceMatcher(a, b).get_opcodes()
 }
 
 
+var p1 = new Data.Trace([
+    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("g")), new Data.Const(1)),
+    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("f")), new Data.Const(1)),
+    <Data.Stmt>new Data.Return(new Data.Const(200)),
+])
+var p2 = new Data.Trace([
+    <Data.Stmt>new Data.Assign(new Data.Field(new Data.Argument(0), new Data.Const("f")), new Data.Const(2)),
+    <Data.Stmt>new Data.Return(new Data.Const(200)),
+])
+
+
+var DISTANCE_NORM = 100000
+function stmtDistance(real: Data.Stmt, candidate: Data.Stmt) {
+    Util.assert(real.type === candidate.type)
+    var l, r
+    switch (real.type) {
+        case Data.StmtType.Assign:
+            l = <Data.Assign>real
+            r = <Data.Assign>candidate
+            return exprDistance(l.lhs, r.lhs)/2 + exprDistance(l.rhs, r.rhs)/2
+        case Data.StmtType.Return:
+            l = <Data.Return>real
+            r = <Data.Return>candidate
+            return exprDistance(l.rhs, r.rhs)
+        default:
+            Util.assert(false, "unhandeled stmt distance: " + real)
+    }
+}
+
+function exprDistance(real: Data.Expr, candidate: Data.Expr) {
+    Util.assert(real.type === candidate.type)
+    var l, r
+    switch (real.type) {
+        case Data.ExprType.Arg:
+            if ((<Data.Argument>real).i === (<Data.Argument>candidate).i) {
+                return 0
+            }
+            return DISTANCE_NORM
+        case Data.ExprType.Field:
+            l = <Data.Field>real
+            r = <Data.Field>candidate
+            return exprDistance(l.o, r.o)/2 + exprDistance(l.f, r.f)/2
+        case Data.ExprType.Const:
+            l = (<Data.Const>real).val
+            r = (<Data.Const>candidate).val
+            if (l === r) {
+                return 0
+            }
+            if (typeof l !== typeof r) {
+                return DISTANCE_NORM
+            }
+            if (typeof l === 'number') {
+                return Math.min(Math.abs(l-r), DISTANCE_NORM)
+            }
+            Util.assert(false, "unhandled const distance: " + real + " - " + candidate)
+            return 0
+        default:
+            Util.assert(false, "unhandled expr distance: " + real)
+    }
+}
+
+function traceDistance(real: Data.Trace, candidate: Data.Trace): number[] {
+    var diff = get_diff(real.toSkeleton(), candidate.toSkeleton())
+    var diffLength = diff.length
+    var nonSkeletonDiff = 0
+    var skeletonDiff = 0
+    for (var i = 0; i < diffLength; i++) {
+        var d = diff[i]
+        if (d[0] === 'delete') {
+            skeletonDiff++
+            continue
+        }
+        if (d[0] === 'equal') {
+            for (var i = 0; i < d[2]-d[1]; i++) {
+                var left = real.getSkeletonIdx(d[1]+i)
+                var right = candidate.getSkeletonIdx(d[3]+i)
+                nonSkeletonDiff += stmtDistance(left, right)
+            }
+        } else {
+            Util.assert(false, "unknown tag: " + d[0])
+        }
+    }
+    return [skeletonDiff, nonSkeletonDiff]
+}
+
+
+
+print(p1.toSkeleton().join("\n"))
+print(p2.toSkeleton().join("\n"))
+
+//print(get_diff(p1.toSkeleton(), p2.toSkeleton()).join("\n"))
+
+print(traceDistance(p1, p2))

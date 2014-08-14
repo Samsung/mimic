@@ -83,7 +83,7 @@ export class State {
         var c = this.candidates.get(a) || []
         c = c.slice(0)
         if (Util.isPrimitive(a)) {
-            c.push(new Data.Const(a, null))
+            c.push(new Data.Const(a))
         }
         return Util.dedup2(c)
     }
@@ -108,7 +108,7 @@ export class State {
 
 function getAccessPath(state: State, v: any): Data.Expr {
     if (Util.isPrimitive(v)) {
-        return new Data.Const(v, state.getCandidates(v))
+        return new Data.Const(v)
     }
     Util.assert(state.getPath(v) !== undefined)
     return state.getPath(v)
@@ -126,13 +126,13 @@ function proxify(state: State, o: Object) {
             common(target)
             if (!(name in target) || target.hasOwnProperty(name)) {
                 var val = target[name];
-                var field = new Data.Field(state.getPath(target), new Data.Const(name, null))
+                var field = new Data.Field(state.getPath(target), new Data.Const(name))
                 state.addCandidate(val, field)
                 //log("reading " + name + " and got " + val)
                 if (state.hasPrestate(target)) {
                     // we cannot use "field" directly, because that is only valid in the current state
                     // however, here we need an expression that is valid in the prestate
-                    state.addPrestate(val, new Data.Field(state.getPrestate(target), new Data.Const(name, null)))
+                    state.addPrestate(val, new Data.Field(state.getPrestate(target), new Data.Const(name)))
                 }
                 if (Util.isPrimitive(val)) {
                     return val;
@@ -153,7 +153,7 @@ function proxify(state: State, o: Object) {
         set: function(target, name: string, value, receiver) {
             common(target)
             // TODO: record ALL candidate paths (maybe?)
-            var field = new Data.Field(state.getPath(target), new Data.Const(name, null));
+            var field = new Data.Field(state.getPath(target), new Data.Const(name));
             var p = getAccessPath(state, value);
             var ass = new Data.Assign(field, p)
             state.record(ass)

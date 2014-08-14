@@ -20,6 +20,10 @@ export class Node {
         Util.assert(false)
         return []
     }
+    toSkeleton(): string {
+        Util.assert(false, "toSkeleton not implemented for " + this)
+        return null
+    }
 }
 
 export class Expr extends Node {
@@ -84,6 +88,9 @@ export class Field extends Expr {
         var res: any[] = this.children()
         return res
     }
+    toSkeleton(): string {
+        return this.o.toSkeleton() + "[" + this.f.toSkeleton() + "]"
+    }
 }
 
 // access path by looking at the ith argument
@@ -111,6 +118,9 @@ export class Argument extends Expr {
         res = res.concat([this.i])
         return res
     }
+    toSkeleton(): string {
+        return "arg(" + this.i + ")"
+    }
 }
 
 export class Var extends Expr {
@@ -135,11 +145,14 @@ export class Var extends Expr {
         res = res.concat([this.name])
         return res
     }
+    toSkeleton(): string {
+        return "var"
+    }
 }
 
 // a primitive value
 export class Const extends Expr {
-    constructor(public val: any, public candidates: Expr[]) {
+    constructor(public val: any) {
         super(ExprType.Const)
         Util.assert(Util.isPrimitive(this.val))
     }
@@ -165,6 +178,9 @@ export class Const extends Expr {
         var res: any[] = this.children()
         res = res.concat([this.val])
         return res
+    }
+    toSkeleton(): string {
+        return "const"
     }
 }
 
@@ -240,6 +256,9 @@ export class Assign extends Stmt {
         var res: any[] = this.children()
         return res
     }
+    toSkeleton(): string {
+        return this.lhs.toSkeleton() + "=" + this.rhs.toSkeleton()
+    }
 }
 export class Return extends Stmt {
     constructor(public rhs: Expr) {
@@ -257,6 +276,9 @@ export class Return extends Stmt {
     anychildren(): any[] {
         var res: any[] = this.children()
         return res
+    }
+    toSkeleton(): string {
+        return "ret " + this.rhs.toSkeleton()
     }
 }
 export class DeleteProp extends Stmt {
@@ -277,6 +299,9 @@ export class DeleteProp extends Stmt {
         res = res.concat([this.f])
         return res
     }
+    toSkeleton(): string {
+        return "del " + this.f + " of " + this.o.toSkeleton()
+    }
 }
 export class DefineProp extends Stmt {
     constructor(public o: Expr, public f: string, public v: any) {
@@ -296,6 +321,9 @@ export class DefineProp extends Stmt {
         var res: any[] = this.children()
         res = res.concat([this.f, this.v])
         return res
+    }
+    toSkeleton(): string {
+        return "def " + this.f + " of " + this.o.toSkeleton() + " as " + this.v.toString()
     }
 }
 export class VarDecl extends Stmt {
@@ -350,5 +378,11 @@ export class Trace {
                 return false
         }
         return true
+    }
+    toSkeleton(): string[] {
+        return this.stmts.map((s) => s.toSkeleton())
+    }
+    getSkeletonIdx(i: number): Stmt {
+        return this.stmts[i]
     }
 }
