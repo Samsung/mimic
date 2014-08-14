@@ -10,7 +10,7 @@ export function print(s: any) {
         console.log(s)
     }
 }
-export function printnln(s: nay) {
+export function printnln(s: any) {
     process.stdout.write(s)
 }
 export function line(str?: any) {

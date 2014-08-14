@@ -11,6 +11,8 @@ import Recorder = require('./Recorder')
 import InputGenerator = require('./InputGenerator')
 import Verifier = require('./Verifier')
 import ansi = require('./util/Ansicolors')
+import _difflib = require('./util/difflib')
+var difflib = _difflib.difflib
 
 var print = Util.print
 var log = Util.log
@@ -138,8 +140,8 @@ var args = [{}, {g: "a", f: {}}, "a", 0]
 
 
 
+/*
 var p = Recorder.proxifyWithLogger([])
-
 p.pop()
 print(Recorder.record((a) => a.pop(), [[]]).trace)
 Util.line()
@@ -164,13 +166,31 @@ pop(p)
 
 
 
+var base = difflib.stringAsLines("ab\ncd\ndef\neq");
+var newtxt = difflib.stringAsLines("a\ncd\ndefg\neq\nadd");
 
+// create a SequenceMatcher instance that diffs the two sets of lines
+var sm = new difflib.SequenceMatcher(base, newtxt);
 
+// get the opcodes from the SequenceMatcher instance
+// opcodes is a list of 3-tuples describing what changes should be made to the base text
+// in order to yield the new text
+var opcodes = sm.get_opcodes();
 
+log(opcodes)
+*/
 
-
-
-
-
+var n = "arguments[0]['a'] = 0; return 2;"
+for (var i = 0; i < 100000; i++) {
+    n = "arguments[0]['a'] = 0;" + n;
+    if (i % 100 == 0) {
+        n = "arguments[0]['a'] = 0; return 2;"
+    }
+    var ff = function (...a: any[]): any {
+        return Function(n).apply(null, a)
+    }
+    var o = {a:2}
+    ff(o)
+}
 
 
