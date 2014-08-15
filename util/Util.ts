@@ -2,6 +2,7 @@
 // some utility functions
 
 import util = require('util');
+import random = require('random-js')
 
 export function print(s: any) {
     if (typeof s === "object" && "toString" in s) {
@@ -25,6 +26,18 @@ export function log(o: any, colors?: boolean) {
 export function inspect(o: any): string {
     return util.inspect(o)
 }
+
+var rrr = new random(random.engines.mt19937().seed(process.argv[2]));
+
+/* Returns a random number in [min,max), or [0,min) if max is not specified. */
+export function randInt(min: number, max?: number): number {
+    if (max == null) {
+        max = min;
+        min = 0;
+    }
+    return rrr.integer(min, max-1);
+}
+
 export function isPrimitive(arg: any) {
     var type = typeof arg;
     return arg == null || (type != "object" && type != "function");
@@ -84,3 +97,4 @@ export function clone<T>(obj: T): T {
 
     throw new Error("Unable to copy obj! Its type isn't supported.");
 }
+

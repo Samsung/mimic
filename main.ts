@@ -300,14 +300,9 @@ function traceDistance(real: Data.Trace, candidate: Data.Trace): number {
     return skeletonDist + valueDist
 }
 
-/* Returns a random number in [min,max), or [0,min) if max is not specified. */
-function randInt(min: number, max?: number): number {
-    if (max == null) {
-        max = min;
-        min = 0;
-    }
-    return min + Math.floor(Math.random() * (max - min));
-}
+var randInt = Util.randInt
+
+
 /* Returns a random element from an array. */
 function randArr<T>(arr: T[]): T {
     if (arr.length === 0) throw new TypeError
@@ -439,7 +434,7 @@ function search(f, args) {
 //        print(newbadness)
 //        line()
         if (newbadness < badness) {
-            print("yes[" + i + "]: " + badness + " -> " + newbadness)
+            print("yes[" + i + "]: " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
             p = newp
             badness = newbadness
         } else {
