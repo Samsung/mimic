@@ -375,7 +375,7 @@ export class Program {
         this.stmts = stmts.slice(0)
     }
     toString() {
-        return this.stmts.join("\n")
+        return "  " + this.stmts.join("\n  ")
     }
 }
 

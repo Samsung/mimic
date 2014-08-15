@@ -34,7 +34,15 @@ export function record(f: (..._: any[]) => any, args: any[]): State {
         var res = f.apply(null, iargs);
         state.record(new Data.Return(getAccessPath(state, res)))
     } catch (e) {
-        state.record(new Data.Throw(getAccessPath(state, e)))
+        if (e instanceof ReferenceError) {
+            var ee = <ReferenceError>e
+            state.record(new Data.Throw(getAccessPath(state, ee.message.toString())))
+        } else if (e instanceof RangeError) {
+            var ee = <RangeError>e
+            state.record(new Data.Throw(getAccessPath(state, ee.message.toString())))
+        } else {
+            state.record(new Data.Throw(getAccessPath(state, e)))
+        }
     }
 
     return state
@@ -113,7 +121,7 @@ function getAccessPath(state: State, v: any): Data.Expr {
     if (Util.isPrimitive(v)) {
         return new Data.Const(v)
     }
-    Util.assert(state.getPath(v) !== undefined)
+    Util.assert(state.getPath(v) !== undefined, "getAccessPath(" + state + "," + v + ")")
     return state.getPath(v)
 }
 

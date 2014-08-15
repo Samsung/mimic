@@ -16,6 +16,7 @@ var difflib = _difflib.difflib
 
 var print = Util.print
 var log = Util.log
+var line = Util.line
 
 
 function run(f, args) {
@@ -172,24 +173,30 @@ function get_diff(a, b) {
 }
 
 var DISTANCE_NORM = 10000
-function stmtDistance(real: Data.Stmt, candidate: Data.Stmt) {
+function stmtDistance(real: Data.Stmt, candidate: Data.Stmt, ds: Map<Data.Var, Data.Var>) {
     Util.assert(real.type === candidate.type)
     var l, r
     switch (real.type) {
         case Data.StmtType.Assign:
             l = <Data.Assign>real
             r = <Data.Assign>candidate
-            return exprDistance(l.lhs, r.lhs)/2 + exprDistance(l.rhs, r.rhs)/2
+            if (l.lhs.type === Data.ExprType.Var && l.lhs.type === r.lhs.type) {
+                if (Verifier.nodeEquiv(l.rhs, r.rhs, ds)) {
+                    // record variable equalities
+                    ds.set(<Data.Var>l.lhs, <Data.Var>r.lhs)
+                }
+            }
+            return exprDistance(l.lhs, r.lhs, ds)/2 + exprDistance(l.rhs, r.rhs, ds)/2
         case Data.StmtType.Return:
             l = <Data.Return>real
             r = <Data.Return>candidate
-            return exprDistance(l.rhs, r.rhs)
+            return exprDistance(l.rhs, r.rhs, ds)
         default:
             Util.assert(false, "unhandeled stmt distance: " + real)
     }
 }
 
-function exprDistance(real: Data.Expr, candidate: Data.Expr) {
+function exprDistance(real: Data.Expr, candidate: Data.Expr, ds: Map<Data.Var, Data.Var>) {
     Util.assert(real.type === candidate.type)
     var l, r
     switch (real.type) {
@@ -201,7 +208,7 @@ function exprDistance(real: Data.Expr, candidate: Data.Expr) {
         case Data.ExprType.Field:
             l = <Data.Field>real
             r = <Data.Field>candidate
-            return exprDistance(l.o, r.o)/2 + exprDistance(l.f, r.f)/2
+            return exprDistance(l.o, r.o, ds)/2 + exprDistance(l.f, r.f, ds)/2
         case Data.ExprType.Const:
             l = (<Data.Const>real).val
             r = (<Data.Const>candidate).val
@@ -219,6 +226,14 @@ function exprDistance(real: Data.Expr, candidate: Data.Expr) {
             }
             Util.assert(false, "unhandled const distance: " + real + " - " + candidate)
             return 0
+        case Data.ExprType.Var:
+            l = <Data.Var>real
+            r = <Data.Var>candidate
+            var l2 = ds.get(l)
+            if (l2 === undefined || l2.name != r.name) {
+                return DISTANCE_NORM
+            }
+            return 0
         default:
             Util.assert(false, "unhandled expr distance: " + real)
     }
@@ -231,30 +246,50 @@ function traceDistance(real: Data.Trace, candidate: Data.Trace): number {
     var nonSkeletonDiff = 0
     var nnonSkeletonDiff = 0
     var skeletonDiff = 0
+    var distanceState: Map<Data.Var, Data.Var> = new Map<Data.Var, Data.Var>()
     for (var i = 0; i < diffLength; i++) {
         var d = diff[i]
         if (d[0] === 'delete') {
-            skeletonDiff++
+            skeletonDiff += d[2] - d[1]
+            skeletonDiff += d[4] - d[3]
             continue
         }
         if (d[0] === 'insert') {
-            skeletonDiff++
+            skeletonDiff += d[2] - d[1]
+            skeletonDiff += d[4] - d[3]
+            continue
+        }
+        if (d[0] === 'replace') {
+            skeletonDiff += d[2] - d[1]
+            skeletonDiff += d[4] - d[3]
             continue
         }
         if (d[0] === 'equal') {
-            for (var i = 0; i < d[2]-d[1]; i++) {
-                var left = real.getSkeletonIdx(d[1]+i)
-                var right = candidate.getSkeletonIdx(d[3]+i)
-                nonSkeletonDiff += stmtDistance(left, right) / DISTANCE_NORM
+            for (var j = 0; j < d[2]-d[1]; j++) {
+                var left = real.getSkeletonIdx(d[1]+j)
+                var right = candidate.getSkeletonIdx(d[3]+j)
+                var sd = stmtDistance(left, right, distanceState) / DISTANCE_NORM;
+                Util.assert(sd >= 0, "negative distance for " + left + " vs " + right)
+                nonSkeletonDiff += sd
                 nnonSkeletonDiff++
             }
         } else {
             Util.assert(false, "unknown tag: " + d[0])
         }
     }
-    var W_SKELETON = 6
+    var W_SKELETON = 10
     var W_VALUES = 2
-    return W_SKELETON * (skeletonDiff/realSk.length) + W_VALUES * (nonSkeletonDiff/nnonSkeletonDiff)
+    Util.assert(skeletonDiff >= 0, "skeletonDiff < 0")
+    Util.assert(nonSkeletonDiff >= 0, "nonSkeletonDiff < 0")
+    var skeletonDist = W_SKELETON * (skeletonDiff / realSk.length);
+    if (realSk.length === 0) {
+        skeletonDist = W_SKELETON * 1
+    }
+    var valueDist = W_VALUES * (nonSkeletonDiff / nnonSkeletonDiff);
+    if (nnonSkeletonDiff === 0) {
+        valueDist = W_VALUES * 1
+    }
+    return skeletonDist + valueDist
 }
 
 /* Returns a random number in [min,max), or [0,min) if max is not specified. */
@@ -348,7 +383,9 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): n
     var badness = 0
     for (var i = 0; i < inputs.length; i++) {
         var candidateTrace = Recorder.record(Verifier.compile(p), inputs[i]).trace
-        badness += traceDistance(realTraces[i], candidateTrace)
+        var td = traceDistance(realTraces[i], candidateTrace)
+        Util.assert(td >= 0, "negative distance for " + realTraces[i] + " vs " + candidateTrace)
+        badness += td
     }
     return badness
 }
@@ -361,18 +398,24 @@ function search(f, args) {
 
     var badness = 10000000
 
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 1000; i++) {
         var newp = randomChange(state, p)
         var newbadness = evaluate(newp, inputs, realTraces)
+//        print(p)
+//        print("---")
+//        print(newp)
+//        print(badness)
+//        print(newbadness)
+//        line()
         if (newbadness < badness) {
             print("yes " + badness + " -> " + newbadness)
             p = newp
             badness = newbadness
         } else {
-            print("no")
             // TODO accept anyway sometimes
         }
     }
+    print(p)
 }
 
 search(f, args)
