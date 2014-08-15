@@ -237,6 +237,10 @@ function traceDistance(real: Data.Trace, candidate: Data.Trace): number {
             skeletonDiff++
             continue
         }
+        if (d[0] === 'insert') {
+            skeletonDiff++
+            continue
+        }
         if (d[0] === 'equal') {
             for (var i = 0; i < d[2]-d[1]; i++) {
                 var left = real.getSkeletonIdx(d[1]+i)
@@ -361,16 +365,15 @@ function search(f, args) {
         var newp = randomChange(state, p)
         var newbadness = evaluate(newp, inputs, realTraces)
         if (newbadness < badness) {
+            print("yes " + badness + " -> " + newbadness)
             p = newp
-            print("yes")
+            badness = newbadness
         } else {
             print("no")
             // TODO accept anyway sometimes
         }
     }
 }
-
-
 
 search(f, args)
 
