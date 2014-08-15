@@ -15,9 +15,9 @@ import ansi = require('./util/Ansicolors')
 export function generate(init: any, n: number): any[] {
     var type = typeof init
     if (type === "number") {
-        return [0, 1, 2]
+        return [0, 1]
     } else if (type === "string") {
-        return ["a", "b", "def"]
+        return ["b", "def"]
     } else if (type === "object") {
         // TODO better strategy
         return [init]

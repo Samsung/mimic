@@ -171,7 +171,7 @@ function get_diff(a, b) {
     return new difflib.SequenceMatcher(a, b).get_opcodes()
 }
 
-var DISTANCE_NORM = 100000
+var DISTANCE_NORM = 10000
 function stmtDistance(real: Data.Stmt, candidate: Data.Stmt) {
     Util.assert(real.type === candidate.type)
     var l, r
@@ -214,6 +214,9 @@ function exprDistance(real: Data.Expr, candidate: Data.Expr) {
             if (typeof l === 'number') {
                 return Math.min(Math.abs(l-r), DISTANCE_NORM)
             }
+            if (typeof l === 'string') {
+                return DISTANCE_NORM
+            }
             Util.assert(false, "unhandled const distance: " + real + " - " + candidate)
             return 0
         default:
@@ -221,10 +224,12 @@ function exprDistance(real: Data.Expr, candidate: Data.Expr) {
     }
 }
 
-function traceDistance(real: Data.Trace, candidate: Data.Trace): number[] {
-    var diff = get_diff(real.toSkeleton(), candidate.toSkeleton())
+function traceDistance(real: Data.Trace, candidate: Data.Trace): number {
+    var realSk = real.toSkeleton();
+    var diff = get_diff(realSk, candidate.toSkeleton())
     var diffLength = diff.length
     var nonSkeletonDiff = 0
+    var nnonSkeletonDiff = 0
     var skeletonDiff = 0
     for (var i = 0; i < diffLength; i++) {
         var d = diff[i]
@@ -236,13 +241,16 @@ function traceDistance(real: Data.Trace, candidate: Data.Trace): number[] {
             for (var i = 0; i < d[2]-d[1]; i++) {
                 var left = real.getSkeletonIdx(d[1]+i)
                 var right = candidate.getSkeletonIdx(d[3]+i)
-                nonSkeletonDiff += stmtDistance(left, right)
+                nonSkeletonDiff += stmtDistance(left, right) / DISTANCE_NORM
+                nnonSkeletonDiff++
             }
         } else {
             Util.assert(false, "unknown tag: " + d[0])
         }
     }
-    return [skeletonDiff, nonSkeletonDiff]
+    var W_SKELETON = 6
+    var W_VALUES = 2
+    return W_SKELETON * (skeletonDiff/realSk.length) + W_VALUES * (nonSkeletonDiff/nnonSkeletonDiff)
 }
 
 /* Returns a random number in [min,max), or [0,min) if max is not specified. */
@@ -332,14 +340,48 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
     return res
 }
 
+function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): number {
+    var badness = 0
+    for (var i = 0; i < inputs.length; i++) {
+        var candidateTrace = Recorder.record(Verifier.compile(p), inputs[i]).trace
+        badness += traceDistance(realTraces[i], candidateTrace)
+    }
+    return badness
+}
 
+function search(f, args) {
+    var state = Recorder.record(f, args)
+    var p = new Data.Program(state.trace.stmts)
+    var inputs = InputGenerator.generateInputs(state, args)
+    var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
+
+    var badness = 10000000
+
+    for (var i = 0; i < 20; i++) {
+        var newp = randomChange(state, p)
+        var newbadness = evaluate(newp, inputs, realTraces)
+        if (newbadness < badness) {
+            p = newp
+            print("yes")
+        } else {
+            print("no")
+            // TODO accept anyway sometimes
+        }
+    }
+}
+
+
+
+search(f, args)
+
+/*
 var state = Recorder.record(f, args)
 var p = new Data.Program(state.trace.stmts)
 for (var i = 0; i < 20; i++) {
     print(randomChange(state, p))
     Util.line()
 }
-
+*/
 
 /*
 var p1 = new Data.Trace([
