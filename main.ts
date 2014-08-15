@@ -305,6 +305,9 @@ function randArr<T>(arr: T[]): T {
     if (arr.length === 0) throw new TypeError
     return arr[randInt(arr.length)]
 }
+function maybe() {
+    return randInt(2) === 0
+}
 
 function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
     var stmts = p.stmts.slice(0)
@@ -333,6 +336,25 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
         },
         () => { // modify an existing statement
             if (stmts.length < 1) return false
+            var ss = stmts[si]
+            var s
+            switch (ss.type) {
+                case Data.StmtType.Assign:
+                    s = <Data.Assign>ss
+                    var news
+                    if (maybe()) {
+                        news = new Data.Assign(s.lhs, randomExpr(state))
+                    } else {
+                        news = new Data.Assign(randomExpr(state, {lhs: true}), s.rhs)
+                    }
+                    stmts[si] = news
+                    break
+                case Data.StmtType.Return:
+                    return false // TODO for now we don't modify returns
+                default:
+                    Util.assert(false, "unhandled statement modification: " + ss)
+                    break
+            }
             return false
         },
     ]
