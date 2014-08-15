@@ -136,6 +136,14 @@ function f(obj1, obj2, str, int) {
 }
 var args = [{}, {g: "a", f: {}}, "a", 0]
 
+/*
+ arguments[0]["a"] = arguments[1]
+ arguments[1][arguments[2]] = arguments[1]["g"]
+ arguments[1][arguments[2]] = "b"
+ n = arguments[1]["f"]
+ arguments[0]["f2"] = n
+ */
+
 //infer(f, args)
 
 
@@ -409,7 +417,8 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): n
         Util.assert(td >= 0, "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
     }
-    return badness
+    var W_LENGTH = 0.01
+    return badness + W_LENGTH*p.stmts.length
 }
 
 function search(f, args) {
@@ -430,7 +439,7 @@ function search(f, args) {
 //        print(newbadness)
 //        line()
         if (newbadness < badness) {
-            print("yes " + badness + " -> " + newbadness)
+            print("yes[" + i + "]: " + badness + " -> " + newbadness)
             p = newp
             badness = newbadness
         } else {
