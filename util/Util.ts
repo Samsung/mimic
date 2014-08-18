@@ -23,8 +23,8 @@ export function line2(str?: any) {
 export function log(o: any, colors?: boolean) {
     print(util.inspect(o, { colors: colors }))
 }
-export function inspect(o: any): string {
-    return util.inspect(o)
+export function inspect(o: any, colors: boolean = true): string {
+    return util.inspect(o, { colors: colors })
 }
 
 var rrr = new random(random.engines.mt19937().seed(process.argv[2]));
@@ -48,9 +48,8 @@ export function isPrimitive(arg: any) {
 }
 export function assert(condition: boolean, message?: () => string) {
     if (!condition) {
-        log("assertion failure", true)
         if (message) {
-            throw new AssertionError(message() + "\n" + console.trace())
+            throw new AssertionError("" + message() + "\n" + console.trace())
         }
         throw new AssertionError("Assertion failed\n" + console.trace())
     }
@@ -107,6 +106,9 @@ export function clone<T>(obj: T): T {
 }
 
 export class AssertionError {
-    constructor(public message) {
+    constructor(public message: string) {
+    }
+    toString() {
+        return "Assertion failure: " + this.message
     }
 }

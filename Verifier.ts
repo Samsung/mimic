@@ -17,8 +17,11 @@ export function isModel(model: Data.Program, prog: (...a: any[]) => any, args: a
 }
 
 export function compile(prog: Data.Program) {
+    return compile2(prog.toString())
+}
+export function compile2(prog: string) {
     return function (...a: any[]): any {
-        return Function(prog.toString()).apply(null, a)
+        return Function(prog).apply(null, a)
     }
 }
 

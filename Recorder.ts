@@ -43,6 +43,9 @@ export function record(f: (..._: any[]) => any, args: any[]): State {
         } else if (e instanceof RangeError) {
             var ee = <RangeError>e
             state.record(new Data.Throw(getAccessPath(state, ee.message.toString())))
+        } else if (e instanceof SyntaxError) {
+            var ee = <SyntaxError>e
+            Util.assert(false, () => "syntax error: " + ee.toString() + "\n\nfor program: " + f.toString())
         } else {
             state.record(new Data.Throw(getAccessPath(state, e)))
         }
@@ -130,7 +133,7 @@ function getAccessPath(state: State, v: any): Data.Expr {
     if (Util.isPrimitive(v)) {
         return new Data.Const(v)
     }
-    Util.assert(state.getPath(v) !== undefined, () => "getAccessPath(" + state + ")" + Util.inspect(v))
+    Util.assert(state.getPath(v) !== undefined, () => "getAccessPath(" + state + "," + Util.inspect(v, true) + ")")
     return state.getPath(v)
 }
 

@@ -322,12 +322,12 @@ function randArrW<T>(arr: T[], weights: number[]): T {
     Util.assert(choice-1 < arr.length)
     return arr[choice-1]
 }
-function maybe() {
-    return randInt(2) === 0
+function maybe(yesProbability: number = 0.5) {
+    return Util.randFloat(0, 1) < yesProbability
 }
-interface WeightedPair<T> {
-    w: number
-    e: T
+class WeightedPair<T> {
+    constructor(public w: number, public e: T) {
+    }
 }
 function pick<T>(arr: WeightedPair<T>[]): T {
     return randArrW(arr.map((x) => x.e), arr.map((x) => x.w))
@@ -399,20 +399,26 @@ function randomStmt(state: Recorder.State): Data.Stmt {
     return randArr(options)()
 }
 function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
-    var options = [
-        () => {
+    var lhs = "lhs" in args && args.lhs === true
+    var obj = "obj" in args && args.obj === true
+    var options: WeightedPair<() => Data.Expr>[] = [
+        new WeightedPair(lhs || obj ? 0 : 1, () => {
             // random new constant
             return new Data.Const(randInt(20)-10)
-        },
-        () => {
+        }),
+        new WeightedPair(5, () => {
             // random candidate expression
             var ps = state.getPrestates();
             if (ps.length === 0) return undefined
             return ps[randInt(ps.length)]
-        }
+        }),
+        new WeightedPair(2, () => {
+            // random new field
+            return <Data.Expr>new Data.Field(randomExpr(state, {obj: true}), randomExpr(state))
+        }),
     ]
     // filter out bad expressions
-    var filter = (e: Data.Expr) => {
+    /*var filter = (e: Data.Expr) => {
         if ("lhs" in args && args.lhs === true) {
             if ([Data.ExprType.Field, Data.ExprType.Var].indexOf(e.type) === -1) {
                 return undefined
@@ -421,14 +427,17 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
         return e
     }
     var res
-    while ((res = filter(randArr(options)())) === undefined) {}
-    return res
+    while ((res = filter(pick(options)())) === undefined) {}
+    return res*/
+    return pick(options)()
 }
 
 function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): number {
     var badness = 0
+    var code = Verifier.compile(p);
+    print("eval " + p)
     for (var i = 0; i < inputs.length; i++) {
-        var candidateTrace = Recorder.record(Verifier.compile(p), inputs[i]).trace
+        var candidateTrace = Recorder.record(code, inputs[i]).trace
         var td = traceDistance(realTraces[i], candidateTrace)
         Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
@@ -467,6 +476,29 @@ function search(f, args) {
 
 search(f, args)
 
+/*
+var state = Recorder.record(f, args)
+for (var i = 0; i < 100; i++) {
+    print(randomExpr(state, {lhs: true}))
+}
+*/
+
+/*
+var s = 'arguments[0]["a"] = arguments[1];\
+arguments[1]["a"] = "a";\
+arguments[1]["g"] = arguments[3];\
+arguments[1]["f"] = arguments[3];\
+arguments[2][arguments[2]] = "b";\
+var n0=1;\
+arguments[0]["f2"] = n0;\
+return 0;'
+var args2 = [{}, {g: "a", f: {}}, "a", 0]
+
+var f2 = Verifier.compile2(s);
+//f2.apply(null, args2)
+print(Recorder.record(f2, args2))
+print(eval("n0"))
+*/
 
 /*
 var state = Recorder.record(f, args)
