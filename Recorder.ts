@@ -1,4 +1,6 @@
 
+"use strict";
+
 import Data = require('./Data')
 
 import harmonyrefl = require('harmony-reflect');
@@ -40,10 +42,14 @@ export function record(f: (..._: any[]) => any, args: any[]): State {
         if (e instanceof ReferenceError) {
             var ee = <ReferenceError>e
             state.record(new Data.Throw(getAccessPath(state, ee.message.toString())))
+        } else if (e instanceof TypeError) {
+            var ee = <TypeError>e
+            state.record(new Data.Throw(getAccessPath(state, ee.message.toString())))
         } else if (e instanceof RangeError) {
             var ee = <RangeError>e
             state.record(new Data.Throw(getAccessPath(state, ee.message.toString())))
-        } else if (e instanceof SyntaxError) {
+        }
+        else if (e instanceof SyntaxError) {
             var ee = <SyntaxError>e
             Util.assert(false, () => "syntax error: " + ee.toString() + "\n\nfor program: " + f.toString())
         } else {
@@ -63,9 +69,9 @@ export class State {
     // just by coincidence
     private candidates: Map<any, Data.Expr[]> = new Map<any, Data.Expr[]>()
     // map objects to their proxified object
-    private mapping: Map<Object, Object> = new Map<Object, Object>()
+    mapping: Map<Object, Object> = new Map<Object, Object>()
     // map proxified objects to their target
-    private mapping2: Map<Object, Object> = new Map<Object, Object>()
+    mapping2: Map<Object, Object> = new Map<Object, Object>()
     public trace: Data.Trace = new Data.Trace([])
     // all prestate expressions that are read
     private readPrestateObj: Map<any, Data.Expr> = new Map<any, Data.Expr>()

@@ -1,4 +1,5 @@
 
+"use strict";
 
 import Data = require('./Data')
 import Recorder = require('./Recorder')
@@ -21,7 +22,7 @@ export function compile(prog: Data.Program) {
 }
 export function compile2(prog: string) {
     return function (...a: any[]): any {
-        return Function(prog).apply(null, a)
+        return new Function('"use strict";' + prog).apply(null, a)
     }
 }
 

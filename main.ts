@@ -1,5 +1,7 @@
 /// <reference path="util/assert.d.ts" />
 
+"use strict";
+
 // activate ES6 proxy proposal
 import harmonyrefl = require('harmony-reflect');
 harmonyrefl;
@@ -489,7 +491,7 @@ arguments[1]["a"] = "a";\
 arguments[1]["g"] = arguments[3];\
 arguments[1]["f"] = arguments[3];\
 arguments[2][arguments[2]] = "b";\
-var n0=1;\
+n0=1;\
 arguments[0]["f2"] = n0;\
 return 0;'
 var args2 = [{}, {g: "a", f: {}}, "a", 0]
@@ -499,6 +501,19 @@ var f2 = Verifier.compile2(s);
 print(Recorder.record(f2, args2))
 print(eval("n0"))
 */
+
+/*function test() {
+    arguments[0]["a"] = arguments[1];
+arguments[1]["a"] = "a";
+arguments[1]["g"] = arguments[3];
+arguments[1]["f"] = arguments[3]
+arguments[2][arguments[2]] = "b";
+n0=1;
+arguments[0]["f2"] = n0;
+return 0;
+}
+test(args2[0], args2[1], "a", 0)*/
+
 
 /*
 var state = Recorder.record(f, args)
