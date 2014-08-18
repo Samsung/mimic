@@ -37,14 +37,22 @@ export function randInt(min: number, max?: number): number {
     }
     return rrr.integer(min, max-1);
 }
+/* Returns a random floating point number. */
+export function randFloat(min: number, max: number, inclusive: boolean = false): number {
+    return rrr.real(min, max, inclusive);
+}
 
 export function isPrimitive(arg: any) {
     var type = typeof arg;
     return arg == null || (type != "object" && type != "function");
 }
-export function assert(condition: any, message?: string) {
+export function assert(condition: boolean, message?: () => string) {
     if (!condition) {
-        throw (message || "Assertion failed") + "\n" + console.trace()
+        log("assertion failure", true)
+        if (message) {
+            throw new AssertionError(message() + "\n" + console.trace())
+        }
+        throw new AssertionError("Assertion failed\n" + console.trace())
     }
 }
 export function dedup<T>(a: T[]): T[] {
@@ -98,3 +106,7 @@ export function clone<T>(obj: T): T {
     throw new Error("Unable to copy obj! Its type isn't supported.");
 }
 
+export class AssertionError {
+    constructor(public message) {
+    }
+}

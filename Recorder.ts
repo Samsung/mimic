@@ -34,6 +34,9 @@ export function record(f: (..._: any[]) => any, args: any[]): State {
         var res = f.apply(null, iargs);
         state.record(new Data.Return(getAccessPath(state, res)))
     } catch (e) {
+        if (e instanceof Util.AssertionError) {
+            throw e // don't catch our own errors
+        }
         if (e instanceof ReferenceError) {
             var ee = <ReferenceError>e
             state.record(new Data.Throw(getAccessPath(state, ee.message.toString())))
@@ -58,6 +61,8 @@ export class State {
     private candidates: Map<any, Data.Expr[]> = new Map<any, Data.Expr[]>()
     // map objects to their proxified object
     private mapping: Map<Object, Object> = new Map<Object, Object>()
+    // map proxified objects to their target
+    private mapping2: Map<Object, Object> = new Map<Object, Object>()
     public trace: Data.Trace = new Data.Trace([])
     // all prestate expressions that are read
     private readPrestateObj: Map<any, Data.Expr> = new Map<any, Data.Expr>()
@@ -104,9 +109,13 @@ export class State {
     setMapping(o: Object, p: Object) {
         Util.assert(!this.mapping.has(o));
         this.mapping.set(o, p)
+        this.mapping2.set(p, o)
     }
     getMapping(o: Object) {
         return this.mapping.get(o)
+    }
+    getMapping2(o: Object) {
+        return this.mapping2.get(o)
     }
     record(stmt: Data.Stmt) {
         this.trace.extend(stmt)
@@ -121,14 +130,14 @@ function getAccessPath(state: State, v: any): Data.Expr {
     if (Util.isPrimitive(v)) {
         return new Data.Const(v)
     }
-    Util.assert(state.getPath(v) !== undefined, "getAccessPath(" + state + "," + v + ")")
+    Util.assert(state.getPath(v) !== undefined, () => "getAccessPath(" + state + ")" + Util.inspect(v))
     return state.getPath(v)
 }
 
 function proxify(state: State, o: Object) {
     if (state.getMapping(o) !== undefined) return state.getMapping(o)
     var common = function (target) {
-        Util.assert(state.getPath(target) !== undefined, "target path undefined")
+        Util.assert(state.getPath(target) !== undefined, () => "target path undefined")
     }
     var ignorec = (a: any) => print(ansi.lightgrey(a))
     ignorec = (a: any) => a
@@ -392,7 +401,7 @@ function generateCandidateStmts(state: State, stmt: Data.Stmt): Data.Stmt[] {
                 res.push(new Data.Return(e))
             })
             break
-        default: Util.assert(false, "unknown type "+stmt.type)
+        default: Util.assert(false, () => "unknown type "+stmt.type)
     }
     return res
 }
@@ -422,7 +431,7 @@ function generateCandidateExprs(state: State, expr: Data.Expr): Data.Expr[] {
             res.push(e)
             break
         default:
-            Util.assert(false, "unknown type "+expr.type)
+            Util.assert(false, () => "unknown type "+expr.type)
     }
     return res
 }

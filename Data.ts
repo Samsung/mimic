@@ -21,7 +21,7 @@ export class Node {
         return []
     }
     toSkeleton(): string {
-        Util.assert(false, "toSkeleton not implemented for " + this)
+        Util.assert(false, () => "toSkeleton not implemented for " + this)
         return null
     }
 }
@@ -166,7 +166,7 @@ export class Const extends Expr {
         return this.val
     }
     update(args: any[], val: any): any {
-        Util.assert(false, "cannot update constant")
+        Util.assert(false, () => "cannot update constant")
     }
     equals(o): boolean {
         return o instanceof Const && o.val === this.val

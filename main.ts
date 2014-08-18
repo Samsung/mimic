@@ -200,7 +200,7 @@ function stmtDistance(real: Data.Stmt, candidate: Data.Stmt, ds: Map<Data.Var, D
             r = <Data.Return>candidate
             return exprDistance(l.rhs, r.rhs, ds)
         default:
-            Util.assert(false, "unhandeled stmt distance: " + real)
+            Util.assert(false, () => "unhandeled stmt distance: " + real)
     }
 }
 
@@ -232,7 +232,7 @@ function exprDistance(real: Data.Expr, candidate: Data.Expr, ds: Map<Data.Var, D
             if (typeof l === 'string') {
                 return DISTANCE_NORM
             }
-            Util.assert(false, "unhandled const distance: " + real + " - " + candidate)
+            Util.assert(false, () => "unhandled const distance: " + real + " - " + candidate)
             return 0
         case Data.ExprType.Var:
             l = <Data.Var>real
@@ -243,7 +243,7 @@ function exprDistance(real: Data.Expr, candidate: Data.Expr, ds: Map<Data.Var, D
             }
             return 0
         default:
-            Util.assert(false, "unhandled expr distance: " + real)
+            Util.assert(false, () => "unhandled expr distance: " + real)
     }
 }
 
@@ -277,18 +277,18 @@ function traceDistance(real: Data.Trace, candidate: Data.Trace): number {
                 var left = real.getSkeletonIdx(d[1]+j)
                 var right = candidate.getSkeletonIdx(d[3]+j)
                 var sd = stmtDistance(left, right, distanceState) / DISTANCE_NORM;
-                Util.assert(sd >= 0, "negative distance for " + left + " vs " + right)
+                Util.assert(sd >= 0, () => "negative distance for " + left + " vs " + right)
                 nonSkeletonDiff += sd
                 nnonSkeletonDiff++
             }
         } else {
-            Util.assert(false, "unknown tag: " + d[0])
+            Util.assert(false, () => "unknown tag: " + d[0])
         }
     }
     var W_SKELETON = 10
     var W_VALUES = 2
-    Util.assert(skeletonDiff >= 0, "skeletonDiff < 0")
-    Util.assert(nonSkeletonDiff >= 0, "nonSkeletonDiff < 0")
+    Util.assert(skeletonDiff >= 0, () => "skeletonDiff < 0")
+    Util.assert(nonSkeletonDiff >= 0, () => "nonSkeletonDiff < 0")
     var skeletonDist = W_SKELETON * (skeletonDiff / realSk.length);
     if (realSk.length === 0) {
         skeletonDist = W_SKELETON * 1
@@ -305,11 +305,32 @@ var randInt = Util.randInt
 
 /* Returns a random element from an array. */
 function randArr<T>(arr: T[]): T {
-    if (arr.length === 0) throw new TypeError
+    Util.assert(arr.length > 0)
     return arr[randInt(arr.length)]
+}
+/* Return a random element from an array of weight/element pairs */
+function randArrW<T>(arr: T[], weights: number[]): T {
+    Util.assert(arr.length > 0 && arr.length === weights.length)
+    var total = weights.reduce((s, w) => w + s, 0)
+    var rand = Util.randFloat(0, total)
+    var choice = 0
+    var sofar = 0
+    while (sofar <= rand) {
+        sofar += weights[choice]
+        choice += 1
+    }
+    Util.assert(choice-1 < arr.length)
+    return arr[choice-1]
 }
 function maybe() {
     return randInt(2) === 0
+}
+interface WeightedPair<T> {
+    w: number
+    e: T
+}
+function pick<T>(arr: WeightedPair<T>[]): T {
+    return randArrW(arr.map((x) => x.e), arr.map((x) => x.w))
 }
 
 function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
@@ -355,7 +376,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                 case Data.StmtType.Return:
                     return false // TODO for now we don't modify returns
                 default:
-                    Util.assert(false, "unhandled statement modification: " + ss)
+                    Util.assert(false, () => "unhandled statement modification: " + ss)
                     break
             }
             return false
@@ -409,7 +430,7 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): n
     for (var i = 0; i < inputs.length; i++) {
         var candidateTrace = Recorder.record(Verifier.compile(p), inputs[i]).trace
         var td = traceDistance(realTraces[i], candidateTrace)
-        Util.assert(td >= 0, "negative distance for " + realTraces[i] + " vs " + candidateTrace)
+        Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
     }
     var W_LENGTH = 0.01
@@ -424,7 +445,7 @@ function search(f, args) {
 
     var badness = 10000000
 
-    for (var i = 0; i < 1000; i++) {
+    for (var i = 0; i < 100; i++) {
         var newp = randomChange(state, p)
         var newbadness = evaluate(newp, inputs, realTraces)
 //        print(p)
@@ -445,6 +466,7 @@ function search(f, args) {
 }
 
 search(f, args)
+
 
 /*
 var state = Recorder.record(f, args)

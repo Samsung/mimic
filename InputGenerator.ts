@@ -26,7 +26,7 @@ export function generate(init: any, n: number): any[] {
         return [undefined]
     }
 
-    Util.assert(false, "unknown type encountered: " + type)
+    Util.assert(false, () => "unknown type encountered: " + type)
     return []
 }
 
