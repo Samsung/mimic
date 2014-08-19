@@ -434,10 +434,22 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
     return pick(options)()
 }
 
+function evaluateOld(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): number {
+    var badness = 0
+    var code = Verifier.compile(p);
+    for (var i = 0; i < inputs.length; i++) {
+        var candidateTrace = Recorder.record(code, inputs[i]).trace
+        var td = traceDistance(realTraces[i], candidateTrace)
+        Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
+        badness += td
+    }
+    var W_LENGTH = 0.01
+    return badness + W_LENGTH*p.stmts.length
+}
+
 function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): number {
     var badness = 0
     var code = Verifier.compile(p);
-    print("eval " + p)
     for (var i = 0; i < inputs.length; i++) {
         var candidateTrace = Recorder.record(code, inputs[i]).trace
         var td = traceDistance(realTraces[i], candidateTrace)
@@ -456,7 +468,7 @@ function search(f, args) {
 
     var badness = 10000000
 
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 500; i++) {
         var newp = randomChange(state, p)
         var newbadness = evaluate(newp, inputs, realTraces)
 //        print(p)
