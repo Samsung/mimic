@@ -134,7 +134,7 @@ function f(obj1, obj2, str, int) {
     obj2[str] = obj2.g
     obj2[str] = "b"
     obj1.f2 = obj2.f
-    return 0
+    return int
 }
 var args = [{}, {g: "a", f: {}}, "a", 0]
 
@@ -182,8 +182,9 @@ function get_diff(a, b) {
     return new difflib.SequenceMatcher(a, b).get_opcodes()
 }
 
+
 var DISTANCE_NORM = 10000
-function stmtDistance(real: Data.Stmt, candidate: Data.Stmt, ds: Map<Data.Var, Data.Var>) {
+/*function stmtDistance(real: Data.Stmt, candidate: Data.Stmt, ds: VariableMap) {
     Util.assert(real.type === candidate.type)
     var l, r
     switch (real.type) {
@@ -204,10 +205,12 @@ function stmtDistance(real: Data.Stmt, candidate: Data.Stmt, ds: Map<Data.Var, D
         default:
             Util.assert(false, () => "unhandeled stmt distance: " + real)
     }
-}
+}*/
 
-function exprDistance(real: Data.Expr, candidate: Data.Expr, ds: Map<Data.Var, Data.Var>) {
-    Util.assert(real.type === candidate.type)
+function exprDistance(real: Data.Expr, candidate: Data.Expr, ds: Data.VariableMap) {
+    if (real.type !== candidate.type) {
+        return DISTANCE_NORM
+    }
     var l, r
     switch (real.type) {
         case Data.ExprType.Arg:
@@ -239,17 +242,17 @@ function exprDistance(real: Data.Expr, candidate: Data.Expr, ds: Map<Data.Var, D
         case Data.ExprType.Var:
             l = <Data.Var>real
             r = <Data.Var>candidate
-            var l2 = ds.get(l)
-            if (l2 === undefined || l2.name != r.name) {
-                return DISTANCE_NORM
+            if (ds.areEqual(l, r)) {
+                return 0
             }
-            return 0
+            return DISTANCE_NORM
         default:
             Util.assert(false, () => "unhandled expr distance: " + real)
     }
+    return 0
 }
-
-function traceDistance(real: Data.Trace, candidate: Data.Trace): number {
+/*
+function traceDistanceOld(real: Data.Trace, candidate: Data.Trace): number {
     var realSk = real.toSkeleton();
     var diff = get_diff(realSk, candidate.toSkeleton())
     var diffLength = diff.length
@@ -300,6 +303,91 @@ function traceDistance(real: Data.Trace, candidate: Data.Trace): number {
         valueDist = W_VALUES * 1
     }
     return skeletonDist + valueDist
+}*/
+
+function traceDistance(a: Data.Trace, b: Data.Trace): number {
+    var badness = 0
+    var W_ERROR_EXIT = 20
+    var W_EXIT = 2
+
+    var W_ASSIGN_FIELD = 1.1
+    var W_ASSIGN_VALUE = 1
+    var W_ASSIGN_MISSING = 2
+
+    // build a variable mapping
+    var ds = new Data.VariableMap()
+    a.stmts.forEach((s) => {
+        var ss
+        if (s.type === Data.StmtType.Assign) {
+            ss = <Data.Assign>s
+            if (ss.lhs.type === Data.ExprType.Var) {
+                ds.addFromA(<Data.Var>ss.lhs, ss.rhs)
+            }
+        }
+    })
+    b.stmts.forEach((s) => {
+        var ss
+        if (s.type === Data.StmtType.Assign) {
+            ss = <Data.Assign>s
+            if (ss.lhs.type === Data.ExprType.Var) {
+                ds.addFromB(<Data.Var>ss.lhs, ss.rhs)
+            }
+        }
+    })
+
+    // compare all assignments
+    var aa = <Data.Assign[]>a.stmts.filter((s) => s.type === Data.StmtType.Assign && (<Data.Assign>s).lhs.type !== Data.ExprType.Var)
+    var bb = <Data.Assign[]>b.stmts.filter((s) => s.type === Data.StmtType.Assign && (<Data.Assign>s).lhs.type !== Data.ExprType.Var)
+    var notInB = 0
+    var used = new Map<number, boolean>()
+    var notInA = bb.length
+    aa.forEach((astmt) => {
+        var ao = (<Data.Field>astmt.lhs).o
+        var af = (<Data.Field>astmt.lhs).f
+        var av = astmt.rhs
+        var found = false
+        for (var i = 0; i < bb.length; i++) {
+            if (!used.has(i)) {
+                var bstmt = bb[i]
+                var bo = (<Data.Field>bstmt.lhs).o
+                var bf = (<Data.Field>bstmt.lhs).f
+                var bv = bstmt.rhs
+                if (Verifier.nodeEquiv(ao, bo, ds)) {
+                    if (Verifier.nodeEquiv(af, bf, ds)) {
+                        if (!Verifier.nodeEquiv(av, bv, ds)) {
+                            // receiver and field matches, but not the value
+                            badness += W_ASSIGN_VALUE * exprDistance(av, bv, ds) / DISTANCE_NORM
+                        }
+                    } else {
+                        // receiver matches, but not field
+                        badness += W_ASSIGN_FIELD * exprDistance(af, bf, ds) / DISTANCE_NORM
+                    }
+                    used.set(i, true)
+                    found = true
+                    notInA--
+                    break
+                }
+            }
+        }
+        if (!found) {
+            notInB++
+        }
+    })
+    badness += (notInA + notInB) * W_ASSIGN_MISSING
+
+    // compare the last statement (return or throw)
+    if (a.lastStmt().type === b.lastStmt().type) {
+        if (a.lastStmt().type === Data.StmtType.Throw) {
+            badness += W_EXIT * exprDistance((<Data.Throw>a.lastStmt()).rhs, (<Data.Throw>b.lastStmt()).rhs, ds)
+        } else {
+            badness += W_EXIT * exprDistance((<Data.Return>a.lastStmt()).rhs, (<Data.Return>b.lastStmt()).rhs, ds)
+        }
+    } else {
+        // one must be return, the other throw
+        badness += W_ERROR_EXIT
+    }
+
+    return badness
 }
 
 var randInt = Util.randInt
@@ -376,7 +464,8 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                     stmts[si] = news
                     break
                 case Data.StmtType.Return:
-                    return false // TODO for now we don't modify returns
+                    stmts[si] = new Data.Return(randomExpr(state))
+                    break
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
                     break
@@ -456,7 +545,7 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): n
         Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
     }
-    var W_LENGTH = 0.01
+    var W_LENGTH = 0.001
     return badness + W_LENGTH*p.stmts.length
 }
 
@@ -485,10 +574,32 @@ function search(f, args) {
             // TODO accept anyway sometimes
         }
     }
+    line()
+    print("Initial:")
+    print(ansi.lightgrey(new Data.Program(state.trace.stmts).toString()))
+    line()
+    print("Found:")
     print(p)
+    line()
+    print("Goal:")
+    print(ansi.lightgrey("  arguments[0][\"a\"] = arguments[1]\n"+
+"  arguments[1][arguments[2]] = arguments[1][\"g\"]\n"+
+"  arguments[1][arguments[2]] = \"b\"\n"+
+"  var n0 = arguments[1][\"f\"]\n" +
+"  arguments[0][\"f2\"] = n0\n"+
+"  return arguments[3]"))
 }
 
 search(f, args)
+
+/*
+var state = Recorder.record(f, args)
+var trace1 = state.trace;
+var trace2 = new Data.Trace([<Data.Stmt>new Data.Return(new Data.Const(0))])
+print(trace1)
+print(trace2)
+print(traceDistance(trace1, trace2))
+*/
 
 /*
 var state = Recorder.record(f, args)

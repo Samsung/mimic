@@ -26,7 +26,7 @@ export function compile2(prog: string) {
     }
 }
 
-export function nodeEquiv(n1: Data.Node, n2: Data.Node, ds: Map<Data.Var, Data.Var>) {
+export function nodeEquiv(n1: Data.Node, n2: Data.Node, ds: Data.VariableMap) {
     if (n1.type !== n2.type) {
         return false
     }
@@ -34,8 +34,9 @@ export function nodeEquiv(n1: Data.Node, n2: Data.Node, ds: Map<Data.Var, Data.V
     if (n1.type === Data.StmtType.Assign) {
         var an1 = <Data.Assign>n1
         var an2 = <Data.Assign>n2
-        if (an1.isDecl) {
-            ds.set(<Data.Var>an1.lhs, <Data.Var>an2.lhs)
+        if (an1.isDecl && an2.isDecl) {
+            ds.addFromA(<Data.Var>an1.lhs, an1.rhs)
+            ds.addFromB(<Data.Var>an2.lhs, an2.rhs)
         }
     }
     // check that all children are equivalent
@@ -50,9 +51,7 @@ export function nodeEquiv(n1: Data.Node, n2: Data.Node, ds: Map<Data.Var, Data.V
                 return false
             }
         } else if (c1.type === Data.ExprType.Var) {
-            var v1 = ds.get(<Data.Var>c1)
-            var v2 = <Data.Var>c2
-            if (v1 === undefined || v1.name != v2.name) {
+            if (!ds.areEqual(<Data.Var>c1, <Data.Var>c2)) {
                 return false
             }
         } else {
@@ -69,7 +68,7 @@ export function nodeEquiv(n1: Data.Node, n2: Data.Node, ds: Map<Data.Var, Data.V
 // euqivalence of traces up to alpha renaming of local variables
 export function traceEquiv(t1: Data.Trace, t2: Data.Trace): boolean {
     // maps variables from t1 to variables in t2
-    var map = new Map<Data.Var, Data.Var>()
+    var map = new Data.VariableMap()
 
     function traceEquivHelper(ss1: Data.Stmt[], ss2: Data.Stmt[]): boolean {
         if (ss1.length !== ss2.length) {

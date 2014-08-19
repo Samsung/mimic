@@ -407,4 +407,36 @@ export class Trace {
     getSkeletonIdx(i: number): Stmt {
         return this.stmts[i]
     }
+    lastStmt(): Stmt {
+        return this.stmts[this.stmts.length-1]
+    }
+}
+
+
+
+export class VariableMap {
+    private a: Map<string, Var[]> = new Map<string, Var[]>()
+    private b: Map<string, Var[]> = new Map<string, Var[]>()
+    private eq: Map<string, boolean> = new Map<string, boolean>()
+    addFromA(v: Var, e: Expr) {
+        var s = e.toString()
+        if (this.b.has(s)) {
+            this.b.get(s).forEach((v2) => this.eq.set(v.name + "|" + v2.name, true))
+        }
+        var old = this.a.get(s) || []
+        old.push(v)
+        this.a.set(s, old)
+    }
+    addFromB(v: Var, e: Expr) {
+        var s = e.toString()
+        if (this.a.has(s)) {
+            this.a.get(s).forEach((v2) => this.eq.set(v2.name + "|" + v.name, true))
+        }
+        var old = this.b.get(s) || []
+        old.push(v)
+        this.b.set(s, old)
+    }
+    areEqual(a: Var, b: Var) {
+        return this.eq.has(a.name + "|" + b.name)
+    }
 }
