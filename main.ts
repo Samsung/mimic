@@ -482,7 +482,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                     Util.assert(false, () => "unhandled statement modification: " + ss)
                     break
             }
-            return false
+            return true
         }),
     ]
     // randomly choose an action (and execute it)
@@ -567,17 +567,11 @@ function search(f, args) {
     var inputs = InputGenerator.generateInputs(state, args)
     var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
 
-    var badness = 10000000
+    var badness = evaluate(p, inputs, realTraces)
 
-    for (var i = 0; i < 300; i++) {
+    for (var i = 0; i < 600; i++) {
         var newp = randomChange(state, p)
         var newbadness = evaluate(newp, inputs, realTraces)
-//        print(p)
-//        print("---")
-//        print(newp)
-//        print(badness)
-//        print(newbadness)
-//        line()
         if (newbadness < badness) {
             print("yes[" + i + "]: " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
             p = newp
@@ -588,7 +582,8 @@ function search(f, args) {
     }
     line()
     print("Initial:")
-    print(ansi.lightgrey(new Data.Program(state.trace.stmts).toString()))
+    var initial = new Data.Program(state.trace.stmts);
+    print(ansi.lightgrey(initial.toString()))
     line()
     print("Found:")
     print(p)
