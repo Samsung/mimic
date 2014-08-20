@@ -5,7 +5,8 @@ export enum ExprType {
     Field = 1000, // make sure these don't collide with other types
     Arg,
     Var,
-    Const
+    Const,
+    Add,
 }
 
 export class Node {
@@ -50,9 +51,8 @@ export class Expr extends Node {
         return this.value
     }
     setValue(val: any) {
-        // TODO: for now, don't record
-        //this.value = val
-        //this.valueSet = true
+        this.value = val
+        this.valueSet = true
     }
 }
 
@@ -104,6 +104,31 @@ export class Field extends Expr {
     }
     toSkeleton(): string {
         return this.o.toSkeleton() + "[" + this.f.toSkeleton() + "]"
+    }
+}
+
+export class Add extends Expr {
+    constructor(public a: Expr, public b: Expr) {
+        super(ExprType.Add)
+    }
+    toString() {
+        return this.a.toString() + "+" + this.b.toString()
+    }
+    eval(args: any[]): any {
+        return this.a.eval(args)+this.b.eval(args)
+    }
+    equals(o) {
+        return o instanceof Add && o.a.equals(this.a) && o.b.equals(this.b)
+    }
+    children(): Node[] {
+        return [this.a, this.b]
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
+    }
+    toSkeleton(): string {
+        return this.a.toSkeleton() + "+" + this.b.toSkeleton()
     }
 }
 
@@ -168,8 +193,8 @@ export class Var extends Expr {
 export class Const extends Expr {
     constructor(public val: any) {
         super(ExprType.Const)
-        Util.assert(Util.isPrimitive(this.val))
         this.setValue(val)
+        Util.assert(Util.isPrimitive(this.val))
     }
     toString() {
         if (typeof this.val === "string") {

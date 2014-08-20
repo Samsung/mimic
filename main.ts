@@ -237,7 +237,8 @@ function exprDistance(real: Data.Expr, candidate: Data.Expr, ds: Data.VariableMa
                 return DISTANCE_NORM
             }
             if (typeof l === 'number') {
-                return Math.min(Math.abs(l-r), DISTANCE_NORM)
+                var n = Math.min(Math.abs(l - r), DISTANCE_NORM);
+                return n !== n ? DISTANCE_NORM : n // handle NaN
             }
             if (typeof l === 'string') {
                 return DISTANCE_NORM
@@ -498,8 +499,9 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                     s = <Data.Assign>ss
                     var news
                     if (s.lhs.type === Data.ExprType.Field) {
-                        if (maybe(1/3)) {
-                            news = new Data.Assign(s.lhs, randomExpr(state))
+                        if (maybe(0.3334)) {
+                            var rhs = randomExpr(state);
+                            news = new Data.Assign(s.lhs, rhs)
                         } else if (maybe(0.5)) {
                             var field = new Data.Field((<Data.Field>s.lhs).o, randomExpr(state, {lhs: true}))
                             news = new Data.Assign(field, s.rhs)
@@ -556,35 +558,51 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
     var lhs = "lhs" in args && args.lhs === true
     var obj = "obj" in args && args.obj === true
     var arr = "arr" in args && args.arr === true
+    var num = "num" in args && args.num === true
+
+    var nonPrimitive = lhs || obj || arr
+    var hasRequirement = lhs || obj || arr || num
+
     var options: WeightedPair<() => Data.Expr>[] = [
-        new WeightedPair(lhs || obj || arr ? 0 : 1, () => {
+        new WeightedPair(nonPrimitive ? 0 : 1, () => {
             // random new constant
             return new Data.Const(randInt(20)-10)
         }),
-        new WeightedPair(5, () => {
+        new WeightedPair(6, () => {
             // random candidate expression
             var ps = state.getPrestates();
             if (ps.length === 0) return undefined
-            return ps[randInt(ps.length)]
+            return randArr(ps)
         }),
-        new WeightedPair(2, () => {
+        new WeightedPair(3, () => {
             // random new field
             return <Data.Expr>new Data.Field(randomExpr(state, {obj: true}), randomExpr(state))
         }),
+        new WeightedPair(nonPrimitive ? 0 : 2, () => {
+            // random new addition
+            return <Data.Expr>new Data.Add(randomExpr(state, {num: true}), new Data.Const(randInt(3)-1))
+        }),
     ]
     // filter out bad expressions
-    /*var filter = (e: Data.Expr) => {
-        if ("lhs" in args && args.lhs === true) {
-            if ([Data.ExprType.Field, Data.ExprType.Var].indexOf(e.type) === -1) {
-                return undefined
+    var filter = (e: Data.Expr) => {
+        if (e.hasValue() && hasRequirement) {
+            var t = typeof e.getValue()
+            if (t === "number" && num) {
+                return e
             }
+            if (t === "object" && (obj || arr || lhs)) {
+                if (lhs && e.getValue() === null) {
+                    return undefined
+                }
+                return e
+            }
+            return undefined // no match
         }
         return e
     }
     var res
     while ((res = filter(pick(options)())) === undefined) {}
-    return res*/
-    return pick(options)()
+    return res
 }
 
 function evaluateOld(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): number {
@@ -628,8 +646,10 @@ function search(f, args) {
     print("Starting search with the following inputs:")
     print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
 
-    for (var i = 0; i < 1200; i++) {
+    var cache:any = {}
+    for (var i = 0; i < 10000; i++) {
         var newp = randomChange(state, p)
+        cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
         var newbadness = evaluate(newp, inputs, realTraces)
         if (newbadness < badness) {
             print("iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
@@ -639,6 +659,19 @@ function search(f, args) {
             // TODO accept anyway sometimes
         }
     }
+    if (false) {
+        var res = []
+        for (var i in cache) {
+            res.push(cache[i])
+        }
+        print(res.sort((a,b) => b-a).slice(0, 100))
+        print(res.length)
+    }
+
+    line()
+    print(realTraces.join("\n"))
+    line()
+    print(inputs.map((i) => Recorder.record(Verifier.compile(p), i).trace).join("\n"))
     line()
     print("Initial:")
     var initial = new Data.Program(state.trace.stmts);

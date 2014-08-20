@@ -77,6 +77,7 @@ export class State {
     private readPrestateObj: Map<any, Data.Expr> = new Map<any, Data.Expr>()
     private readPrestate: Data.Expr[] = []
     addPrestate(a: any, e: Data.Expr) {
+        e.setValue(a)
         if (Util.isPrimitive(a)) {
             this.readPrestate.push(e)
         } else {
@@ -156,7 +157,6 @@ function proxify(state: State, o: Object) {
             if (!(name in target) || target.hasOwnProperty(name)) {
                 var val = target[name];
                 var field = new Data.Field(state.getPath(target), new Data.Const(name))
-                field.setValue(val)
                 state.addCandidate(val, field)
                 //log("reading " + name + " and got " + val)
                 if (state.hasPrestate(target)) {
@@ -168,7 +168,6 @@ function proxify(state: State, o: Object) {
                     return val;
                 } else {
                     var variable = new Data.Var()
-                    variable.setValue(val)
                     var p = proxify(state, val)
                     var ass = new Data.Assign(variable, field, true)
                     state.record(ass)
