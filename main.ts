@@ -383,9 +383,9 @@ function traceDistance(a: Data.Trace, b: Data.Trace): number {
     // compare the last statement (return or throw)
     if (a.lastStmt().type === b.lastStmt().type) {
         if (a.lastStmt().type === Data.StmtType.Throw) {
-            badness += W_EXIT * exprDistance((<Data.Throw>a.lastStmt()).rhs, (<Data.Throw>b.lastStmt()).rhs, ds)
+            badness += W_EXIT * exprDistance((<Data.Throw>a.lastStmt()).rhs, (<Data.Throw>b.lastStmt()).rhs, ds)/DISTANCE_NORM
         } else {
-            badness += W_EXIT * exprDistance((<Data.Return>a.lastStmt()).rhs, (<Data.Return>b.lastStmt()).rhs, ds)
+            badness += W_EXIT * exprDistance((<Data.Return>a.lastStmt()).rhs, (<Data.Return>b.lastStmt()).rhs, ds)/DISTANCE_NORM
         }
     } else {
         // one must be return, the other throw
@@ -435,7 +435,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
     var si = randInt(stmts.length)
     // all possible transformations (they return false if they cannot be applied)
     var options = [
-        new WeightedPair(1, () => { // remove this statement
+        new WeightedPair(2, () => { // remove this statement
             if (stmts.length < 1) return false
             stmts.splice(si, 1)
             return true
@@ -444,7 +444,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
             stmts.splice(si, 0, randomStmt(state))
             return true
         }),
-        new WeightedPair(0, () => { // swap with another statement
+        new WeightedPair(1, () => { // swap with another statement
             if (stmts.length < 2) return false
             var si2
             while ((si2 = randInt(stmts.length)) === si) {}
@@ -453,7 +453,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
             stmts[si2] = t
             return true
         }),
-        new WeightedPair(5, () => { // modify an existing statement
+        new WeightedPair(7, () => { // modify an existing statement
             if (stmts.length < 1) return false
             var ss = stmts[si]
             var s
@@ -574,22 +574,29 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): n
         badness += td
     }
     var W_LENGTH = 0.001
-    return badness + W_LENGTH*p.stmts.length
+    return badness + W_LENGTH*(p.stmts.length - (p.stmts[p.stmts.length-1].type === Data.StmtType.Return ? 1 : 0))
 }
 
 function search(f, args) {
     var state = Recorder.record(f, args)
     var p = new Data.Program(state.trace.stmts)
     var inputs = InputGenerator.generateInputs(state, args)
+    inputs = [
+        ['a', 'b', 'c'],
+        ['a', 'b'],
+        [],
+    ]
     var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
 
     var badness = evaluate(p, inputs, realTraces)
+    print("Starting search with the following inputs:")
+    print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
 
     for (var i = 0; i < 600; i++) {
         var newp = randomChange(state, p)
         var newbadness = evaluate(newp, inputs, realTraces)
         if (newbadness < badness) {
-            print("yes[" + i + "]: " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+            print("iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
             p = newp
             badness = newbadness
         } else {
