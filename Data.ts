@@ -27,6 +27,9 @@ export class Node {
 }
 
 export class Expr extends Node {
+    // the value observed at runtime, if any
+    private value: any
+    private valueSet: boolean = false
     constructor(public type: ExprType) {
         super()
     }
@@ -39,6 +42,17 @@ export class Expr extends Node {
     equals(o): boolean {
         Util.assert(false)
         return false
+    }
+    hasValue() {
+        return this.valueSet
+    }
+    getValue() {
+        return this.value
+    }
+    setValue(val: any) {
+        // TODO: for now, don't record
+        //this.value = val
+        //this.valueSet = true
     }
 }
 
@@ -155,6 +169,7 @@ export class Const extends Expr {
     constructor(public val: any) {
         super(ExprType.Const)
         Util.assert(Util.isPrimitive(this.val))
+        this.setValue(val)
     }
     toString() {
         if (typeof this.val === "string") {

@@ -430,16 +430,16 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
     var si = randInt(stmts.length)
     // all possible transformations (they return false if they cannot be applied)
     var options = [
-        () => { // remove this statement
+        new WeightedPair(1, () => { // remove this statement
             if (stmts.length < 1) return false
             stmts.splice(si, 1)
             return true
-        },
-        () => { // insert a new statement
+        }),
+        new WeightedPair(0, () => { // insert a new statement
             stmts.splice(si, 0, randomStmt(state))
             return true
-        },
-        () => { // swap with another statement
+        }),
+        new WeightedPair(0, () => { // swap with another statement
             if (stmts.length < 2) return false
             var si2
             while ((si2 = randInt(stmts.length)) === si) {}
@@ -447,8 +447,8 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
             stmts[si] = stmts[si2]
             stmts[si2] = t
             return true
-        },
-        () => { // modify an existing statement
+        }),
+        new WeightedPair(5, () => { // modify an existing statement
             if (stmts.length < 1) return false
             var ss = stmts[si]
             var s
@@ -456,10 +456,22 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                 case Data.StmtType.Assign:
                     s = <Data.Assign>ss
                     var news
-                    if (maybe()) {
-                        news = new Data.Assign(s.lhs, randomExpr(state))
+                    if (s.lhs.type === Data.ExprType.Field) {
+                        if (maybe(1/3)) {
+                            news = new Data.Assign(s.lhs, randomExpr(state))
+                        } else if (maybe(0.5)) {
+                            var field = new Data.Field((<Data.Field>s.lhs).o, randomExpr(state, {lhs: true}))
+                            news = new Data.Assign(field, s.rhs)
+                        } else {
+                            var field = new Data.Field(randomExpr(state, {obj: true}), (<Data.Field>s.lhs).f)
+                            news = new Data.Assign(field, s.rhs)
+                        }
                     } else {
-                        news = new Data.Assign(randomExpr(state, {lhs: true}), s.rhs)
+                        if (maybe()) {
+                            news = new Data.Assign(s.lhs, randomExpr(state))
+                        } else {
+                            news = new Data.Assign(randomExpr(state, {lhs: true}), s.rhs)
+                        }
                     }
                     stmts[si] = news
                     break
@@ -471,10 +483,10 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                     break
             }
             return false
-        },
+        }),
     ]
     // randomly choose an action (and execute it)
-    while (!randArr(options)()) {}
+    while (!pick(options)()) {}
 
     return new Data.Program(stmts)
 }
@@ -557,7 +569,7 @@ function search(f, args) {
 
     var badness = 10000000
 
-    for (var i = 0; i < 500; i++) {
+    for (var i = 0; i < 300; i++) {
         var newp = randomChange(state, p)
         var newbadness = evaluate(newp, inputs, realTraces)
 //        print(p)
