@@ -240,7 +240,7 @@ function proxify(state: State, o: Object) {
         },
         deleteProperty: function(target, name: string) {
             common(target)
-            state.record(new Data.DeleteProp(getAccessPath(state, o), name))
+            state.record(new Data.DeleteProp(getAccessPath(state, o), new Data.Const(name)))
             return Reflect.deleteProperty(target, name);
         },
         enumerate: function(target) {

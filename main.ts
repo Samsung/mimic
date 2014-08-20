@@ -138,6 +138,11 @@ function f(obj1, obj2, str, int) {
 }
 var args = [{}, {g: "a", f: {}}, "a", 0]
 
+function f2(arr) {
+    return arr.pop()
+}
+var args2 = [['a', 'b', 'c']]
+
 /*
  arguments[0]["a"] = arguments[1]
  arguments[1][arguments[2]] = arguments[1]["g"]
@@ -478,6 +483,16 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                 case Data.StmtType.Return:
                     stmts[si] = new Data.Return(randomExpr(state))
                     break
+                case Data.StmtType.DeleteProp:
+                    s = <Data.DeleteProp>ss
+                    var news
+                    if (maybe()) {
+                        news = new Data.DeleteProp(randomExpr(state, {arr: true}), s.f)
+                    } else {
+                        news = new Data.DeleteProp(s.o, randomExpr(state))
+                    }
+                    stmts[si] = news
+                    break
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
                     break
@@ -504,8 +519,9 @@ function randomStmt(state: Recorder.State): Data.Stmt {
 function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
     var lhs = "lhs" in args && args.lhs === true
     var obj = "obj" in args && args.obj === true
+    var arr = "arr" in args && args.arr === true
     var options: WeightedPair<() => Data.Expr>[] = [
-        new WeightedPair(lhs || obj ? 0 : 1, () => {
+        new WeightedPair(lhs || obj || arr ? 0 : 1, () => {
             // random new constant
             return new Data.Const(randInt(20)-10)
         }),
@@ -597,7 +613,7 @@ function search(f, args) {
 "  return arguments[3]"))
 }
 
-search(f, args)
+search(f2, args2)
 
 /*
 var state = Recorder.record(f, args)

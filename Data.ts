@@ -319,48 +319,46 @@ export class Throw extends Stmt {
     }
 }
 export class DeleteProp extends Stmt {
-    constructor(public o: Expr, public f: string) {
+    constructor(public o: Expr, public f: Expr) {
         super(StmtType.DeleteProp)
     }
     toString() {
-        return "delete " + this.o.toString() + "[\"" + this.f.toString() + "\"]"
+        return "delete " + this.o.toString() + "[" + this.f.toString() + "]"
     }
     equals(o) {
-        return o instanceof DeleteProp && o.o.equals(this.o) && o.f === this.f
+        return o instanceof DeleteProp && o.o.equals(this.o) && o.f.equals(this.f)
     }
     children(): Node[] {
-        return [this.o]
+        return [this.o, this.f]
     }
     anychildren(): any[] {
         var res: any[] = this.children()
-        res = res.concat([this.f])
         return res
     }
     toSkeleton(): string {
-        return "del " + this.f + " of " + this.o.toSkeleton()
+        return "del " + this.f.toSkeleton() + " of " + this.o.toSkeleton()
     }
 }
 export class DefineProp extends Stmt {
-    constructor(public o: Expr, public f: string, public v: any) {
+    constructor(public o: Expr, public f: Expr, public v: Expr) {
         super(StmtType.DefineProp)
     }
     toString() {
         return "Object.defineProperty(" + this.o.toString() +
-            ", \"" + this.f.toString() + "\", {value: " + this.v.toString() + "})"
+            ", " + this.f.toString() + ", {value: " + this.v.toString() + "})"
     }
     equals(o) {
-        return o instanceof DefineProp && o.o.equals(this.o) && o.f === this.f && o.v === this.v
+        return o instanceof DefineProp && o.o.equals(this.o) && o.f.equals(this.f) && o.v.equals(this.v)
     }
     children(): Node[] {
-        return [this.o]
+        return [this.o, this.f, this.v]
     }
     anychildren(): any[] {
         var res: any[] = this.children()
-        res = res.concat([this.f, this.v])
         return res
     }
     toSkeleton(): string {
-        return "def " + this.f + " of " + this.o.toSkeleton() + " as " + this.v.toString()
+        return "def " + this.f.toSkeleton() + " of " + this.o.toSkeleton() + " as " + this.v.toSkeleton()
     }
 }
 export class VarDecl extends Stmt {
