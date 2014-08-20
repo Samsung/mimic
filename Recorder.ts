@@ -14,8 +14,8 @@ var print = Util.print
 
 import ansi = require('./util/Ansicolors')
 
-export function record(f: (..._: any[]) => any, args: any[]): State {
-    var state = new State()
+export function record(f: (..._: any[]) => any, args: any[], extended: boolean = false): State {
+    var state = new State(extended)
 
     args = Util.clone(args)
 
@@ -76,6 +76,9 @@ export class State {
     // all prestate expressions that are read
     private readPrestateObj: Map<any, Data.Expr> = new Map<any, Data.Expr>()
     private readPrestate: Data.Expr[] = []
+    variables: Data.Var[] = []
+    constructor(public extended: boolean) {
+    }
     addPrestate(a: any, e: Data.Expr) {
         e.setValue(a)
         if (Util.isPrimitive(a)) {
@@ -128,6 +131,12 @@ export class State {
         return this.mapping2.get(o)
     }
     record(stmt: Data.Stmt) {
+        if (stmt.type === Data.StmtType.Assign) {
+            var lhs = (<Data.Assign>stmt).lhs;
+            if (lhs.type === Data.ExprType.Var) {
+                this.variables.push(<Data.Var>lhs)
+            }
+        }
         this.trace.extend(stmt)
     }
     toString() {
@@ -165,12 +174,17 @@ function proxify(state: State, o: Object) {
                     state.addPrestate(val, new Data.Field(state.getPrestate(target), new Data.Const(name)))
                 }
                 if (Util.isPrimitive(val)) {
+                    if (state.extended) {
+                        var variable = new Data.Var()
+                        var ass = new Data.Assign(variable, field, true)
+                        state.record(ass)
+                    }
                     return val;
                 } else {
                     var variable = new Data.Var()
-                    var p = proxify(state, val)
                     var ass = new Data.Assign(variable, field, true)
                     state.record(ass)
+                    var p = proxify(state, val)
                     state.setPath(p, variable)
                     return p
                 }
@@ -184,6 +198,12 @@ function proxify(state: State, o: Object) {
             common(target)
             // TODO: record ALL candidate paths (maybe?)
             var field = new Data.Field(state.getPath(target), new Data.Const(name));
+            if (state.extended) {
+                // record the old value in a variable
+                var variable = new Data.Var()
+                var ass = new Data.Assign(variable, field, true)
+                state.record(ass)
+            }
             var p = getAccessPath(state, value);
             var ass = new Data.Assign(field, p)
             state.record(ass)

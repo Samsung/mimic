@@ -481,7 +481,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
             stmts.splice(si, 0, randomStmt(state))
             return true
         }),
-        new WeightedPair(1, () => { // swap with another statement
+        new WeightedPair(2, () => { // swap with another statement
             if (stmts.length < 2) return false
             var si2
             while ((si2 = randInt(stmts.length)) === si) {}
@@ -574,6 +574,12 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
             if (ps.length === 0) return undefined
             return randArr(ps)
         }),
+        new WeightedPair(4, () => {
+            // random value read during generation
+            var vs = state.variables;
+            if (vs.length === 0) return undefined
+            return randArr(vs)
+        }),
         new WeightedPair(3, () => {
             // random new field
             return <Data.Expr>new Data.Field(randomExpr(state, {obj: true}), randomExpr(state))
@@ -618,7 +624,7 @@ function evaluateOld(p: Data.Program, inputs: any[][], realTraces: Data.Trace[])
     return badness + W_LENGTH*p.stmts.length
 }
 
-function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): number {
+function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
     var badness = 0
     var code = Verifier.compile(p);
     for (var i = 0; i < inputs.length; i++) {
@@ -628,11 +634,24 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): n
         badness += td
     }
     var W_LENGTH = 0.001
-    return badness + W_LENGTH*(p.stmts.length - (p.stmts[p.stmts.length-1].type === Data.StmtType.Return ? 1 : 0))
+    var stmts = 0
+    p.stmts.forEach((s) => {
+        // don't count return statements
+        if (s.type === Data.StmtType.Return)
+            return false
+        // don't count assignments to local variables, at least initially
+        if (s.type === Data.StmtType.Assign && !finalizing) {
+            var as = <Data.Assign>s
+            if (as.lhs.type === Data.ExprType.Var)
+                return false
+        }
+        stmts++
+    })
+    return badness + W_LENGTH*stmts
 }
 
 function search(f, args) {
-    var state = Recorder.record(f, args)
+    var state = Recorder.record(f, args, true)
     var p = new Data.Program(state.trace.stmts)
     var inputs = InputGenerator.generateInputs(state, args)
     inputs = [
@@ -647,10 +666,11 @@ function search(f, args) {
     print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
 
     var cache:any = {}
-    for (var i = 0; i < 10000; i++) {
+    var n = 5000;
+    for (var i = 0; i < n; i++) {
         var newp = randomChange(state, p)
         cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
-        var newbadness = evaluate(newp, inputs, realTraces)
+        var newbadness = evaluate(newp, inputs, realTraces, (n-i)/n > 0.8)
         if (newbadness < badness) {
             print("iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
             p = newp
@@ -668,11 +688,13 @@ function search(f, args) {
         print(res.length)
     }
 
+    /*
     line()
     print(realTraces.join("\n"))
     line()
     print(inputs.map((i) => Recorder.record(Verifier.compile(p), i).trace).join("\n"))
     line()
+    */
     print("Initial:")
     var initial = new Data.Program(state.trace.stmts);
     print(ansi.lightgrey(initial.toString()))
@@ -680,13 +702,14 @@ function search(f, args) {
     print("Found:")
     print(p)
     line()
+    /*
     print("Goal:")
     print(ansi.lightgrey("  arguments[0][\"a\"] = arguments[1]\n"+
 "  arguments[1][arguments[2]] = arguments[1][\"g\"]\n"+
 "  arguments[1][arguments[2]] = \"b\"\n"+
 "  var n0 = arguments[1][\"f\"]\n" +
 "  arguments[0][\"f2\"] = n0\n"+
-"  return arguments[3]"))
+"  return arguments[3]"))*/
 }
 
 search(f2, args2)
