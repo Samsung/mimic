@@ -319,6 +319,9 @@ function traceDistance(a: Data.Trace, b: Data.Trace): number {
     var W_ASSIGN_VALUE = 1
     var W_ASSIGN_MISSING = 2
 
+    var W_DELETE_FIELD = 1
+    var W_DELETE_MISSING = 2
+
     // build a variable mapping
     var ds = new Data.VariableMap()
     a.stmts.forEach((s) => {
@@ -341,8 +344,8 @@ function traceDistance(a: Data.Trace, b: Data.Trace): number {
     })
 
     // compare all assignments
-    var aa = <Data.Assign[]>a.stmts.filter((s) => s.type === Data.StmtType.Assign && (<Data.Assign>s).lhs.type !== Data.ExprType.Var)
-    var bb = <Data.Assign[]>b.stmts.filter((s) => s.type === Data.StmtType.Assign && (<Data.Assign>s).lhs.type !== Data.ExprType.Var)
+    var aa: any = <Data.Assign[]>a.stmts.filter((s) => s.type === Data.StmtType.Assign && (<Data.Assign>s).lhs.type !== Data.ExprType.Var)
+    var bb: any = <Data.Assign[]>b.stmts.filter((s) => s.type === Data.StmtType.Assign && (<Data.Assign>s).lhs.type !== Data.ExprType.Var)
     var notInB = 0
     var used = new Map<number, boolean>()
     var notInA = bb.length
@@ -379,6 +382,39 @@ function traceDistance(a: Data.Trace, b: Data.Trace): number {
         }
     })
     badness += (notInA + notInB) * W_ASSIGN_MISSING
+
+    // compare all delete properties
+    aa = <Data.DeleteProp[]>a.stmts.filter((s) => s.type === Data.StmtType.DeleteProp)
+    bb = <Data.DeleteProp[]>b.stmts.filter((s) => s.type === Data.StmtType.DeleteProp)
+    notInB = 0
+    used = new Map<number, boolean>()
+    notInA = bb.length
+    aa.forEach((astmt) => {
+        var ao = astmt.o
+        var af = astmt.f
+        var found = false
+        for (var i = 0; i < bb.length; i++) {
+            if (!used.has(i)) {
+                var bstmt = bb[i]
+                var bo = bstmt.o
+                var bf = bstmt.f
+                if (Verifier.nodeEquiv(ao, bo, ds)) {
+                    if (!Verifier.nodeEquiv(af, bf, ds)) {
+                        // receiver matches, but not field
+                        badness += W_DELETE_FIELD * exprDistance(af, bf, ds) / DISTANCE_NORM
+                    }
+                    used.set(i, true)
+                    found = true
+                    notInA--
+                    break
+                }
+            }
+        }
+        if (!found) {
+            notInB++
+        }
+    })
+    badness += (notInA + notInB) * W_DELETE_MISSING
 
     // compare the last statement (return or throw)
     if (a.lastStmt().type === b.lastStmt().type) {
@@ -582,9 +618,9 @@ function search(f, args) {
     var p = new Data.Program(state.trace.stmts)
     var inputs = InputGenerator.generateInputs(state, args)
     inputs = [
-        ['a', 'b', 'c'],
-        ['a', 'b'],
-        [],
+        [['a', 'b', 'c']],
+        [['a', 'b']],
+        [[]],
     ]
     var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
 
@@ -592,7 +628,7 @@ function search(f, args) {
     print("Starting search with the following inputs:")
     print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
 
-    for (var i = 0; i < 600; i++) {
+    for (var i = 0; i < 1200; i++) {
         var newp = randomChange(state, p)
         var newbadness = evaluate(newp, inputs, realTraces)
         if (newbadness < badness) {
