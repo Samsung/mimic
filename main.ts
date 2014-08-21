@@ -87,6 +87,8 @@ log(candidates.length)
 print(candidates.join("\n\n"))
 */
 
+var dbug_end = false
+
 function infer(f, args) {
     var status = (s) => print(ansi.green(s))
 
@@ -481,7 +483,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
             stmts.splice(si, 0, randomStmt(state))
             return true
         }),
-        new WeightedPair(2, () => { // swap with another statement
+        new WeightedPair(3, () => { // swap with another statement
             if (stmts.length < 2) return false
             var si2
             while ((si2 = randInt(stmts.length)) === si) {}
@@ -667,8 +669,8 @@ function search(f, args) {
     print("Starting search with the following inputs:")
     print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
 
-    var cache:any = {}
-    var n = 7000;
+    var cache: any = {}
+    var n = 3000
     for (var i = 0; i < n; i++) {
         var newp = randomChange(state, p)
         cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
@@ -678,7 +680,7 @@ function search(f, args) {
             p = newp
             badness = newbadness
         } else {
-            var W_BETA = 6
+            var W_BETA = 4
             var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
             //print("r: " + ( alpha).toFixed(4) + " from " + newbadness)
             if (maybe(alpha)) {
@@ -697,6 +699,18 @@ function search(f, args) {
         print(res.length)
     }
 
+    dbug_end = true
+
+    /*
+    line()
+    print(evaluate(p, inputs, realTraces))
+    print(p)
+    line()
+    var s: any = p.stmts[5]
+    s.rhs = new Data.Add(s.rhs, new Data.Const(-1))
+    print(evaluate(p, inputs, realTraces))
+    print(p)
+    */
 
     line()
     print(realTraces.join("\n"))
