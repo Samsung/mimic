@@ -607,6 +607,21 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], fi
     return badness
 }
 
+function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
+
+    var badness = evaluate(p, inputs, realTraces)
+    for (var i = 0; i < 700 && p.body.numberOfStmts() > 0; i++) {
+        var j = randInt(p.body.numberOfStmts())
+        var newp = new Data.Program(p.body.replace(j, Data.Seq.Empty))
+        var newbadness = evaluate(newp, inputs, realTraces)
+        if (newbadness <= badness) {
+            p = newp
+            badness = newbadness
+        }
+    }
+    return p
+}
+
 function introIf(f, p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): Data.Program {
     var code = Verifier.compile(p)
     var tds = []
@@ -678,9 +693,9 @@ function search(f, args) {
         print(res.length)
     }
 
-    dbug_end = true
+    p = shorten(p, inputs, realTraces)
 
-    print(evaluate(p, inputs, realTraces))
+    dbug_end = true
 
     /*
     line()
