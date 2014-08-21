@@ -89,48 +89,6 @@ print(candidates.join("\n\n"))
 
 var dbug_end = false
 
-function infer(f, args) {
-    var status = (s) => print(ansi.green(s))
-
-    status("the function to be processed is:")
-    print(f.toString())
-    status("initial set of arguments")
-    log(args, false)
-
-    status("recording an initial trace: ")
-    var s = Recorder.record(f, args)
-    print(s.trace)
-
-    var candidates = Recorder.generateCandidates(s);
-    status("generated " + candidates.length + " candidate implementations based on this trace.")
-
-    var inputs = InputGenerator.generateInputs(s, args)
-    status("generated " + inputs.length + " inputs based on this trace.")
-    inputs.forEach((a) => {
-        log(a, false)
-    })
-
-    status("running validation for candidates. remaining candidates:")
-    Util.printnln(candidates.length + " ")
-    for (var i = 0; i < inputs.length; i++) {
-        candidates = candidates.filter((c) => {
-            return Verifier.isModel(c, f, inputs[i])
-        })
-        Util.printnln(candidates.length + " ")
-    }
-    print("")
-
-    if (candidates.length === 0) {
-        status("no candidate left :(")
-    } else if (candidates.length === 1) {
-        status("one candidate program left:")
-        print(candidates[0])
-    } else {
-        status(candidates.length + " many candidates left:")
-        print(candidates.join("\n\n"))
-    }
-}
-
 function f(obj1, obj2, str, int) {
     obj1.a = obj2
     obj2[str] = obj2.g
@@ -471,38 +429,39 @@ function pick<T>(arr: WeightedPair<T>[]): T {
 }
 
 function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
-    var stmts = p.stmts.slice(0)
-
-    // randomly choose a statement
+    var stmts = p.body.allStmts()
     var si = randInt(stmts.length)
     // all possible transformations (they return false if they cannot be applied)
     var options = [
         new WeightedPair(0, () => { // remove this statement
-            if (stmts.length < 1) return false
+            /*if (stmts.length < 1) return undefined
             stmts.splice(si, 1)
-            return true
+            return true*/
+            return undefined
         }),
         new WeightedPair(0, () => { // insert a new statement
-            stmts.splice(si, 0, randomStmt(state))
-            return true
+            /*stmts.splice(si, 0, randomStmt(state))
+            return true*/
+            return undefined
         }),
         new WeightedPair(0, () => { // swap with another statement
-            if (stmts.length < 2) return false
+            /*if (stmts.length < 2) return undefined
             var si2
             while ((si2 = randInt(stmts.length)) === si) {}
             var t = stmts[si]
             stmts[si] = stmts[si2]
             stmts[si2] = t
-            return true
+            return true*/
+            return undefined
         }),
         new WeightedPair(7, () => { // modify an existing statement
-            if (stmts.length < 1) return false
+            if (stmts.length < 1) return undefined
             var ss = stmts[si]
             var s
+            var news
             switch (ss.type) {
                 case Data.StmtType.Assign:
                     s = <Data.Assign>ss
-                    var news
                     if (s.lhs.type === Data.ExprType.Field) {
                         if (maybe(0.3334)) {
                             var rhs = randomExpr(state);
@@ -523,36 +482,34 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                             news = new Data.Assign(s.lhs, new Data.Field(randomExpr(state, {lhs: true}), f.f), s.isDecl)
                         }
                     }
-                    stmts[si] = news
                     break
                 case Data.StmtType.Return:
-                    stmts[si] = new Data.Return(randomExpr(state))
+                    news = new Data.Return(randomExpr(state))
                     break
                 case Data.StmtType.DeleteProp:
                     s = <Data.DeleteProp>ss
-                    var news
                     if (maybe()) {
                         news = new Data.DeleteProp(randomExpr(state, {arr: true, obj: true}), s.f)
                     } else {
                         news = new Data.DeleteProp(s.o, randomExpr(state))
                     }
-                    stmts[si] = news
                     break
                 case Data.StmtType.If:
                     s = <Data.If>ss
-                    stmts[si] = new Data.If(randomExpr(state), s.thn, s.els)
+                    news = new Data.If(randomExpr(state), s.thn, s.els)
                     break
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
                     break
             }
-            return true
+            return p.body.replace(si, news)
         }),
     ]
     // randomly choose an action (and execute it)
-    while (!pick(options)()) {}
+    var res
+    while ((res = pick(options)()) === undefined) {}
 
-    return new Data.Program(stmts)
+    return res
 }
 function randomStmt(state: Recorder.State): Data.Stmt {
     var options = [
@@ -622,19 +579,6 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
     return res
 }
 
-function evaluateOld(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]): number {
-    var badness = 0
-    var code = Verifier.compile(p);
-    for (var i = 0; i < inputs.length; i++) {
-        var candidateTrace = Recorder.record(code, inputs[i]).trace
-        var td = traceDistance(realTraces[i], candidateTrace)
-        Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
-        badness += td
-    }
-    var W_LENGTH = 0.01
-    return badness + W_LENGTH*p.stmts.length
-}
-
 function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
     var badness = 0
     var code = Verifier.compile(p);
@@ -674,13 +618,13 @@ function introIf(f, p: Data.Program, inputs: any[][], realTraces: Data.Trace[], 
     }
     tds = tds.sort((a, b) => b.val - a.val)
     var fulltrace = Recorder.record(f, inputs[tds[0].i], true)
-    var stmts = new Data.If(new Data.Const(true), new Data.Seq(p.stmts), new Data.Seq(fulltrace.trace.stmts))
-    return new Data.Program([stmts])
+    var stmt = new Data.If(new Data.Const(true), p.body, fulltrace.trace.asStmt())
+    return new Data.Program(stmt)
 }
 
 function search(f, args) {
     var state = Recorder.record(f, args, true)
-    var p = new Data.Program(state.trace.stmts)
+    var p = state.trace.asProgram()
     var inputs = InputGenerator.generateInputs(state, args)
     inputs = [
         [['a', 'b', 'c']],
@@ -755,7 +699,7 @@ function search(f, args) {
     line()
 
     print("Initial:")
-    var initial = new Data.Program(state.trace.stmts);
+    var initial = state.trace.asProgram()
     print(ansi.lightgrey(initial.toString()))
     line()
     print("Found:")

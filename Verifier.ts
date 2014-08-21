@@ -17,6 +17,7 @@ export function isModel(model: Data.Program, prog: (...a: any[]) => any, args: a
     return traceEquiv(trace1.trace, trace2.trace)
 }
 
+
 export function compile(prog: Data.Program) {
     return compile2(prog.toString())
 }

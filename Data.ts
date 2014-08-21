@@ -490,20 +490,26 @@ export class DefineProp extends Stmt {
 
 
 export class Program {
-    static Empty = new Program([])
-    public stmts: Stmt[]
-    constructor(stmts: Stmt[]) {
-        this.stmts = stmts
+    static Empty = new Program(Seq.Empty)
+    constructor(public body: Stmt) {
     }
     toString() {
-        return "  " + this.stmts.join("\n").replace(/\n/g, "\n  ")
+        return "  " + this.body.toString().replace(/\n/g, "\n  ")
     }
 }
 
 
 
 export class Trace {
-    constructor(public stmts: Stmt[]) {
+    public stmts: Stmt[] = []
+    constructor(s?: Stmt) {
+        if (s) {
+            if (s.type === StmtType.Seq) {
+                this.stmts = (<Seq>s).stmts.slice(0)
+            } else {
+                this.stmts = [s]
+            }
+        }
     }
     extend(s: Stmt) {
         this.stmts.push(s)
@@ -530,6 +536,12 @@ export class Trace {
     }
     lastStmt(): Stmt {
         return this.stmts[this.stmts.length-1]
+    }
+    asProgram(): Program {
+        return new Program(this.asStmt())
+    }
+    asStmt(): Stmt {
+        return new Seq(this.stmts)
     }
 }
 

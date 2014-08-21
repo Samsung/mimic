@@ -72,7 +72,7 @@ export class State {
     mapping: Map<Object, Object> = new Map<Object, Object>()
     // map proxified objects to their target
     mapping2: Map<Object, Object> = new Map<Object, Object>()
-    public trace: Data.Trace = new Data.Trace([])
+    public trace: Data.Trace = new Data.Trace()
     // all prestate expressions that are read
     private readPrestateObj: Map<any, Data.Expr> = new Map<any, Data.Expr>()
     private readPrestate: Data.Expr[] = []
@@ -391,88 +391,4 @@ export function proxifyWithLogger<T>(o: T): T {
     }
     var p = Proxy(o, Handler)
     return <T>p
-}
-
-// given a trace, generate all possible candidate implementations
-// for the primitive values that occur
-export function generateCandidates(state: State): Data.Program[] {
-    return generateCandidatePrograms(state, state.trace.stmts)
-}
-
-function generateCandidatePrograms(state: State, stmts: Data.Stmt[]): Data.Program[] {
-    var res = []
-
-    if (stmts.length === 0) return []
-    var head = stmts[0]
-    var tail = stmts.slice(1)
-
-    var heads = generateCandidateStmts(state, head)
-    var tails = generateCandidatePrograms(state, tail)
-    heads.forEach((s) => {
-        if (tails.length === 0) {
-            res.push(new Data.Program([s]))
-        }
-        else {
-            tails.forEach((p) => {
-                res.push(new Data.Program([s].concat(p.stmts)))
-            })
-        }
-    })
-
-    return res
-}
-
-function generateCandidateStmts(state: State, stmt: Data.Stmt): Data.Stmt[] {
-    var res = []
-    var s
-    switch (stmt.type) {
-        case Data.StmtType.Assign:
-            s = <Data.Assign>stmt
-            var rhss = generateCandidateExprs(state, s.rhs)
-            var lhss = generateCandidateExprs(state, s.lhs)
-            lhss.forEach((e1) => {
-                rhss.forEach((e2) => {
-                    res.push(new Data.Assign(e1, e2))
-                })
-            })
-            break
-        case Data.StmtType.Return:
-            s = <Data.Return>stmt
-            generateCandidateExprs(state, s.rhs).forEach((e) => {
-                res.push(new Data.Return(e))
-            })
-            break
-        default: Util.assert(false, () => "unknown type "+stmt.type)
-    }
-    return res
-}
-function generateCandidateExprs(state: State, expr: Data.Expr): Data.Expr[] {
-    var res = []
-    var e
-    switch (expr.type) {
-        case Data.ExprType.Field:
-            e = <Data.Field>expr
-            var os = generateCandidateExprs(state, e.o)
-            var fs = generateCandidateExprs(state, e.f)
-            os.forEach((o) => {
-                fs.forEach((f) => {
-                    res.push(new Data.Field(o, f))
-                })
-            })
-            break
-        case Data.ExprType.Const:
-            e = <Data.Const>expr
-            res = state.getCandidates(e.val)
-            break
-        case Data.ExprType.Arg:
-            res.push(expr)
-            break
-        case Data.ExprType.Var:
-            e = <Data.Var>expr
-            res.push(e)
-            break
-        default:
-            Util.assert(false, () => "unknown type "+expr.type)
-    }
-    return res
 }
