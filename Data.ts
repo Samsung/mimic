@@ -251,6 +251,9 @@ export class Stmt extends Node {
             }
         }
     }*/
+    allStmts(): Stmt[] {
+        return [this]
+    }
     numberOfStmts(): number {
         return 1
     }
@@ -320,6 +323,9 @@ export class If extends Stmt {
         // recurse for els
         return new If(this.c, this.thn, this.els.replace(i, news))
     }
+    allStmts(): Stmt[] {
+        return [<Stmt>this].concat(this.thn.allStmts()).concat(this.els.allStmts())
+    }
 }
 
 export class Seq extends Stmt {
@@ -363,6 +369,11 @@ export class Seq extends Stmt {
                 }
             }
         }
+    }
+    allStmts(): Stmt[] {
+        var res = []
+        this.stmts.forEach((s) => res = res.concat(s.allStmts()))
+        return res
     }
 }
 
