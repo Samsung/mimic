@@ -352,7 +352,11 @@ export class Seq extends Stmt {
         var cur = 0
         function repl(ths, idx, ss) {
             var newss = ths.stmts.slice(0)
-            newss.splice(idx, 1, ss)
+            if (ss === Seq.Empty) {
+                newss.splice(idx, 1)
+            } else {
+                newss.splice(idx, 1, ss)
+            }
             return new Seq(newss)
         }
         while (true) {

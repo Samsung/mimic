@@ -103,6 +103,11 @@ function f2(arr) {
 }
 var args2 = [['a', 'b', 'c']]
 
+function f3(arr, v) {
+    return arr.push(v)
+}
+var args3 = [['a', 'b', 'c'], 'd']
+
 /*
  arguments[0]["a"] = arguments[1]
  arguments[1][arguments[2]] = arguments[1]["g"]
@@ -539,7 +544,7 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
         }),
         new WeightedPair(6, () => {
             // random candidate expression
-            var ps = state.getPrestates();
+            var ps = state.getPrestates()
             if (ps.length === 0) return undefined
             return randArr(ps)
         }),
@@ -555,7 +560,7 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
         }),
         new WeightedPair(nonPrimitive ? 0 : 2, () => {
             // random new addition
-            return <Data.Expr>new Data.Add(randomExpr(state, {num: true}), new Data.Const(randInt(3)-1))
+            return <Data.Expr>new Data.Add(randomExpr(state, {num: true}), new Data.Const(maybe() ? 1 : -1))
         }),
     ]
     // filter out bad expressions
@@ -604,13 +609,17 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], fi
         stmts++
     })
     return badness + W_LENGTH*stmts*/
+    if (finalizing) {
+        var W_LENGTH = 0.0001
+        badness += W_LENGTH * p.toString().length
+    }
     return badness
 }
 
 function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
 
     var badness = evaluate(p, inputs, realTraces)
-    for (var i = 0; i < 700 && p.body.numberOfStmts() > 0; i++) {
+    for (var i = 0; i < 300 && p.body.numberOfStmts() > 0; i++) {
         var j = randInt(p.body.numberOfStmts())
         var newp = new Data.Program(p.body.replace(j, Data.Seq.Empty))
         var newbadness = evaluate(newp, inputs, realTraces)
@@ -633,6 +642,7 @@ function introIf(f, p: Data.Program, inputs: any[][], realTraces: Data.Trace[], 
         }
     }
     tds = tds.sort((a, b) => b.val - a.val)
+    log(tds)
     var fulltrace = Recorder.record(f, inputs[tds[0].i], true)
     var stmt = new Data.If(new Data.Const(true), p.body, fulltrace.trace.asStmt())
     return new Data.Program(stmt)
@@ -643,9 +653,9 @@ function search(f, args) {
     var p = state.trace.asProgram()
     var inputs = InputGenerator.generateInputs(state, args)
     inputs = [
-        [['a', 'b', 'c']],
-        [['a', 'b']],
-        [[]],
+        [['a', 'b', 'c'], 'd'],
+        [['a', 'b'], 'e'],
+        [[], 'f'],
     ]
     var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
 
@@ -654,12 +664,14 @@ function search(f, args) {
     print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
 
     var cache: any = {}
-    var n = 5000
+    var n = 7000
+    var do_finalize = false
     for (var i = 0; i < n; i++) {
 
         var newp
         if (i === Math.floor(n/2)) {
             // maybe we should have an if?
+            break
             p = introIf(f, p, inputs, realTraces)
 
             print("--> introduce if")
@@ -667,7 +679,13 @@ function search(f, args) {
             newp = randomChange(state, p)
 
             cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
-            var newbadness = evaluate(newp, inputs, realTraces, (n-i)/n > 0.9)
+            if (do_finalize && !finalizing && i / n > 0.8) {
+                // switch metric
+                p = shorten(p, inputs, realTraces)
+                badness = evaluate(p, inputs, realTraces, true)
+            }
+            var finalizing = do_finalize && i / n > 0.8;
+            var newbadness = evaluate(newp, inputs, realTraces, finalizing)
             if (newbadness < badness) {
                 print("  iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
                 p = newp
@@ -693,8 +711,6 @@ function search(f, args) {
         print(res.length)
     }
 
-    p = shorten(p, inputs, realTraces)
-
     dbug_end = true
 
     /*
@@ -708,11 +724,13 @@ function search(f, args) {
     print(p)
     */
 
+    /*
     line()
     print(realTraces.join("\n"))
     line()
     print(inputs.map((i) => Recorder.record(Verifier.compile(p), i).trace).join("\n"))
     line()
+    */
 
     print("Initial:")
     var initial = state.trace.asProgram()
@@ -731,7 +749,8 @@ function search(f, args) {
 "  return arguments[3]"))*/
 }
 
-search(f2, args2)
+//search(f2, args2)
+search(f3, args3)
 
 /*
 var e0 = new Data.Const(0)
