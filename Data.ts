@@ -250,6 +250,12 @@ export class Stmt extends Node {
             }
         }
     }*/
+    numberOfStmts(): number {
+        return 1
+    }
+    replace(i: number, news: Stmt) {
+         Util.assert(false)
+    }
 }
 
 /*
@@ -294,6 +300,37 @@ export class If extends Stmt {
     anychildren(): any[] {
         var res: any[] = this.children()
         return res
+    }
+    numberOfStmts(): number {
+        return 1 + Util.sum(this.thn.map((x) => x.numberOfStmts()))
+            + Util.sum(this.els.map((x) => x.numberOfStmts()))
+    }
+    replace(i: number, news: Stmt) {
+        Util.assert(i > 0, () => "cannot replace myself")
+        Util.assert(i < this.numberOfStmts(), () => "out of bound replacement")
+        i -= 1
+        var stmts = this.thn.concat(this.els)
+        var cur = 0
+        while (true) {
+            if (i === 0) {
+                // replace directly
+                if (cur < this.thn.length) {
+                    this.thn[cur] = news
+                } else {
+                    this.els[cur - this.thn.length] = news
+                }
+                break
+            } else {
+                if (i < stmts[cur].numberOfStmts()) {
+                    // recurse
+                    stmts[cur].replace(i, news)
+                    break
+                } else {
+                    i -= stmts[cur].numberOfStmts()
+                    cur += 1
+                }
+            }
+        }
     }
 }
 

@@ -27,6 +27,10 @@ export function inspect(o: any, colors: boolean = true): string {
     return util.inspect(o, { colors: colors })
 }
 
+export function argv(i: number) {
+    return process.argv[i]
+}
+
 var rrr = new random(random.engines.mt19937().seed(process.argv[2]));
 
 /* Returns a random number in [min,max), or [0,min) if max is not specified. */
@@ -111,4 +115,8 @@ export class AssertionError {
     toString() {
         return "Assertion failure: " + this.message
     }
+}
+
+export function sum(a: number[]) {
+    return a.reduce((a,b) => a+b, 0)
 }
