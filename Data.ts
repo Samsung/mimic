@@ -492,13 +492,12 @@ export class DefineProp extends Stmt {
 export class Program {
     static Empty = new Program(Seq.Empty)
     constructor(public body: Stmt) {
+        Util.assert(this.body != undefined)
     }
     toString() {
         return "  " + this.body.toString().replace(/\n/g, "\n  ")
     }
 }
-
-
 
 export class Trace {
     public stmts: Stmt[] = []

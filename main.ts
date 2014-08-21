@@ -502,13 +502,14 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                     Util.assert(false, () => "unhandled statement modification: " + ss)
                     break
             }
-            return p.body.replace(si, news)
+            return new Data.Program(p.body.replace(si, news))
         }),
     ]
     // randomly choose an action (and execute it)
     var res
     while ((res = pick(options)()) === undefined) {}
 
+    Util.assert(res instanceof Data.Program)
     return res
 }
 function randomStmt(state: Recorder.State): Data.Stmt {
