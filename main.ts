@@ -472,7 +472,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
     var si = randInt(stmts.length)
     // all possible transformations (they return false if they cannot be applied)
     var options = [
-        new WeightedPair(2, () => { // remove this statement
+        new WeightedPair(0, () => { // remove this statement
             if (stmts.length < 1) return false
             stmts.splice(si, 1)
             return true
@@ -510,10 +510,12 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                             news = new Data.Assign(field, s.rhs)
                         }
                     } else {
+                        Util.assert(s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field)
+                        var f = <Data.Field>s.rhs
                         if (maybe()) {
-                            news = new Data.Assign(s.lhs, randomExpr(state))
+                            news = new Data.Assign(s.lhs, new Data.Field(f.o, randomExpr(state)), s.isDecl)
                         } else {
-                            news = new Data.Assign(randomExpr(state, {lhs: true}), s.rhs)
+                            news = new Data.Assign(s.lhs, new Data.Field(randomExpr(state, {lhs: true}), f.f), s.isDecl)
                         }
                     }
                     stmts[si] = news
@@ -525,7 +527,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                     s = <Data.DeleteProp>ss
                     var news
                     if (maybe()) {
-                        news = new Data.DeleteProp(randomExpr(state, {arr: true}), s.f)
+                        news = new Data.DeleteProp(randomExpr(state, {arr: true, obj: true}), s.f)
                     } else {
                         news = new Data.DeleteProp(s.o, randomExpr(state))
                     }
@@ -672,11 +674,18 @@ function search(f, args) {
         cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
         var newbadness = evaluate(newp, inputs, realTraces, (n-i)/n > 0.9)
         if (newbadness < badness) {
-            print("iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+            print("  iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
             p = newp
             badness = newbadness
         } else {
-            // TODO accept anyway sometimes
+            var W_BETA = 6
+            var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
+            //print("r: " + ( alpha).toFixed(4) + " from " + newbadness)
+            if (maybe(alpha)) {
+                print("! iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+                p = newp
+                badness = newbadness
+            }
         }
     }
     if (false) {
@@ -688,13 +697,13 @@ function search(f, args) {
         print(res.length)
     }
 
-    /*
+
     line()
     print(realTraces.join("\n"))
     line()
     print(inputs.map((i) => Recorder.record(Verifier.compile(p), i).trace).join("\n"))
     line()
-    */
+
     print("Initial:")
     var initial = new Data.Program(state.trace.stmts);
     print(ansi.lightgrey(initial.toString()))
