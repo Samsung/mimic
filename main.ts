@@ -469,10 +469,9 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                     s = <Data.Assign>ss
                     if (s.lhs.type === Data.ExprType.Field) {
                         if (maybe(0.3334)) {
-                            var rhs = randomExpr(state);
-                            news = new Data.Assign(s.lhs, rhs)
+                            news = new Data.Assign(s.lhs, randomExpr(state))
                         } else if (maybe(0.5)) {
-                            var field = new Data.Field((<Data.Field>s.lhs).o, randomExpr(state, {lhs: true}))
+                            var field = new Data.Field((<Data.Field>s.lhs).o, randomExpr(state))
                             news = new Data.Assign(field, s.rhs)
                         } else {
                             var field = new Data.Field(randomExpr(state, {obj: true}), (<Data.Field>s.lhs).f)
