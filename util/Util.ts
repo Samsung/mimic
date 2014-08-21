@@ -31,19 +31,9 @@ export function argv(i: number) {
     return process.argv[i]
 }
 
-var rrr = new random(random.engines.mt19937().seed(process.argv[2]));
-
-/* Returns a random number in [min,max), or [0,min) if max is not specified. */
-export function randInt(min: number, max?: number): number {
-    if (max == null) {
-        max = min;
-        min = 0;
-    }
-    return rrr.integer(min, max-1);
-}
-/* Returns a random floating point number. */
-export function randFloat(min: number, max: number, inclusive: boolean = false): number {
-    return rrr.real(min, max, inclusive);
+// for now we keep this here, as it creates various spurious errors
+export function rrr() {
+    return new random(random.engines.mt19937().seed(process.argv[2]))
 }
 
 export function isPrimitive(arg: any) {

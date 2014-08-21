@@ -8,6 +8,7 @@ harmonyrefl;
 declare var Proxy: (target: any, handler: any) => any;
 
 import Util = require('./util/Util')
+import Random = require('./util/Random')
 import Data = require('./Data')
 import Recorder = require('./Recorder')
 import InputGenerator = require('./InputGenerator')
@@ -119,7 +120,11 @@ var args3 = [['a', 'b', 'c'], 'd']
 //infer(f, args)
 
 
-
+var randInt = Random.randInt
+var WeightedPair = Random.WeightedPair
+var maybe = Random.maybe
+var pick = Random.pick
+var randArr = Random.randArr
 
 /*
 var p = Recorder.proxifyWithLogger([])
@@ -400,39 +405,6 @@ function traceDistance(a: Data.Trace, b: Data.Trace): number {
     return badness
 }
 
-var randInt = Util.randInt
-
-
-/* Returns a random element from an array. */
-function randArr<T>(arr: T[]): T {
-    Util.assert(arr.length > 0)
-    return arr[randInt(arr.length)]
-}
-/* Return a random element from an array of weight/element pairs */
-function randArrW<T>(arr: T[], weights: number[]): T {
-    Util.assert(arr.length > 0 && arr.length === weights.length)
-    var total = weights.reduce((s, w) => w + s, 0)
-    var rand = Util.randFloat(0, total)
-    var choice = 0
-    var sofar = 0
-    while (sofar <= rand) {
-        sofar += weights[choice]
-        choice += 1
-    }
-    Util.assert(choice-1 < arr.length)
-    return arr[choice-1]
-}
-function maybe(yesProbability: number = 0.5) {
-    return Util.randFloat(0, 1) < yesProbability
-}
-class WeightedPair<T> {
-    constructor(public w: number, public e: T) {
-    }
-}
-function pick<T>(arr: WeightedPair<T>[]): T {
-    return randArrW(arr.map((x) => x.e), arr.map((x) => x.w))
-}
-
 function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
     var stmts = p.body.allStmts()
     var si = randInt(stmts.length)
@@ -536,7 +508,7 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
     var nonPrimitive = lhs || obj || arr
     var hasRequirement = lhs || obj || arr || num
 
-    var options: WeightedPair<() => Data.Expr>[] = [
+    var options = [
         new WeightedPair(nonPrimitive ? 0 : 1, () => {
             // random new constant
             return new Data.Const(randInt(20)-10)
@@ -666,7 +638,6 @@ function search(f, args) {
     var n = 7000
     var do_finalize = true
     for (var i = 0; i < n; i++) {
-
         var newp
         if (i === Math.floor(n/2) && badness > 0) {
             // maybe we should have an if?
