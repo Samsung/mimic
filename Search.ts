@@ -7,7 +7,6 @@
 import Data = require('./Data')
 import Util = require('./util/Util')
 import Random = require('./util/Random')
-import Verifier = require('./Verifier')
 import Recorder = require('./Recorder')
 import Metric = require('./Metric')
 import InputGenerator = require('./InputGenerator')
@@ -41,7 +40,7 @@ export function search(f, args) {
     print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
 
     var cache: any = {}
-    var n = 7000
+    var n = 2000
     var do_finalize = true
     for (var i = 0; i < n; i++) {
         var newp
@@ -138,7 +137,7 @@ function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
 }
 
 function introIf(f, p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): Data.Program {
-    var code = Verifier.compile(p)
+    var code = Recorder.compile(p)
     var tds = []
     for (var i = 0; i < inputs.length; i++) {
         var candidateTrace = Recorder.record(code, inputs[i]).trace

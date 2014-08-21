@@ -18,14 +18,12 @@ import Data = require('./Data')
 import Metric = require('./Metric')
 import InputGenerator = require('./InputGenerator')
 import Recorder = require('./Recorder')
-import Verifier = require('./Verifier')
 import ProgramGen = require('./ProgramGen')
 import Search = require('./Search')
 
 var print = Util.print
 var log = Util.log
 var line = Util.line
-
 
 
 // --------------------------
@@ -80,3 +78,4 @@ function f3(arr, v) {
 var args3 = [['a', 'b', 'c'], 'd']
 
 Search.search(f3, args3)
+

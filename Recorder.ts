@@ -60,6 +60,15 @@ export function record(f: (..._: any[]) => any, args: any[], extended: boolean =
     return state
 }
 
+export function compile(prog: Data.Program) {
+    return compile2(prog.toString())
+}
+export function compile2(prog: string) {
+    return function (...a: any[]): any {
+        return new Function('"use strict";' + prog).apply(null, a)
+    }
+}
+
 export class State {
     // maps objects to an expression that can be used to access it
     private exprs: Map<any, Data.Expr> = new Map<any, Data.Expr>()

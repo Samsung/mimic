@@ -7,7 +7,6 @@
 import Data = require('./Data')
 import Util = require('./util/Util')
 import Random = require('./util/Random')
-import Verifier = require('./Verifier')
 import Recorder = require('./Recorder')
 
 var randInt = Random.randInt

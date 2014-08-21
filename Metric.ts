@@ -6,7 +6,6 @@
 
 import Data = require('./Data')
 import Util = require('./util/Util')
-import Verifier = require('./Verifier')
 import Recorder = require('./Recorder')
 
 var print = Util.print
@@ -32,7 +31,7 @@ var W_DELETE_MISSING = 2
  */
 export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
     var badness = 0
-    var code = Verifier.compile(p);
+    var code = Recorder.compile(p);
     for (var i = 0; i < inputs.length; i++) {
         var candidateTrace = Recorder.record(code, inputs[i]).trace
         var td = traceDistance(realTraces[i], candidateTrace)
@@ -106,9 +105,9 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
                 var bo = (<Data.Field>bstmt.lhs).o
                 var bf = (<Data.Field>bstmt.lhs).f
                 var bv = bstmt.rhs
-                if (Verifier.nodeEquiv(ao, bo, ds)) {
-                    if (Verifier.nodeEquiv(af, bf, ds)) {
-                        if (!Verifier.nodeEquiv(av, bv, ds)) {
+                if (nodeEquiv(ao, bo, ds)) {
+                    if (nodeEquiv(af, bf, ds)) {
+                        if (!nodeEquiv(av, bv, ds)) {
                             // receiver and field matches, but not the value
                             badness += W_ASSIGN_VALUE * exprDistance(av, bv, ds) / DISTANCE_NORM
                         }
@@ -144,8 +143,8 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
                 var bstmt = bb[i]
                 var bo = bstmt.o
                 var bf = bstmt.f
-                if (Verifier.nodeEquiv(ao, bo, ds)) {
-                    if (!Verifier.nodeEquiv(af, bf, ds)) {
+                if (nodeEquiv(ao, bo, ds)) {
+                    if (!nodeEquiv(af, bf, ds)) {
                         // receiver matches, but not field
                         badness += W_DELETE_FIELD * exprDistance(af, bf, ds) / DISTANCE_NORM
                     }
@@ -225,4 +224,43 @@ function exprDistance(real: Data.Expr, candidate: Data.Expr, ds: Data.VariableMa
             Util.assert(false, () => "unhandled expr distance: " + real)
     }
     return 0
+}
+
+function nodeEquiv(n1: Data.Node, n2: Data.Node, ds: Data.VariableMap) {
+    if (n1.type !== n2.type) {
+        return false
+    }
+    // on variable declaration, save correspondence
+    if (n1.type === Data.StmtType.Assign) {
+        var an1 = <Data.Assign>n1
+        var an2 = <Data.Assign>n2
+        if (an1.isDecl && an2.isDecl) {
+            ds.addFromA(<Data.Var>an1.lhs, an1.rhs)
+            ds.addFromB(<Data.Var>an2.lhs, an2.rhs)
+        }
+    }
+    // check that all children are equivalent
+    var cs1 = n1.anychildren()
+    var cs2 = n2.anychildren()
+    Util.assert(cs1.length === cs2.length)
+    for (var i = 0; i < cs1.length; i++) {
+        var c1 = cs1[i]
+        var c2 = cs2[i]
+        if (Util.isPrimitive(c1)) {
+            if (c1 !== c2) {
+                return false
+            }
+        } else if (c1.type === Data.ExprType.Var) {
+            if (!ds.areEqual(<Data.Var>c1, <Data.Var>c2)) {
+                return false
+            }
+        } else {
+            Util.assert(c1 instanceof Data.Node)
+            Util.assert(c2 instanceof Data.Node)
+            if (!nodeEquiv(c1, c2, ds)) {
+                return false
+            }
+        }
+    }
+    return true
 }
