@@ -664,13 +664,12 @@ function search(f, args) {
 
     var cache: any = {}
     var n = 7000
-    var do_finalize = false
+    var do_finalize = true
     for (var i = 0; i < n; i++) {
 
         var newp
-        if (i === Math.floor(n/2)) {
+        if (i === Math.floor(n/2) && badness > 0) {
             // maybe we should have an if?
-            break
             p = introIf(f, p, inputs, realTraces)
 
             print("--> introduce if")
@@ -678,12 +677,12 @@ function search(f, args) {
             newp = randomChange(state, p)
 
             cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
-            if (do_finalize && !finalizing && i / n > 0.8) {
+            if (do_finalize && !finalizing && (i / n > 0.8)) {
                 // switch metric
                 p = shorten(p, inputs, realTraces)
                 badness = evaluate(p, inputs, realTraces, true)
             }
-            var finalizing = do_finalize && i / n > 0.8;
+            var finalizing = do_finalize && (i / n > 0.8)
             var newbadness = evaluate(newp, inputs, realTraces, finalizing)
             if (newbadness < badness) {
                 print("  iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
