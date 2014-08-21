@@ -671,7 +671,7 @@ function introIf(f, p: Data.Program, inputs: any[][], realTraces: Data.Trace[], 
     }
     tds = tds.sort((a, b) => b.val - a.val)
     var fulltrace = Recorder.record(f, inputs[tds[0].i], true)
-    var stmts = new Data.If(new Data.Const(true), p.stmts, fulltrace.trace.stmts)
+    var stmts = new Data.If(new Data.Const(true), new Data.Seq(p.stmts), new Data.Seq(fulltrace.trace.stmts))
     return new Data.Program([stmts])
 }
 
@@ -766,18 +766,19 @@ function search(f, args) {
 
 //search(f2, args2)
 
-/*
+
 var e0 = new Data.Const(0)
 var e1 = new Data.Const(1)
 var s0 = <Data.Stmt>new Data.Return(e0)
 var s1 = <Data.Stmt>new Data.Return(e1)
-var i0 = <Data.Stmt>new Data.If(e0, [s0, s0], [s0, s0])
-var i0p = <Data.Stmt>new Data.If(e0, [s0, s0], [s0, s0])
-var i1 = <Data.Stmt>new Data.If(e0, [i0, i0p], [])
+var i0 = <Data.Stmt>new Data.If(e0, new Data.Seq([s0, s0]), new Data.Seq([s0, s0]))
+var i0p = <Data.Stmt>new Data.If(e0, new Data.Seq([s0, s0]), new Data.Seq([s0, s0]))
+var i1 = <Data.Stmt>new Data.If(e0, new Data.Seq([i0, i0p]), Data.Seq.Empty)
 
-print(i1.replace(Util.argv(3), s1))
+
+print(i1.replace(+Util.argv(3), s1))
 print(i1)
-*/
+
 
 /*
 var state = Recorder.record(f, args)

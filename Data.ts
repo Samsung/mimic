@@ -232,6 +232,7 @@ export enum StmtType {
     DefineProp,
     VarDecl,
     If,
+    Seq,
 }
 
 export class Stmt extends Node {
@@ -253,8 +254,9 @@ export class Stmt extends Node {
     numberOfStmts(): number {
         return 1
     }
-    replace(i: number, news: Stmt) {
-         Util.assert(false)
+    replace(i: number, news: Stmt): Stmt {
+        Util.assert(i === 0, () => "out of bounds repl")
+        return news
     }
 }
 
@@ -284,14 +286,14 @@ switch (stmt.type) {
 */
 
 export class If extends Stmt {
-    constructor(public c: Expr, public thn: Stmt[], public els: Stmt[]) {
+    constructor(public c: Expr, public thn: Stmt, public els: Stmt) {
         super(StmtType.If)
     }
     toString() {
         return "if (" + this.c.toString() + ") {\n  " +
-            this.thn.map((x)=>x.toString()).join("\n").replace(/\n/g, "\n  ") +
+            this.thn.toString().replace(/\n/g, "\n  ") +
             "\n} else {\n  " +
-            this.els.map((x)=>x.toString()).join("\n").replace(/\n/g, "\n  ") +
+            this.els.toString().replace(/\n/g, "\n  ") +
             "\n}"
     }
     children(): Node[] {
@@ -302,25 +304,50 @@ export class If extends Stmt {
         return res
     }
     numberOfStmts(): number {
-        return 1 + Util.sum(this.thn.map((x) => x.numberOfStmts()))
-            + Util.sum(this.els.map((x) => x.numberOfStmts()))
+        return 1 + this.thn.numberOfStmts() + this.els.numberOfStmts()
     }
     replace(i: number, news: Stmt) {
-        Util.assert(i > 0, () => "cannot replace myself")
-        Util.assert(i < this.numberOfStmts(), () => "out of bound replacement")
+        Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
+        if (i === 0) {
+            return news
+        }
         i -= 1
-        var stmts = this.thn.concat(this.els)
+        if (i < this.thn.numberOfStmts()) {
+            // recurse for thn
+            return new If(this.c, this.thn.replace(i, news), this.els)
+        }
+        i -= this.thn.numberOfStmts()
+        // recurse for els
+        return new If(this.c, this.thn, this.els.replace(i, news))
+    }
+}
+
+export class Seq extends Stmt {
+    static Empty = new Seq([])
+    constructor(public stmts: Stmt[]) {
+        super(StmtType.Seq)
+    }
+    toString() {
+        return this.stmts.join("\n")
+    }
+    children(): Node[] {
+        return this.stmts
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
+    }
+    numberOfStmts(): number {
+        return Util.sum(this.stmts.map((x) => x.numberOfStmts()))
+    }
+    replace(i: number, news: Stmt) {
+        Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
+        var stmts = this.stmts
         var cur = 0
         function repl(ths, idx, ss) {
-            if (idx < ths.thn.length) {
-                var newthn = ths.thn.slice(0)
-                newthn.splice(idx, 1, ss)
-                return new If(ths.c, newthn, ths.els)
-            } else {
-                var newels = ths.els.slice(0)
-                newels.splice(idx - ths.thn.length, 1, ss)
-                return new If(ths.c, ths.thn, newels)
-            }
+            var newss = ths.stmts.slice(0)
+            newss.splice(idx, 1, ss)
+            return new Seq(newss)
         }
         while (true) {
             if (i === 0) {
