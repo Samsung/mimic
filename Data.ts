@@ -476,24 +476,6 @@ export class DefineProp extends Stmt {
         return "def " + this.f.toSkeleton() + " of " + this.o.toSkeleton() + " as " + this.v.toSkeleton()
     }
 }
-export class VarDecl extends Stmt {
-    constructor(public v: Var) {
-        super(StmtType.VarDecl)
-    }
-    toString() {
-        return "var " + this.v.name
-    }
-    equals(o): boolean {
-        return o instanceof VarDecl && o.v.equals(this.v)
-    }
-    children(): Node[] {
-        return [this.v]
-    }
-    anychildren(): any[] {
-        var res: any[] = this.children()
-        return res
-    }
-}
 
 
 export class Program {
