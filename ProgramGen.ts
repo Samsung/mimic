@@ -16,6 +16,10 @@ var maybe = Random.maybe
 var pick = Random.pick
 var randArr = Random.randArr
 
+var print = Util.print
+var log = Util.log
+var line = Util.line
+
 /**
  * Randomly mutate the given program.
  */

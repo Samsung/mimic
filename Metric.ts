@@ -9,6 +9,10 @@ import Util = require('./util/Util')
 import Verifier = require('./Verifier')
 import Recorder = require('./Recorder')
 
+var print = Util.print
+var log = Util.log
+var line = Util.line
+
 var DISTANCE_NORM = 100
 
 var W_ERROR_EXIT = 5

@@ -13,7 +13,7 @@ function proxy<T>(target: T, handler: any): T {
 
 // colored output
 // /<reference path="ansicolors.d.ts" />
-//import ansi = require('ansicolors');
+//import Ansi = require('ansicolors');
 
 // /<reference path="assert.d.ts" />
 //import assrt = require("assert");
