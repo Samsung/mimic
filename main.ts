@@ -483,7 +483,7 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
             stmts.splice(si, 0, randomStmt(state))
             return true
         }),
-        new WeightedPair(3, () => { // swap with another statement
+        new WeightedPair(0, () => { // swap with another statement
             if (stmts.length < 2) return false
             var si2
             while ((si2 = randInt(stmts.length)) === si) {}
@@ -534,6 +534,10 @@ function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
                         news = new Data.DeleteProp(s.o, randomExpr(state))
                     }
                     stmts[si] = news
+                    break
+                case Data.StmtType.If:
+                    s = <Data.If>ss
+                    stmts[si] = new Data.If(randomExpr(state), s.thn, s.els)
                     break
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
@@ -654,6 +658,22 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], fi
     return badness + W_LENGTH*stmts
 }
 
+function introIf(f, p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): Data.Program {
+    var code = Verifier.compile(p)
+    var tds = []
+    for (var i = 0; i < inputs.length; i++) {
+        var candidateTrace = Recorder.record(code, inputs[i]).trace
+        tds[i] = {
+            i: i,
+            val: traceDistance(realTraces[i], candidateTrace),
+        }
+    }
+    tds = tds.sort((a, b) => b.val - a.val)
+    var fulltrace = Recorder.record(f, inputs[tds[0].i], true)
+    var stmts = new Data.If(new Data.Const(true), p.stmts, fulltrace.trace.stmts)
+    return new Data.Program([stmts])
+}
+
 function search(f, args) {
     var state = Recorder.record(f, args, true)
     var p = new Data.Program(state.trace.stmts)
@@ -670,9 +690,17 @@ function search(f, args) {
     print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
 
     var cache: any = {}
-    var n = 3000
+    var n = 2000
     for (var i = 0; i < n; i++) {
-        var newp = randomChange(state, p)
+
+        var newp
+        if (i === Math.floor(n/2)) {
+            // maybe we should have an if?
+            newp = introIf(f, p, inputs, realTraces)
+        } else {
+            newp = randomChange(state, p)
+        }
+
         cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
         var newbadness = evaluate(newp, inputs, realTraces, (n-i)/n > 0.9)
         if (newbadness < badness) {

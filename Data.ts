@@ -231,6 +231,7 @@ export enum StmtType {
     DeleteProp,
     DefineProp,
     VarDecl,
+    If,
 }
 
 export class Stmt extends Node {
@@ -275,6 +276,26 @@ switch (stmt.type) {
         Util.assert(false, "unknown type "+expr.type)
 }
 */
+
+export class If extends Stmt {
+    constructor(public c: Expr, public thn: Stmt[], public els: Stmt[]) {
+        super(StmtType.If)
+    }
+    toString() {
+        return "if (" + this.c.toString() + ") {\n  " +
+            this.thn.map((x)=>x.toString()).join("\n").replace(/\n/g, "\n  ") +
+            "\n} else {\n  " +
+            this.els.map((x)=>x.toString()).join("\n").replace(/\n/g, "\n  ") +
+            "\n}"
+    }
+    children(): Node[] {
+        return (<Node[]>[this.c]).concat(this.thn).concat(this.els)
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
+    }
+}
 
 export class Assign extends Stmt {
     constructor(public lhs: Expr, public rhs: Expr, public isDecl: boolean = false) {
@@ -413,7 +434,7 @@ export class Program {
         this.stmts = stmts.slice(0)
     }
     toString() {
-        return "  " + this.stmts.join("\n  ")
+        return "  " + this.stmts.join("\n").replace(/\n/g, "\n  ")
     }
 }
 
