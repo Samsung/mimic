@@ -239,8 +239,11 @@ function exprDistance(real: Data.Expr, candidate: Data.Expr, ds: Data.VariableMa
                 return DISTANCE_NORM
             }
             if (typeof l === 'number') {
+                return DISTANCE_NORM
+                /*
                 var n = Math.min(Math.abs(l - r), DISTANCE_NORM);
                 return n !== n ? DISTANCE_NORM : n // handle NaN
+                */
             }
             if (typeof l === 'string') {
                 return DISTANCE_NORM
@@ -691,31 +694,33 @@ function search(f, args) {
     print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
 
     var cache: any = {}
-    var n = 2000
+    var n = 5000
     for (var i = 0; i < n; i++) {
 
         var newp
         if (i === Math.floor(n/2)) {
             // maybe we should have an if?
-            newp = introIf(f, p, inputs, realTraces)
+            p = introIf(f, p, inputs, realTraces)
+
+            print("--> introduce if")
         } else {
             newp = randomChange(state, p)
-        }
 
-        cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
-        var newbadness = evaluate(newp, inputs, realTraces, (n-i)/n > 0.9)
-        if (newbadness < badness) {
-            print("  iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
-            p = newp
-            badness = newbadness
-        } else {
-            var W_BETA = 4
-            var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
-            //print("r: " + ( alpha).toFixed(4) + " from " + newbadness)
-            if (maybe(alpha)) {
-                print("! iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+            cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
+            var newbadness = evaluate(newp, inputs, realTraces, (n-i)/n > 0.9)
+            if (newbadness < badness) {
+                print("  iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
                 p = newp
                 badness = newbadness
+            } else {
+                var W_BETA = 6
+                var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
+                //print("r: " + ( alpha).toFixed(4) + " from " + newbadness)
+                if (maybe(alpha)) {
+                    print("! iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+                    p = newp
+                    badness = newbadness
+                }
             }
         }
     }
@@ -729,6 +734,8 @@ function search(f, args) {
     }
 
     dbug_end = true
+
+    print(evaluate(p, inputs, realTraces))
 
     /*
     line()
@@ -764,9 +771,9 @@ function search(f, args) {
 "  return arguments[3]"))*/
 }
 
-//search(f2, args2)
+search(f2, args2)
 
-
+/*
 var e0 = new Data.Const(0)
 var e1 = new Data.Const(1)
 var s0 = <Data.Stmt>new Data.Return(e0)
@@ -778,6 +785,7 @@ var i1 = <Data.Stmt>new Data.If(e0, new Data.Seq([i0, i0p]), Data.Seq.Empty)
 
 print(i1.replace(+Util.argv(3), s1))
 print(i1)
+*/
 
 
 /*
