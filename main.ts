@@ -641,7 +641,7 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], fi
         Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
     }
-    var W_LENGTH = 0.001
+    /*var W_LENGTH = 0.001
     var stmts = 0
     p.stmts.forEach((s) => {
         // don't count return statements
@@ -655,7 +655,8 @@ function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], fi
         }
         stmts++
     })
-    return badness + W_LENGTH*stmts
+    return badness + W_LENGTH*stmts*/
+    return badness
 }
 
 function introIf(f, p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): Data.Program {
@@ -774,8 +775,7 @@ var i0 = <Data.Stmt>new Data.If(e0, [s0, s0], [s0, s0])
 var i0p = <Data.Stmt>new Data.If(e0, [s0, s0], [s0, s0])
 var i1 = <Data.Stmt>new Data.If(e0, [i0, i0p], [])
 
-print(i1)
-i1.replace(Util.argv(3), s1)
+print(i1.replace(Util.argv(3), s1))
 print(i1)
 */
 

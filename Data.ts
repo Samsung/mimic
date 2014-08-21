@@ -311,20 +311,25 @@ export class If extends Stmt {
         i -= 1
         var stmts = this.thn.concat(this.els)
         var cur = 0
+        function repl(ths, idx, ss) {
+            if (idx < ths.thn.length) {
+                var newthn = ths.thn.slice(0)
+                newthn.splice(idx, 1, ss)
+                return new If(ths.c, newthn, ths.els)
+            } else {
+                var newels = ths.els.slice(0)
+                newels.splice(idx - ths.thn.length, 1, ss)
+                return new If(ths.c, ths.thn, newels)
+            }
+        }
         while (true) {
             if (i === 0) {
                 // replace directly
-                if (cur < this.thn.length) {
-                    this.thn[cur] = news
-                } else {
-                    this.els[cur - this.thn.length] = news
-                }
-                break
+                return repl(this, cur, news)
             } else {
                 if (i < stmts[cur].numberOfStmts()) {
                     // recurse
-                    stmts[cur].replace(i, news)
-                    break
+                    return repl(this, cur, stmts[cur].replace(i, news))
                 } else {
                     i -= stmts[cur].numberOfStmts()
                     cur += 1
@@ -468,7 +473,7 @@ export class Program {
     static Empty = new Program([])
     public stmts: Stmt[]
     constructor(stmts: Stmt[]) {
-        this.stmts = stmts.slice(0)
+        this.stmts = stmts
     }
     toString() {
         return "  " + this.stmts.join("\n").replace(/\n/g, "\n  ")
