@@ -176,12 +176,14 @@ function proxify(state: State, o: Object) {
                 if (Util.isPrimitive(val)) {
                     if (state.extended) {
                         var variable = new Data.Var()
+                        variable.setValue(val)
                         var ass = new Data.Assign(variable, field, true)
                         state.record(ass)
                     }
                     return val;
                 } else {
                     var variable = new Data.Var()
+                    variable.setValue(val)
                     var ass = new Data.Assign(variable, field, true)
                     state.record(ass)
                     var p = proxify(state, val)
@@ -259,7 +261,16 @@ function proxify(state: State, o: Object) {
         },
         deleteProperty: function(target, name: string) {
             common(target)
-            state.record(new Data.DeleteProp(getAccessPath(state, o), new Data.Const(name)))
+            var obj = getAccessPath(state, o);
+            var f = new Data.Const(name);
+            var field = new Data.Field(obj, f);
+            if (state.extended) {
+                // record the old value in a variable
+                var variable = new Data.Var()
+                var ass = new Data.Assign(variable, field, true)
+                state.record(ass)
+            }
+            state.record(new Data.DeleteProp(obj, f))
             return Reflect.deleteProperty(target, name);
         },
         enumerate: function(target) {

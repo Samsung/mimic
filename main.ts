@@ -666,11 +666,11 @@ function search(f, args) {
     print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
 
     var cache:any = {}
-    var n = 5000;
+    var n = 7000;
     for (var i = 0; i < n; i++) {
         var newp = randomChange(state, p)
         cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
-        var newbadness = evaluate(newp, inputs, realTraces, (n-i)/n > 0.8)
+        var newbadness = evaluate(newp, inputs, realTraces, (n-i)/n > 0.9)
         if (newbadness < badness) {
             print("iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
             p = newp
