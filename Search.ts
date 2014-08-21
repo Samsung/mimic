@@ -9,7 +9,7 @@ import Util = require('./util/Util')
 import Random = require('./util/Random')
 import Recorder = require('./Recorder')
 import Metric = require('./Metric')
-import InputGenerator = require('./InputGenerator')
+import InputGen = require('./InputGen')
 import ProgramGen = require('./ProgramGen')
 import Ansi = require('./util/Ansicolors')
 
@@ -27,7 +27,7 @@ var line = Util.line
 export function search(f, args) {
     var state = Recorder.record(f, args, true)
     var p = state.trace.asProgram()
-    var inputs = InputGenerator.generateInputs(state, args)
+    var inputs = InputGen.generateInputs(state, args)
     inputs = [
         [['a', 'b', 'c'], 'd'],
         [['a', 'b'], 'e'],
