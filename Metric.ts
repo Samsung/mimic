@@ -21,6 +21,11 @@ var W_ASSIGN_MISSING = 2
 var W_DELETE_FIELD = 1
 var W_DELETE_MISSING = 2
 
+/**
+ * Evaluate how well program `p' behaves on the given inputs (the traces in `realTraces' are used as the
+ * gold standard).  Returns a non-negative value, where 0 means the program behaves identically (w.r.t. to our
+ * metric) and the higher the number, the less similar `p's behavior.
+ */
 export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
     var badness = 0
     var code = Verifier.compile(p);
@@ -52,6 +57,10 @@ export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trac
     return badness
 }
 
+/**
+ * Determine how 'close' two traces are, and return a number describing the closeness.  0 is identical,
+ * and the higher, the less similar the traces are.  This is a metric.
+ */
 export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     var badness = 0
 
