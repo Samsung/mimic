@@ -120,3 +120,9 @@ export function start(): number {
 export function stop(s: number): number {
     return start() - s
 }
+
+export function pad(n, width, z) {
+    z = z || '0';
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}

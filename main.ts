@@ -23,6 +23,7 @@ import Search = require('./Search')
 var print = Util.print
 var log = Util.log
 var line = Util.line
+var Gray = Ansi.Gray
 
 
 
@@ -83,7 +84,7 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
     var nit = []
     var success = 0
     for (var i = 0; i < n; i++) {
-        Ansi.Gray("Iteration " + (i+1) + " of " + n + "...")
+        Gray("Iteration " + (i+1) + " of " + n + "...")
         var res = Search.search(f, a, {
             iterations: max[0],
             cleanupIterations: max[1],
@@ -92,13 +93,13 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
         if (res.score === 0) {
             success += 1
             nit.push(res.iterations)
-            Ansi.Gray("  successful in " + res.iterations + " iterations")
+            Gray("  successful in " + res.iterations + " iterations")
         } else {
-            Ansi.Gray("  no success in " + res.iterations + " iterations")
+            Gray("  no success in " + res.iterations + " iterations")
         }
-        Ansi.Gray("  " + res.speed)
+        Gray("  " + res.speed)
 
-        //Ansi.Gray(res.result.toString())
+        //Gray(res.result.toString())
     }
 
     print("Tried " + n + " searches, with " + success + " successful ones.")
@@ -106,15 +107,23 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
         " (max: " + max[0] + "/" + max[1] + ")")
 }
 
+function search(f, a) {
+    var config = new Search.SearchConfig({
+        iterations: 5000,
+        cleanupIterations: 700,
+        debug: 1,
+    })
+    Gray("Configuration: " + config.toString())
+    var res = Search.search(f, a, config)
+    Gray("Found in " + res.iterations + " iterations:")
+    Gray("  " + res.speed)
+    print(res.result.toString())
+}
 
-howMany(f, args, 20, [7000, 0])
 
+//howMany(f, args, 20, [7000, 0])
 
-/*
-var res = Search.search(f2, args2)
-print("Found in " + res.iterations + " iterations:")
-print(res.result.toString())
-*/
+search(f, args)
 
 /*
 var ff = f2

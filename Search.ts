@@ -24,16 +24,13 @@ var log = Util.log
 var line = Util.line
 
 
-export function search(f: (...a: any[]) => any, args: any[], config: SearchConfig = SearchConfig.DEFAULT): SearchResult {
+export function search(f: (...a: any[]) => any, args: any[], config: SearchConfig = new SearchConfig()): SearchResult {
     var state = Recorder.record(f, args, true)
     var p = state.trace.asProgram()
     var inputs = InputGen.generateInputs(state, args)
-    /*inputs = [
-        [['a', 'b', 'c'], 'd'],
-        [['a', 'b'], 'e'],
-        [[], 'f'],
-    ]*/
     var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
+
+    Ansi.Gray("Starting core search...")
 
     var randomChange = (pp) => ProgramGen.randomChange(state, pp)
     var mainSearch = core_search(p, {
@@ -42,11 +39,13 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
         randomChange: randomChange,
         introIf: (pp) => introIf(f, pp, inputs, realTraces),
         base: config,
-    })
+    }, inputs.length)
     p = mainSearch.result
 
     var secondarySearch
     if (config.cleanupIterations > 0) {
+        Ansi.Gray("Starting secondary cleanup search...")
+
         // shorten the program
         p = shorten(p, inputs, realTraces)
 
@@ -57,7 +56,7 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
             randomChange: randomChange,
             introIf: (pp) => pp,
             base: config,
-        })
+        }, inputs.length)
         p = secondarySearch.result
     } else {
         secondarySearch = {
@@ -86,9 +85,18 @@ export class SearchConfig {
         cleanupIterations: 700,
         debug: 0,
     }
+    constructor(o: SearchConfig = SearchConfig.DEFAULT) {
+        this.iterations = o.iterations
+        this.cleanupIterations = o.cleanupIterations
+        this.debug = o.debug
+    }
     iterations: number
     cleanupIterations: number
     debug: number
+
+    toString(): string {
+        return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup"
+    }
 }
 
 interface CoreSearchConfig {
@@ -99,7 +107,7 @@ interface CoreSearchConfig {
     base: SearchConfig
 }
 
-function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
+function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: number): SearchResult {
     var start = Util.start()
     var badness = config.metric(p)
     var n = config.iterations
@@ -119,7 +127,8 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             var newbadness = config.metric(newp)
             if (newbadness < badness) {
                 if (config.base.debug > 0) {
-                    print("  iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+                    Ansi.Gray("   accept at iteration "+Util.pad(i, 5, ' ')+": " +
+                        Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
                 }
                 p = newp
                 badness = newbadness
@@ -128,7 +137,8 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
                 var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
                 if (maybe(alpha)) {
                     if (config.base.debug > 0) {
-                        print("! iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+                        Ansi.Gray(" ! accept at iteration "+Util.pad(i, 5, ' ')+": " +
+                            Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
                     }
                     p = newp
                     badness = newbadness
@@ -143,7 +153,8 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
         iterations: i,
         result: p,
         score: badness,
-        speed: (i*1000/time).toFixed(2) + " per second",
+        speed: (i*nexecutions*1000/time).toFixed(2) + " executions per second, or " +
+            (i*1000/time).toFixed(2) + " iterations per second",
     }
 }
 
