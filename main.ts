@@ -59,24 +59,7 @@ run(id, ["a", "a"])
 run(f2, [{g: {}}])
 */
 
-function f(obj1, obj2, str, int) {
-    obj1.a = obj2
-    obj2[str] = obj2.g
-    obj2[str] = "b"
-    obj1.f2 = obj2.f
-    return int
-}
-var args = [{}, {g: "a", f: {}}, "a", 0]
 
-function f2(arr) {
-    return arr.pop()
-}
-var args2 = [['a', 'b', 'c']]
-
-function f3(arr, v) {
-    return arr.push(v)
-}
-var args3 = [['a', 'b', 'c'], 'd']
 
 
 
@@ -121,9 +104,36 @@ function search(f, a) {
 }
 
 
+var fs:any = [
+    [
+        (obj1, obj2, str, int) => {
+            obj1.a = obj2
+            obj2[str] = obj2.g
+            obj2[str] = "b"
+            obj1.f2 = obj2.f
+            return int
+        },
+        [{}, {g: "a", f: {}}, "a", 0]
+    ],
+    [
+        (arr) => arr.pop(),
+        [['a', 'b', 'c']]
+    ],
+    [
+        (arr, v) => arr.push(v),
+        [['a', 'b', 'c'], 'd']
+    ],
+    [
+        (arr, i) => arr[i],
+        [['a', 'b', 'c'], 2]
+    ],
+]
+
+
 //howMany(f, args, 20, [7000, 0])
 
-search(f, args)
+var i = 3
+search(fs[i][0], fs[i][1])
 
 /*
 var ff = f2
