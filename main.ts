@@ -79,8 +79,40 @@ var args3 = [['a', 'b', 'c'], 'd']
 
 
 
+function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
+    var nit = []
+    var success = 0
+    for (var i = 0; i < n; i++) {
+        Ansi.Gray("Iteration " + (i+1) + " of " + n + "...")
+        var res = Search.search(f, a, {
+            iterations: max[0],
+            cleanupIterations: max[1],
+            debug: 1,
+        })
+        if (res.score === 0) {
+            success += 1
+            nit.push(res.iterations)
+            Ansi.Gray("  successful in " + res.iterations + " iterations")
+        } else {
+            Ansi.Gray("  no success in " + res.iterations + " iterations")
+        }
+        Ansi.Gray(res.result.toString())
+    }
 
-Search.search(f2, args2)
+    print("Tried " + n + " searches, with " + success + " successful ones.")
+    print("Average number of iterations (for sucessful ones): " + (Util.sum(nit)/success).toFixed(1) +
+        " (max: " + max[0] + "/" + max[1] + ")")
+}
+
+
+howMany(f2, args2, 5, [7000, 0])
+
+
+/*
+var res = Search.search(f2, args2)
+print("Found in " + res.iterations + " iterations:")
+print(res.result.toString())
+*/
 
 /*
 var ff = f2

@@ -45,7 +45,7 @@ export class Expr extends Node {
     // the value observed at runtime, if any
     private value: any
     private valueSet: boolean = false
-    constructor(public type: ExprType) {
+    constructor(public type: ExprType, public depth: number) {
         super()
     }
     eval(args: any[]): any {
@@ -75,7 +75,7 @@ export class Expr extends Node {
  */
 export class Field extends Expr {
     constructor(public o: Expr, public f: Expr) {
-        super(ExprType.Field)
+        super(ExprType.Field, 1+Math.max(o.depth, f.depth))
     }
     toString() {
         return this.o.toString() + "[" + this.f.toString() + "]"
@@ -106,7 +106,7 @@ export class Field extends Expr {
  */
 export class Add extends Expr {
     constructor(public a: Expr, public b: Expr) {
-        super(ExprType.Add)
+        super(ExprType.Add, 1+Math.max(a.depth, b.depth))
     }
     toString() {
         return this.a.toString() + "+" + this.b.toString()
@@ -134,7 +134,7 @@ export class Add extends Expr {
  */
 export class Argument extends Expr {
     constructor(public i: number) {
-        super(ExprType.Arg)
+        super(ExprType.Arg, 0)
     }
     toString() {
         return "arguments[" + this.i + "]"
@@ -168,7 +168,7 @@ export class Var extends Expr {
     private static count = 0
     name: string
     constructor() {
-        super(ExprType.Var)
+        super(ExprType.Var, 0)
         this.name = "n" + Var.count
         Var.count++
     }
@@ -196,7 +196,7 @@ export class Var extends Expr {
  */
 export class Const extends Expr {
     constructor(public val: any) {
-        super(ExprType.Const)
+        super(ExprType.Const, 0)
         this.setValue(val)
         Util.assert(Util.isPrimitive(this.val))
     }

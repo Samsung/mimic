@@ -120,7 +120,7 @@ function randomStmt(state: Recorder.State): Data.Stmt {
 }
 
 
-function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
+function randomExpr(state: Recorder.State, args: any = {}, depth: number = 2): Data.Expr {
     var lhs = "lhs" in args && args.lhs === true
     var obj = "obj" in args && args.obj === true
     var arr = "arr" in args && args.arr === true
@@ -128,6 +128,8 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
 
     var nonPrimitive = lhs || obj || arr
     var hasRequirement = lhs || obj || arr || num
+
+    var zeroD = depth === 0
 
     var options = [
         new WeightedPair(nonPrimitive ? 0 : 1, () => {
@@ -146,17 +148,18 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
             if (vs.length === 0) return undefined
             return randArr(vs)
         }),
-        new WeightedPair(3, () => {
+        new WeightedPair(zeroD ? 0 : 3, () => {
             // random new field
-            return <Data.Expr>new Data.Field(randomExpr(state, {obj: true}), randomExpr(state))
+            return <Data.Expr>new Data.Field(randomExpr(state, {obj: true}, depth-1), randomExpr(state, {}, depth-1))
         }),
-        new WeightedPair(nonPrimitive ? 0 : 2, () => {
+        new WeightedPair(nonPrimitive || zeroD ? 0 : 2, () => {
             // random new addition
-            return <Data.Expr>new Data.Add(randomExpr(state, {num: true}), new Data.Const(maybe() ? 1 : -1))
+            return <Data.Expr>new Data.Add(randomExpr(state, {num: true}, depth-1), new Data.Const(maybe() ? 1 : -1))
         }),
     ]
     // filter out bad expressions
     var filter = (e: Data.Expr) => {
+        // filter by requirement
         if (e.hasValue() && hasRequirement) {
             var t = typeof e.getValue()
             if (t === "number" && num) {
@@ -170,6 +173,8 @@ function randomExpr(state: Recorder.State, args: any = {}): Data.Expr {
             }
             return undefined // no match
         }
+        // filter by depth
+        if (e.depth > depth) return undefined
         return e
     }
     var res

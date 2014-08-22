@@ -24,7 +24,7 @@ var log = Util.log
 var line = Util.line
 
 
-export function search(f, args) {
+export function search(f: (...a: any[]) => any, args: any[], config: SearchConfig = SearchConfig.DEFAULT): SearchResult {
     var state = Recorder.record(f, args, true)
     var p = state.trace.asProgram()
     var inputs = InputGen.generateInputs(state, args)
@@ -35,90 +35,110 @@ export function search(f, args) {
     ]*/
     var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
 
-    var badness = Metric.evaluate(p, inputs, realTraces)
-    print("Starting search with the following inputs:")
-    print("  " + inputs.map((a) => Util.inspect(a)).join("\n  "))
+    var randomChange = (pp) => ProgramGen.randomChange(state, pp)
+    var mainSearch = core_search(p, {
+        metric: (pp) => Metric.evaluate(pp, inputs, realTraces),
+        iterations: config.iterations,
+        randomChange: randomChange,
+        introIf: (pp) => introIf(f, pp, inputs, realTraces),
+        base: config,
+    })
+    p = mainSearch.result
 
-    var cache: any = {}
-    var n = 2000
-    var do_finalize = true
-    for (var i = 0; i < n; i++) {
+    var secondarySearch
+    if (config.cleanupIterations > 0) {
+        // shorten the program
+        p = shorten(p, inputs, realTraces)
+
+        // switch to the finalizing metric
+        secondarySearch = core_search(p, {
+            metric: (pp) => Metric.evaluate(pp, inputs, realTraces, true),
+            iterations: config.cleanupIterations,
+            randomChange: randomChange,
+            introIf: (pp) => pp,
+            base: config,
+        })
+        p = secondarySearch.result
+    } else {
+        secondarySearch = {
+            iterations: 0
+        }
+    }
+
+    return {
+        result: p,
+        iterations: mainSearch.iterations + secondarySearch.iterations,
+        score: mainSearch.score,
+    }
+}
+
+export interface SearchResult {
+    iterations: number
+    result: Data.Program
+    score: number
+}
+
+export class SearchConfig {
+    static DEFAULT = {
+        iterations: 5000,
+        cleanupIterations: 700,
+        debug: 0,
+    }
+    iterations: number
+    cleanupIterations: number
+    debug: number
+}
+
+interface CoreSearchConfig {
+    metric: (p: Data.Program) => number
+    iterations: number
+    randomChange: (p: Data.Program) => Data.Program
+    introIf: (p: Data.Program) => Data.Program
+    base: SearchConfig
+}
+
+function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
+    var badness = config.metric(p)
+    var n = config.iterations
+    var i
+    for (i = 0; i < n; i++) {
+        if (badness === 0) {
+            // stop search if we found a perfect program
+            break;
+        }
         var newp
-        if (i === Math.floor(n/2) && badness > 0) {
+        if (i === Math.floor(n*0.5) && badness > 0) {
             // maybe we should have an if?
-            p = introIf(f, p, inputs, realTraces)
-
-            print("--> introduce if")
+            p = config.introIf(p)
         } else {
-            newp = ProgramGen.randomChange(state, p)
+            newp = config.randomChange(p)
 
-            cache[newp.toString()] = (cache[newp.toString()] || 0) + 1
-            if (do_finalize && !finalizing && (i / n > 0.8)) {
-                // switch metric
-                p = shorten(p, inputs, realTraces)
-                badness = Metric.evaluate(p, inputs, realTraces, true)
-            }
-            var finalizing = do_finalize && (i / n > 0.8)
-            var newbadness = Metric.evaluate(newp, inputs, realTraces, finalizing)
+            var newbadness = config.metric(newp)
             if (newbadness < badness) {
-                print("  iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+                if (config.base.debug > 0) {
+                    print("  iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+                }
                 p = newp
                 badness = newbadness
             } else {
                 var W_BETA = 6
                 var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
-                //print("r: " + ( alpha).toFixed(4) + " from " + newbadness)
                 if (maybe(alpha)) {
-                    print("! iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+                    if (config.base.debug > 0) {
+                        print("! iteration "+i+": " + badness.toFixed(3) + " -> " + newbadness.toFixed(3))
+                    }
                     p = newp
                     badness = newbadness
                 }
             }
         }
     }
-    if (false) {
-        var res = []
-        for (var i in cache) {
-            res.push(cache[i])
-        }
-        print(res.sort((a,b) => b-a).slice(0, 100))
-        print(res.length)
+
+    return {
+        iterations: i,
+        result: p,
+        score: badness
     }
-
-    /*
-     line()
-     print(evaluate(p, inputs, realTraces))
-     print(p)
-     line()
-     var s: any = p.stmts[5]
-     s.rhs = new Data.Add(s.rhs, new Data.Const(-1))
-     print(evaluate(p, inputs, realTraces))
-     print(p)
-     */
-
-    /*
-     line()
-     print(realTraces.join("\n"))
-     line()
-     print(inputs.map((i) => Recorder.record(Verifier.compile(p), i).trace).join("\n"))
-     line()
-     */
-
-    print("Initial:")
-    var initial = state.trace.asProgram()
-    print(Ansi.lightgrey(initial.toString()))
-    line()
-    print("Found:")
-    print(p)
-    line()
-    /*
-     print("Goal:")
-     print(Ansi.lightgrey("  arguments[0][\"a\"] = arguments[1]\n"+
-     "  arguments[1][arguments[2]] = arguments[1][\"g\"]\n"+
-     "  arguments[1][arguments[2]] = \"b\"\n"+
-     "  var n0 = arguments[1][\"f\"]\n" +
-     "  arguments[0][\"f2\"] = n0\n"+
-     "  return arguments[3]"))*/
 }
 
 function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
