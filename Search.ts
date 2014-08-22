@@ -25,9 +25,16 @@ var line = Util.line
 
 
 export function search(f: (...a: any[]) => any, args: any[], config: SearchConfig = new SearchConfig()): SearchResult {
+    Ansi.Gray("Recording original execution...")
+
     var state = Recorder.record(f, args, true)
     var p = state.trace.asProgram()
+
+    Ansi.Gray("Input generation...")
     var inputs = InputGen.generateInputs(state, args)
+    Ansi.Gray("  " + inputs.join("\n  "))
+
+    Ansi.Gray("Record correct behavior on inputs...")
     var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
 
     Ansi.Gray("Starting core search...")
@@ -127,7 +134,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: num
             var newbadness = config.metric(newp)
             if (newbadness < badness) {
                 if (config.base.debug > 0) {
-                    Ansi.Gray("   accept at iteration "+Util.pad(i, 5, ' ')+": " +
+                    Ansi.Gray("   improvement at iteration "+Util.pad(i, 5, ' ')+": " +
                         Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
                 }
                 p = newp
@@ -137,7 +144,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: num
                 var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
                 if (maybe(alpha)) {
                     if (config.base.debug > 0) {
-                        Ansi.Gray(" ! accept at iteration "+Util.pad(i, 5, ' ')+": " +
+                        Ansi.Gray(" ! improvement at iteration "+Util.pad(i, 5, ' ')+": " +
                             Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
                     }
                     p = newp

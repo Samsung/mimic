@@ -9,7 +9,7 @@ import Util = require('./util/Util')
 var log = Util.log
 var print = Util.print
 
-import ansi = require('./util/Ansicolors')
+import Ansi = require('./util/Ansicolors')
 
 
 export function generate(init: any, n: number): any[] {
@@ -31,6 +31,7 @@ export function generate(init: any, n: number): any[] {
 }
 
 export function generateInputs(state: Recorder.State, args: any[]): any[][] {
+    var debug = 0
     var helper = function (ps: Data.Expr[]): any[][] {
         if (ps.length === 0) return [args]
         var res: any[][] = []
@@ -43,7 +44,9 @@ export function generateInputs(state: Recorder.State, args: any[]): any[][] {
             Util.assert(vals.length > 0)
             for (var i = 0; i < vals.length; i++) {
                 var nr = Util.clone(r)
-//                print("update " + p + " to " + vals[i])
+                if (debug) {
+                    Ansi.Gray("update " + p + " to " + vals[i])
+                }
                 p.update(nr, vals[i])
                 res.push(nr)
             }
@@ -51,6 +54,8 @@ export function generateInputs(state: Recorder.State, args: any[]): any[][] {
         return res
     }
 
-//    print(state.getPrestates().join("\n"))
+    if (debug) {
+        Ansi.Gray(state.getPrestates().join("\n"))
+    }
     return helper(state.getPrestates()).concat([args])
 }

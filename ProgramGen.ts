@@ -159,6 +159,8 @@ function randomExpr(state: Recorder.State, args: any = {}, depth: number = 2): D
     ]
     // filter out bad expressions
     var filter = (e: Data.Expr) => {
+        if (e === undefined) return e
+
         // filter by requirement
         if (e.hasValue() && hasRequirement) {
             var t = typeof e.getValue()

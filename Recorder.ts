@@ -326,8 +326,16 @@ function proxify(state: State, o: Object) {
 /**
  * Proxify the object `o', and log all behavior (in addition to actually performing the actions).
  */
-export function proxifyWithLogger<T>(o: T): T {
+export function proxifyWithLogger<T>(o: T, level: number = 0, cache: WeakMap<any, any> = new WeakMap<any, any>()): T {
+    if (cache.has(o)) {
+        return cache.get(o)
+    }
     var common = function (target) {
+        if (level === 0) {
+            Util.printnln("  ")
+        } else {
+            Util.printnln(Ansi.lightgrey("" + level + " "))
+        }
     }
     var logaccess = (a: any) => print(Ansi.lightgrey(a))
     var Handler = {
@@ -337,6 +345,8 @@ export function proxifyWithLogger<T>(o: T): T {
             var s = "get of " + name;
             if (Util.isPrimitive(value)) {
                 s += " (yields " + value + ")"
+            } else {
+                value = proxifyWithLogger(value, level+1, cache)
             }
             logaccess(s)
             return value;
@@ -356,18 +366,24 @@ export function proxifyWithLogger<T>(o: T): T {
             return Reflect.has(target, name);
         },
         apply: function(target, receiver, args) {
-            logaccess("apply")
             common(target)
-            return Reflect.apply(target, receiver, args);
+            var v = Reflect.apply(target, receiver, args);
+            if (Util.isPrimitive(v)) {
+                logaccess("apply (result: " + v + ")")
+            } else {
+                logaccess("apply")
+                v = proxifyWithLogger(v, level+1, cache)
+            }
+            return  v;
         },
         construct: function(target, args) {
-            logaccess("construct")
             common(target)
+            logaccess("construct")
             return Reflect.construct(target, args);
         },
         getOwnPropertyDescriptor: function(target, name: string) {
-            logaccess("getOwnPropertyDescriptor for " + name)
             common(target)
+            logaccess("getOwnPropertyDescriptor for " + name)
             return Reflect.getOwnPropertyDescriptor(target, name);
         },
         defineProperty: function(target, name: string, desc) {
@@ -376,18 +392,18 @@ export function proxifyWithLogger<T>(o: T): T {
             return Reflect.defineProperty(target, name, desc);
         },
         getOwnPropertyNames: function(target) {
-            logaccess("getOwnPropertyNames")
             common(target)
+            logaccess("getOwnPropertyNames")
             return Reflect.getOwnPropertyNames(target);
         },
         getPrototypeOf: function(target) {
-            logaccess("getPrototypeOf")
             common(target)
+            logaccess("getPrototypeOf")
             return Reflect.getPrototypeOf(target);
         },
         setPrototypeOf: function(target, newProto) {
-            logaccess("setPrototypeOf")
             common(target)
+            logaccess("setPrototypeOf")
             return Reflect.setPrototypeOf(target, newProto);
         },
         deleteProperty: function(target, name: string) {
@@ -396,26 +412,27 @@ export function proxifyWithLogger<T>(o: T): T {
             return Reflect.deleteProperty(target, name);
         },
         enumerate: function(target) {
-            logaccess("enumerate")
             common(target)
-            return Reflect.enumerate(target);
+            logaccess("enumerate")
+            return proxifyWithLogger(Reflect.enumerate(target), level+1, cache)
         },
         preventExtensions: function(target) {
-            logaccess("preventExtensions")
             common(target)
+            logaccess("preventExtensions")
             return Reflect.preventExtensions(target);
         },
         isExtensible: function(target) {
-            logaccess("isExtensible")
             common(target)
+            logaccess("isExtensible")
             return Reflect.isExtensible(target);
         },
         ownKeys: function(target) {
-            logaccess("ownKeys")
             common(target)
+            logaccess("ownKeys")
             return Reflect.ownKeys(target);
         }
     }
     var p = Proxy(o, Handler)
+    cache.set(o, p)
     return <T>p
 }

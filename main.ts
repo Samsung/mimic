@@ -100,6 +100,7 @@ function search(f, a) {
     var res = Search.search(f, a, config)
     Gray("Found in " + res.iterations + " iterations:")
     Gray("  " + res.speed)
+    Gray("  Score: " + res.score)
     print(res.result.toString())
 }
 
@@ -127,19 +128,50 @@ var fs:any = [
         (arr, i) => arr[i],
         [['a', 'b', 'c'], 2]
     ],
+    [
+        (arr, i) => {
+            if (i) {
+                return arr
+            } else {
+                return arr[arr.length-1]
+            }
+        },
+        [['a', 'b', 'c'], 2]
+    ]
 ]
 
 
-//howMany(f, args, 20, [7000, 0])
 
-var i = 3
-search(fs[i][0], fs[i][1])
+
+var i = 4
+var f = fs[i][0]
+var a = fs[i][1]
+
+
+//search(f, a)
+//howMany(f, a, 20, [7000, 0])
 
 /*
-var ff = f2
-var aa = args2
+var ff = f
+var aa = a
 var state = Recorder.record(ff, aa)
 var gen = InputGen.generateInputs(state, aa)
 
 log(gen)
 */
+
+function loop(o) {
+    for (var f in o) {
+        o[f]++
+    }
+}
+function loop2(o) {
+    for (var i = 0; i < o.length; i++) {
+        o[i]++
+    }
+}
+loop(Recorder.proxifyWithLogger({a: 0, b: 2, c: 3}))
+line()
+loop(Recorder.proxifyWithLogger([1, 2, 3]))
+line()
+loop2(Recorder.proxifyWithLogger([1, 2, 3]))
