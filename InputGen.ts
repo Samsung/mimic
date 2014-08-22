@@ -43,6 +43,7 @@ export function generateInputs(state: Recorder.State, args: any[]): any[][] {
             Util.assert(vals.length > 0)
             for (var i = 0; i < vals.length; i++) {
                 var nr = Util.clone(r)
+//                print("update " + p + " to " + vals[i])
                 p.update(nr, vals[i])
                 res.push(nr)
             }
@@ -50,5 +51,6 @@ export function generateInputs(state: Recorder.State, args: any[]): any[][] {
         return res
     }
 
-    return helper(state.getPrestates())
+//    print(state.getPrestates().join("\n"))
+    return helper(state.getPrestates()).concat([args])
 }

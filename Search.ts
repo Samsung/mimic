@@ -28,11 +28,11 @@ export function search(f, args) {
     var state = Recorder.record(f, args, true)
     var p = state.trace.asProgram()
     var inputs = InputGen.generateInputs(state, args)
-    inputs = [
+    /*inputs = [
         [['a', 'b', 'c'], 'd'],
         [['a', 'b'], 'e'],
         [[], 'f'],
-    ]
+    ]*/
     var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
 
     var badness = Metric.evaluate(p, inputs, realTraces)

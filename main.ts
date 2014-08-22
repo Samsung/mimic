@@ -77,5 +77,16 @@ function f3(arr, v) {
 }
 var args3 = [['a', 'b', 'c'], 'd']
 
-Search.search(f3, args3)
 
+
+
+Search.search(f2, args2)
+
+/*
+var ff = f2
+var aa = args2
+var state = Recorder.record(ff, aa)
+var gen = InputGen.generateInputs(state, aa)
+
+log(gen)
+*/
