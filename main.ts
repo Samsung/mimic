@@ -1,12 +1,11 @@
-/// <reference path="util/assert.d.ts" />
+
+/**
+ * Main entry point.
+ *
+ * @author Stefan Heule <stefanheule@gmail.com>
+ */
 
 "use strict";
-
-// activate ES6 proxy proposal
-import harmonyrefl = require('harmony-reflect');
-harmonyrefl;
-declare var Proxy: (target: any, handler: any) => any;
-
 
 import _difflib = require('./util/difflib')
 var difflib = _difflib.difflib
@@ -24,6 +23,7 @@ import Search = require('./Search')
 var print = Util.print
 var log = Util.log
 var line = Util.line
+
 
 
 // --------------------------

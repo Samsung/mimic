@@ -1,5 +1,8 @@
-
-// some utility functions
+/**
+ * Various utility functions.
+ *
+ * @author Stefan Heule <stefanheule@gmail.com>
+ */
 
 import util = require('util');
 import random = require('random-js')

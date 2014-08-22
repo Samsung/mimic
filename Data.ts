@@ -1,14 +1,14 @@
+/**
+ * Data structures for programs, statements, expressions and traces.
+ *
+ * @author Stefan Heule <stefanheule@gmail.com>
+ */
 
 import Util = require('./util/Util')
 
-export enum ExprType {
-    Field = 1000, // make sure these don't collide with other types
-    Arg,
-    Var,
-    Const,
-    Add,
-}
-
+/**
+ * Common ancestor for expressions and statements.
+ */
 export class Node {
     type: any
     /* Returns all direct child nodes (of type Node) */
@@ -27,6 +27,20 @@ export class Node {
     }
 }
 
+/**
+ * An enum for expressions.
+ */
+export enum ExprType {
+    Field = 1000, // make sure these don't collide with other types
+    Arg,
+    Var,
+    Const,
+    Add,
+}
+
+/**
+ * Common ancestor for all expressions.
+ */
 export class Expr extends Node {
     // the value observed at runtime, if any
     private value: any
@@ -56,29 +70,9 @@ export class Expr extends Node {
     }
 }
 
-/*
-skeleton for pattern match:
-
-var e
-switch (expr.type) {
-    case Data.ExprType.Field:
-        e = <Data.Field>expr
-        break
-    case Data.ExprType.Const:
-        e = <Data.Const>expr
-        break
-    case Data.ExprType.Arg:
-        e = <Data.Arg>expr
-        break
-    case Data.ExprType.Var:
-        e = <Data.Var>expr
-        break
-    default:
-        Util.assert(false, "unknown type "+expr.type)
-}
-*/
-
-// access path through a field
+/**
+ * A field access.
+ */
 export class Field extends Expr {
     constructor(public o: Expr, public f: Expr) {
         super(ExprType.Field)
@@ -107,6 +101,9 @@ export class Field extends Expr {
     }
 }
 
+/**
+ * An addition.
+ */
 export class Add extends Expr {
     constructor(public a: Expr, public b: Expr) {
         super(ExprType.Add)
@@ -132,7 +129,9 @@ export class Add extends Expr {
     }
 }
 
-// access path by looking at the ith argument
+/**
+ * The i-th argument of a function.
+ */
 export class Argument extends Expr {
     constructor(public i: number) {
         super(ExprType.Arg)
@@ -162,6 +161,9 @@ export class Argument extends Expr {
     }
 }
 
+/**
+ * A local variable.
+ */
 export class Var extends Expr {
     private static count = 0
     name: string
@@ -189,7 +191,9 @@ export class Var extends Expr {
     }
 }
 
-// a primitive value
+/**
+ * A constant (of a primitive type).
+ */
 export class Const extends Expr {
     constructor(public val: any) {
         super(ExprType.Const)
@@ -224,6 +228,9 @@ export class Const extends Expr {
     }
 }
 
+/**
+ * An enum for all statements.
+ */
 export enum StmtType {
     Assign = 2000,
     Return,
@@ -235,6 +242,9 @@ export enum StmtType {
     Seq,
 }
 
+/**
+ * Common ancestor of all statements.
+ */
 export class Stmt extends Node {
     constructor(public type: StmtType) {
         super()
@@ -263,31 +273,9 @@ export class Stmt extends Node {
     }
 }
 
-/*
- skeleton for pattern match:
-
-var s
-switch (stmt.type) {
-    case Data.StmtType.Assign:
-        e = <Data.Assign>stmt
-        break
-    case Data.StmtType.DefineProp:
-        e = <Data.DefineProp>stmt
-        break
-    case Data.StmtType.DeleteProp:
-        e = <Data.DeleteProp>stmt
-        break
-    case Data.StmtType.Return:
-        e = <Data.Return>stmt
-        break
-    case Data.StmtType.VarDecl:
-        e = <Data.VarDecl>stmt
-        break
-    default:
-        Util.assert(false, "unknown type "+expr.type)
-}
-*/
-
+/**
+ * Conditional statement.
+ */
 export class If extends Stmt {
     constructor(public c: Expr, public thn: Stmt, public els: Stmt) {
         super(StmtType.If)
@@ -328,6 +316,9 @@ export class If extends Stmt {
     }
 }
 
+/**
+ * A sequence of statements (has no behavior other that that of it's children).
+ */
 export class Seq extends Stmt {
     static Empty = new Seq([])
     constructor(public stmts: Stmt[]) {
@@ -381,6 +372,9 @@ export class Seq extends Stmt {
     }
 }
 
+/**
+ * An assignment statement.
+ */
 export class Assign extends Stmt {
     constructor(public lhs: Expr, public rhs: Expr, public isDecl: boolean = false) {
         super(StmtType.Assign)
@@ -406,6 +400,10 @@ export class Assign extends Stmt {
         return this.lhs.toSkeleton() + "=" + this.rhs.toSkeleton()
     }
 }
+
+/**
+ * A return statement.
+ */
 export class Return extends Stmt {
     constructor(public rhs: Expr) {
         super(StmtType.Return)
@@ -448,6 +446,10 @@ export class Throw extends Stmt {
         return "throw " + this.rhs.toSkeleton()
     }
 }
+
+/**
+ * A property deletion statement.
+ */
 export class DeleteProp extends Stmt {
     constructor(public o: Expr, public f: Expr) {
         super(StmtType.DeleteProp)
@@ -469,6 +471,10 @@ export class DeleteProp extends Stmt {
         return "del " + this.f.toSkeleton() + " of " + this.o.toSkeleton()
     }
 }
+
+/**
+ * A property definition statement.
+ */
 export class DefineProp extends Stmt {
     constructor(public o: Expr, public f: Expr, public v: Expr) {
         super(StmtType.DefineProp)
@@ -492,7 +498,9 @@ export class DefineProp extends Stmt {
     }
 }
 
-
+/**
+ * A program (just a way to group statements).
+ */
 export class Program {
     static Empty = new Program(Seq.Empty)
     constructor(public body: Stmt) {
@@ -503,6 +511,9 @@ export class Program {
     }
 }
 
+/**
+ * A program trace.  Note that some statements like conditionals will never occur in traces.
+ */
 export class Trace {
     public stmts: Stmt[] = []
     constructor(s?: Stmt) {
@@ -548,8 +559,9 @@ export class Trace {
     }
 }
 
-
-
+/**
+ * A variable map to compare two traces with potentially different variable names.
+ */
 export class VariableMap {
     private a: Map<string, Var[]> = new Map<string, Var[]>()
     private b: Map<string, Var[]> = new Map<string, Var[]>()

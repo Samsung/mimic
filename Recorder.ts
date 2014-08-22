@@ -1,19 +1,29 @@
+/**
+ * Functionality to record the execution of a javascript function by using proxies.
+ *
+ * @author Stefan Heule <stefanheule@gmail.com>
+ */
 
 "use strict";
 
+import Util = require('./util/Util')
+import Ansi = require('./util/Ansicolors')
 import Data = require('./Data')
 
+// enable proxies
 import harmonyrefl = require('harmony-reflect');
 harmonyrefl;
 declare var Proxy: (target: Object, handler: Object) => Object;
 declare var Reflect: any
 
-import Util = require('./util/Util')
 var log = Util.log
 var print = Util.print
 
-import ansi = require('./util/Ansicolors')
-
+/**
+ * Record a trace for the given function and arguments.  In the `extended' mode, we additionally
+ * store various intermediate results (e.g. those from all field reads, or the old value of field
+ * writes) in local variables.  This is used to make program generation easier.
+ */
 export function record(f: (..._: any[]) => any, args: any[], extended: boolean = false): State {
     var state = new State(extended)
 
@@ -60,10 +70,16 @@ export function record(f: (..._: any[]) => any, args: any[], extended: boolean =
     return state
 }
 
-export function compile(prog: Data.Program) {
+/**
+ * Given a program, compile it into a regular function.
+ */
+export function compile(prog: Data.Program): (...a: any[]) => any {
     return compile2(prog.toString())
 }
-export function compile2(prog: string) {
+/**
+ * Like `compile', directly takes a string as input.
+ */
+export function compile2(prog: string): (...a: any[]) => any {
     return function (...a: any[]): any {
         return new Function('"use strict";' + prog).apply(null, a)
     }
@@ -153,7 +169,6 @@ export class State {
     }
 }
 
-
 function getAccessPath(state: State, v: any): Data.Expr {
     if (Util.isPrimitive(v)) {
         return new Data.Const(v)
@@ -167,7 +182,7 @@ function proxify(state: State, o: Object) {
     var common = function (target) {
         Util.assert(state.getPath(target) !== undefined, () => "target path undefined")
     }
-    var ignorec = (a: any) => print(ansi.lightgrey(a))
+    var ignorec = (a: any) => print(Ansi.lightgrey(a))
     ignorec = (a: any) => a
     var Handler = {
         get: function(target, name: string, receiver) {
@@ -308,10 +323,13 @@ function proxify(state: State, o: Object) {
     return p
 }
 
+/**
+ * Proxify the object `o', and log all behavior (in addition to actually performing the actions).
+ */
 export function proxifyWithLogger<T>(o: T): T {
     var common = function (target) {
     }
-    var logaccess = (a: any) => print(ansi.lightgrey(a))
+    var logaccess = (a: any) => print(Ansi.lightgrey(a))
     var Handler = {
         get: function(target, name: string, receiver) {
             common(target)
