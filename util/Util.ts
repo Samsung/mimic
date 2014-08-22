@@ -113,3 +113,10 @@ export class AssertionError {
 export function sum(a: number[]) {
     return a.reduce((a,b) => a+b, 0)
 }
+
+export function start(): number {
+    return new Date().getTime()
+}
+export function stop(s: number): number {
+    return start() - s
+}

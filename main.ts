@@ -87,7 +87,7 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
         var res = Search.search(f, a, {
             iterations: max[0],
             cleanupIterations: max[1],
-            debug: 1,
+            debug: 0,
         })
         if (res.score === 0) {
             success += 1
@@ -96,7 +96,9 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
         } else {
             Ansi.Gray("  no success in " + res.iterations + " iterations")
         }
-        Ansi.Gray(res.result.toString())
+        Ansi.Gray("  " + res.speed)
+
+        //Ansi.Gray(res.result.toString())
     }
 
     print("Tried " + n + " searches, with " + success + " successful ones.")
@@ -105,7 +107,7 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
 }
 
 
-howMany(f2, args2, 5, [7000, 0])
+howMany(f, args, 20, [7000, 0])
 
 
 /*

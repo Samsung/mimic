@@ -69,6 +69,7 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
         result: p,
         iterations: mainSearch.iterations + secondarySearch.iterations,
         score: mainSearch.score,
+        speed: mainSearch.speed,
     }
 }
 
@@ -76,6 +77,7 @@ export interface SearchResult {
     iterations: number
     result: Data.Program
     score: number
+    speed: string
 }
 
 export class SearchConfig {
@@ -98,6 +100,7 @@ interface CoreSearchConfig {
 }
 
 function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
+    var start = Util.start()
     var badness = config.metric(p)
     var n = config.iterations
     var i
@@ -134,10 +137,13 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
         }
     }
 
+    var time = Util.stop(start)
+
     return {
         iterations: i,
         result: p,
-        score: badness
+        score: badness,
+        speed: (i*1000/time).toFixed(2) + " per second",
     }
 }
 
