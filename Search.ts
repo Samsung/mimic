@@ -32,7 +32,8 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
 
     Ansi.Gray("Input generation...")
     var inputs = InputGen.generateInputs(state, args)
-    Ansi.Gray("  " + inputs.join("\n  "))
+    //inputs = [[['a']], [['b', 'c']], [[]]]
+    Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
 
     Ansi.Gray("Record correct behavior on inputs...")
     var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
