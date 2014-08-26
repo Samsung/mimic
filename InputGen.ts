@@ -27,7 +27,13 @@ export function generate(init: any, n: number): any[] {
     } else if (type === "object") {
         // TODO better strategy
         if (Array.isArray(init)) {
-            return [[]]
+            var res = [[]]
+            if (init.length > 0) {
+                var oneless = Util.clone(init)
+                oneless.pop()
+                res.push(oneless)
+            }
+            return res
         }
         return []
     } else if (type === "undefined") {
