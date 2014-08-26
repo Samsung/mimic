@@ -82,7 +82,17 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     }
                     break
                 case Data.StmtType.Return:
-                    news = new Data.Return(randomExpr(info))
+                    s = <Data.Return>ss
+                    if (s.rhs.type === Data.ExprType.Field) {
+                        var e = <Data.Field>s.rhs
+                        if (maybe()) {
+                            news = new Data.Return(new Data.Field(e.o, randomExpr(info)))
+                        } else {
+                            news = new Data.Return(new Data.Field(randomExpr(info, {lhs: true}), e.f))
+                        }
+                    } else {
+                        news = new Data.Return(randomExpr(info))
+                    }
                     break
                 case Data.StmtType.DeleteProp:
                     s = <Data.DeleteProp>ss
