@@ -184,18 +184,27 @@ function proxify(state: State, o: Object) {
     }
     var ignorec = (a: any) => print(Ansi.lightgrey(a))
     ignorec = (a: any) => a
+
+    function makeFieldName(target: any, name: string) {
+        var num = parseInt(name, 10);
+        if (Array.isArray(target) && num === num) {
+            return new Data.Const(num)
+        }
+        return new Data.Const(name)
+    }
+
     var Handler = {
         get: function(target, name: string, receiver) {
             common(target)
             if (!(name in target) || target.hasOwnProperty(name)) {
                 var val = target[name];
-                var field = new Data.Field(state.getPath(target), new Data.Const(name))
+                var field = new Data.Field(state.getPath(target), makeFieldName(target, name))
                 state.addCandidate(val, field)
                 //log("reading " + name + " and got " + val)
                 if (state.hasPrestate(target)) {
                     // we cannot use "field" directly, because that is only valid in the current state
                     // however, here we need an expression that is valid in the prestate
-                    state.addPrestate(val, new Data.Field(state.getPrestate(target), new Data.Const(name)))
+                    state.addPrestate(val, new Data.Field(state.getPrestate(target), makeFieldName(target, name)))
                 }
                 if (Util.isPrimitive(val)) {
                     if (state.extended) {
@@ -223,7 +232,7 @@ function proxify(state: State, o: Object) {
         set: function(target, name: string, value, receiver) {
             common(target)
             // TODO: record ALL candidate paths (maybe?)
-            var field = new Data.Field(state.getPath(target), new Data.Const(name));
+            var field = new Data.Field(state.getPath(target), makeFieldName(target, name));
             if (state.extended) {
                 // record the old value in a variable
                 var variable = new Data.Var()
@@ -286,7 +295,7 @@ function proxify(state: State, o: Object) {
         deleteProperty: function(target, name: string) {
             common(target)
             var obj = getAccessPath(state, o);
-            var f = new Data.Const(name);
+            var f = makeFieldName(target, name);
             var field = new Data.Field(obj, f);
             if (state.extended) {
                 // record the old value in a variable
