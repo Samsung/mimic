@@ -54,8 +54,6 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
             base: config,
         }, inputs.length)
 
-        print(result.result)
-
         Ansi.Gray("  Found a program in " + result.iterations + " iterations of score " + result.score.toFixed(2) + ".")
         return result
     }
@@ -75,6 +73,7 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
         Util.assert(nCategories === 2, () => "cannot handle more than 2 categories at the moment")
         p = new Data.Program(new Data.If(new Data.Const(true), res[0].result.body, res[1].result.body))
         mainSearch = straightLineSearch(f, inputs.all, 0.2*iterations, p)
+        p = mainSearch.result
     } else {
         Ansi.Gray("Searching a program for all " + inputs.all.length + " inputs.")
         mainSearch = straightLineSearch(f, inputs.all, config.iterations)
@@ -91,10 +90,8 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
         var realTraces = inputs.all.map((i) => Recorder.record(f, i).trace)
 
         // shorten the program
-        print(p)
         p = shorten(p, inputs.all, realTraces)
 
-        print(p)
         // switch to the finalizing metric
         secondarySearch = core_search(p, {
             metric: (pp) => Metric.evaluate(pp, inputs.all, realTraces, true),
