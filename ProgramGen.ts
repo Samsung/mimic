@@ -33,9 +33,8 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
     // all possible transformations (they return false if they cannot be applied)
     var options = [
         new WeightedPair(0, () => { // remove this statement
-            /*if (stmts.length < 1) return undefined
-             stmts.splice(si, 1)
-             return true*/
+            if (stmts.length < 1) return undefined
+            p.body.replace(si, Data.Seq.Empty)
             return undefined
         }),
         new WeightedPair(0, () => { // insert a new statement
