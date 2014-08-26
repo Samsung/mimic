@@ -106,9 +106,18 @@ export class Expr extends Node {
 }
 
 /**
+ * A marker class for Field and Argument
+ */
+export class Prestate extends Expr {
+    getBase(): Prestate {
+        return this
+    }
+}
+
+/**
  * A field access.
  */
-export class Field extends Expr {
+export class Field extends Prestate {
     constructor(public o: Expr, public f: Expr) {
         super(ExprType.Field, 1+Math.max(o.depth, f.depth))
     }
@@ -155,6 +164,10 @@ export class Field extends Expr {
         var type = typeof oVal;
         return type === 'object' || type === 'function'
     }
+    getBase() {
+        Util.assert(this.o instanceof Prestate)
+        return (<Prestate>this.o).getBase()
+    }
 }
 
 /**
@@ -194,7 +207,7 @@ export class Add extends Expr {
 /**
  * The i-th argument of a function.
  */
-export class Argument extends Expr {
+export class Argument extends Prestate {
     constructor(public i: number) {
         super(ExprType.Arg, 0)
     }

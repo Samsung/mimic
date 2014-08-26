@@ -99,12 +99,12 @@ export class State {
     mapping2: Map<Object, Object> = new Map<Object, Object>()
     public trace: Data.Trace = new Data.Trace()
     // all prestate expressions that are read
-    private readPrestateObj: Map<any, Data.Expr> = new Map<any, Data.Expr>()
-    private readPrestate: Data.Expr[] = []
+    private readPrestateObj: Map<any, Data.Prestate> = new Map<any, Data.Prestate>()
+    private readPrestate: Data.Prestate[] = []
     variables: Data.Var[] = []
     constructor(public extended: boolean) {
     }
-    addPrestate(a: any, e: Data.Expr) {
+    addPrestate(a: any, e: Data.Prestate) {
         e.setValue(a)
         if (Util.isPrimitive(a)) {
             this.readPrestate.push(e)
@@ -119,7 +119,7 @@ export class State {
     getPrestate(a: any) {
         return this.readPrestateObj.get(this.mapping.get(a))
     }
-    getPrestates() {
+    getPrestates(): Data.Prestate[] {
         var res = this.readPrestate.slice(0)
         //this.readPrestateObj.forEach((v, k) => res.push(v))
         return Util.dedup2(res)

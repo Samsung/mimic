@@ -40,12 +40,11 @@ export function generate(init: any, n: number): any[] {
 }
 
 export function generateInputs(f: (...a: any[]) => any, args: any[]): any[][] {
-    var candidates = genCandidateExpr(f, args).reverse()
-    print(candidates.join("\n"))
+    var candidates = genCandidateExpr(f, args)
     return generateInputsAux(f, args, candidates)
 }
 
-function generateInputsAux(f: (...a: any[]) => any, args: any[], exprs: Data.Expr[]): any[][] {
+function generateInputsAux(f: (...a: any[]) => any, args: any[], exprs: Data.Prestate[]): any[][] {
     var helper = function (ps: Data.Expr[]): any[][] {
         if (ps.length === 0) return [args]
         var res: any[][] = []
@@ -80,15 +79,38 @@ function generateInputsAux(f: (...a: any[]) => any, args: any[], exprs: Data.Exp
         return res
     }
 
-    return helper(exprs)
+    // order the expressions so that less specific updates happen first.
+    // for instance, if we want to update both args[0] and args[0][0], then
+    // we should do args[0] first, because otherwise we might update args[0][0],
+    // and then update args[0] to the empty array, thereby losing the update
+    // to args[0][0] (and thus creating equivalent inputs)
+
+    // of course, this is just a best-effort mechanism;  if there are aliases,
+    // we might not do the right thing
+
+    var sorted = []
+    var worklist: Data.Prestate[][] = exprs.map((e) => [e, e])
+    while (worklist.length > 0) {
+        worklist = worklist.filter(a => {
+            var base = a[0].getBase()
+            if (base === a[0]) {
+                sorted.push(a[1])
+                return false
+            }
+            a[0] = base
+            return true
+        })
+    }
+
+    return helper(sorted.reverse())
 }
 
 /**
  * Returns a list of interesting expressions that should be modified to get inputs.
  */
-function genCandidateExpr(f: (...a: any[]) => any, initial: any[]): Data.Expr[] {
-    function filter(input: Data.Expr[]): Data.Expr[] {
-        var filtered: Data.Expr[] = []
+function genCandidateExpr(f: (...a: any[]) => any, initial: any[]): Data.Prestate[] {
+    function filter(input: Data.Prestate[]): Data.Prestate[] {
+        var filtered: Data.Prestate[] = []
         for (var i = 0; i < input.length; i++) {
             var e
             if (input[i].type === Data.ExprType.Field) {
