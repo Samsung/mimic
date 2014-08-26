@@ -106,7 +106,7 @@ function search(f, a) {
 
 
 var fs:any = [
-    [
+    [ // 0
         (obj1, obj2, str, int) => {
             obj1.a = obj2
             obj2[str] = obj2.g
@@ -116,19 +116,19 @@ var fs:any = [
         },
         [{}, {g: "a", f: {}}, "a", 0]
     ],
-    [
+    [ // 1
         (arr) => arr.pop(),
         [['a', 'b', 'c']]
     ],
-    [
+    [ // 2
         (arr, v) => arr.push(v),
         [['a', 'b', 'c'], 'd']
     ],
-    [
+    [ // 3
         (arr, i) => arr[i],
         [['a', 'b', 'c'], 2]
     ],
-    [
+    [ // 4
         (arr, i) => {
             if (i) {
                 return arr
