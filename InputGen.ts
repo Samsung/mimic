@@ -8,6 +8,7 @@ import Recorder = require('./Recorder')
 import Util = require('./util/Util')
 var log = Util.log
 var print = Util.print
+var line = Util.line
 
 import Ansi = require('./util/Ansicolors')
 
@@ -18,6 +19,8 @@ export function generate(init: any, n: number): any[] {
         return [0, 1]
     } else if (type === "string") {
         return ["b", "def"]
+    } else if (type === "boolean") {
+        return [true, false]
     } else if (type === "object") {
         // TODO better strategy
         return [init]
@@ -58,4 +61,37 @@ export function generateInputs(state: Recorder.State, args: any[]): any[][] {
         Ansi.Gray(state.getPrestates().join("\n"))
     }
     return helper(state.getPrestates()).concat([args])
+}
+
+export function genInputs(f: (...a: any[]) => any, initial: any[]): any[][] {
+    var state = Recorder.record(f, initial)
+    var newArgs = generateInputs(state, initial)
+    var res = state.getPrestates()
+    print(res.join("\n"))
+    line()
+    for (var i = 0; i < newArgs.length; i++) {
+        var ps = Recorder.record(f, newArgs[i]).getPrestates()
+        res = res.concat(ps)
+    }
+    res = Util.dedup2(res)
+    var filtered = []
+    for (var i = 0; i < res.length; i++) {
+        var e
+        if (res[i].type === Data.ExprType.Field) {
+            e = <Data.Field>res[i]
+            /*if (Array.isArray(e.o.getValue()) && typeof e.f.getValue() === 'number') {
+                filtered.push(e.o)
+                continue
+            }*/
+            if (Array.isArray(e.o.getValue()) && e.f.getValue() === 'length') {
+                // we always vary the array length, so no need to kep this
+                filtered.push(e.o)
+                continue
+            }
+        }
+        filtered.push(res[i])
+    }
+    filtered = Util.dedup2(filtered)
+    print(filtered.join("\n"))
+    return null
 }

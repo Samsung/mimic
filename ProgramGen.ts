@@ -89,7 +89,7 @@ export function randomChange(state: Recorder.State, p: Data.Program): Data.Progr
                     break
                 case Data.StmtType.If:
                     s = <Data.If>ss
-                    news = new Data.If(randomExpr(state), s.thn, s.els)
+                    news = new Data.If(randomExpr(state, {num: true}), s.thn, s.els)
                     break
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
