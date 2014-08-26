@@ -48,9 +48,17 @@ export class Expr extends Node {
     constructor(public type: ExprType, public depth: number) {
         super()
     }
+
+    /**
+     * Evaluate this expression over args.  Assumes this.isSafe(args) === true.
+     */
     eval(args: any[]): any {
         Util.assert(false)
     }
+
+    /**
+     * Update the value of this expression in args to `val'.  Assumes that this.canBeUpdate(args) === true.
+     */
     update(args: any[], val: any): any {
         Util.assert(false)
     }
@@ -67,6 +75,33 @@ export class Expr extends Node {
     setValue(val: any) {
         this.value = val
         this.valueSet = true
+    }
+
+    /**
+     * Returns true if the expression (interpreted over args) can be updated.
+     *
+     * For instance, a constant cannot be updated, or a field of something that isn't an object or array.
+     */
+    canBeUpdated(args: any[]): boolean {
+        Util.assert(false)
+        return false
+    }
+
+    /**
+     * Returns true if the expression (interpreted over arg) already has the value `val'.
+     * Assumes that this.canBeUpdate(args) === true.
+     */
+    isUpdateNop(args: any[], val: any): boolean {
+        Util.assert(false)
+        return false
+    }
+
+    /**
+     * Returns true if the expression interpreted over args makes sense and can safely be accessed.
+     */
+    isSafe(args: any[]): boolean {
+        Util.assert(false)
+        return false
     }
 }
 
@@ -99,6 +134,19 @@ export class Field extends Expr {
     toSkeleton(): string {
         return this.o.toSkeleton() + "[" + this.f.toSkeleton() + "]"
     }
+    canBeUpdated(args: any[]): boolean {
+        return this.isSafe(args)
+    }
+    isUpdateNop(args: any[], val: any): boolean {
+        return this.eval(args) === val
+    }
+    isSafe(args: any[]): boolean {
+        return this.o.isSafe(args) && this.canHaveFields(this.o.eval(args))
+    }
+    private canHaveFields(oVal: any) {
+        var type = typeof oVal;
+        return type === 'object' || type === 'function'
+    }
 }
 
 /**
@@ -126,6 +174,12 @@ export class Add extends Expr {
     }
     toSkeleton(): string {
         return this.a.toSkeleton() + "+" + this.b.toSkeleton()
+    }
+    canBeUpdated(args: any[]): boolean {
+        return false
+    }
+    isSafe(args: any[]): boolean {
+        return this.a.isSafe(args) && this.b.isSafe(args)
     }
 }
 
@@ -159,6 +213,15 @@ export class Argument extends Expr {
     toSkeleton(): string {
         return "arg(" + this.i + ")"
     }
+    canBeUpdated(args: any[]): boolean {
+        return this.isSafe(args)
+    }
+    isUpdateNop(args: any[], val: any): boolean {
+        return args[this.i] === val
+    }
+    isSafe(args: any[]): boolean {
+        return this.i < args.length
+    }
 }
 
 /**
@@ -188,6 +251,12 @@ export class Var extends Expr {
     }
     toSkeleton(): string {
         return "var"
+    }
+    canBeUpdated(args: any[]): boolean {
+        return false
+    }
+    isSafe(args: any[]): boolean {
+        return false
     }
 }
 
@@ -225,6 +294,12 @@ export class Const extends Expr {
     }
     toSkeleton(): string {
         return "const"
+    }
+    canBeUpdated(args: any[]): boolean {
+        return false
+    }
+    isSafe(args: any[]): boolean {
+        return true
     }
 }
 
