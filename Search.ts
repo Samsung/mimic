@@ -31,7 +31,7 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
     var p = state.trace.asProgram()
 
     Ansi.Gray("Input generation...")
-    var inputs = InputGen.generateInputs(state, args)
+    var inputs = InputGen.generateInputs(f, args)
     //inputs = [[['a']], [['b', 'c']], [[]]]
     Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
 

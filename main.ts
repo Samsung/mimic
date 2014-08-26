@@ -116,8 +116,7 @@ function hash(s: string) {
 }
 
 function categorize(f, a) {
-    var state = Recorder.record(f, a, true)
-    var inputs = InputGen.generateInputs(state, a)
+    var inputs = InputGen.generateInputs(f, a)
 
     var ts: Recorder.State[] = []
     for (var i = 0; i < inputs.length; i++) {
@@ -180,10 +179,7 @@ var a = fs[i][1]
 
 var ff = f
 var aa = a
-var state = Recorder.record(ff, aa)
-var gen = InputGen.generateInputs(state, aa)
-InputGen.genInputs(ff, aa)
-
+var gen = InputGen.generateInputs(ff, aa)
 log(gen)
 
 /*

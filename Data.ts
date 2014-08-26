@@ -135,7 +135,15 @@ export class Field extends Expr {
         return this.o.toSkeleton() + "[" + this.f.toSkeleton() + "]"
     }
     canBeUpdated(args: any[]): boolean {
-        return this.isSafe(args)
+        if (!this.isSafe(args)) {
+            return false
+        }
+        var o = this.o.eval(args)
+        var i = this.f.eval(args)
+        if (Array.isArray(o) && (i < 0 || i >= o.length)) {
+            return false
+        }
+        return true
     }
     isUpdateNop(args: any[], val: any): boolean {
         return this.eval(args) === val
