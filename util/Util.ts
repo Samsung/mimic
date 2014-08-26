@@ -20,11 +20,23 @@ export function printnln(s: any) {
 export function line(str?: any) {
     print("------------------------ " + (str || ""))
 }
+export function linereturn(str?: any) {
+    return ("------------------------ " + (str || ""))
+}
 export function line2(str?: any) {
     print("======================== " + (str || ""))
 }
 export function log(o: any, colors?: boolean) {
     print(util.inspect(o, { colors: colors }))
+}
+export function log2(o: any, colors?: boolean) {
+    print(util.inspect(o, { colors: colors, depth: 3 }))
+}
+export function log3(o: any, colors?: boolean) {
+    print(util.inspect(o, { colors: colors, depth: 4 }))
+}
+export function logall(o: any, colors?: boolean) {
+    print(util.inspect(o, { colors: colors, depth: null }))
 }
 export function inspect(o: any, colors: boolean = true): string {
     return util.inspect(o, { colors: colors })
@@ -129,4 +141,15 @@ export function pad(n, width, z) {
 
 export function isInt(s: string) {
     return /^(\-|\+)?([0-9]+)$/.test(s)
+}
+
+export function hash(s: string) {
+    var hash = 0, i, chr, len;
+    if (s.length == 0) return hash;
+    for (i = 0, len = s.length; i < len; i++) {
+        chr   = s.charCodeAt(i);
+        hash  = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
 }

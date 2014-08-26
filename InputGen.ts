@@ -39,9 +39,34 @@ export function generate(init: any, n: number): any[] {
     return []
 }
 
-export function generateInputs(f: (...a: any[]) => any, args: any[]): any[][] {
+function categorize(f, inputs) {
+    var map = new Map<string, number>()
+    var res = []
+    var cat = 0
+    for (var i = 0; i < inputs.length; i++) {
+        var input = inputs[i];
+        var skeleton = Recorder.record(f, input).trace.toSkeleton()
+        if (!map.has(skeleton)) {
+            map.set(skeleton, cat)
+            res[cat] = {
+                id: cat,
+                inputs: [],
+            }
+            cat += 1
+        }
+        res[map.get(skeleton)].inputs.push(input)
+    }
+    return res
+}
+
+export function generateInputs(f: (...a: any[]) => any, args: any[]) {
     var candidates = genCandidateExpr(f, args)
-    return generateInputsAux(f, args, candidates)
+    var allInputs = generateInputsAux(f, args, candidates)
+    var categories = categorize(f, allInputs)
+    return {
+        all: allInputs,
+        categories: categories,
+    }
 }
 
 function generateInputsAux(f: (...a: any[]) => any, args: any[], exprs: Data.Prestate[]): any[][] {
@@ -106,7 +131,21 @@ function generateInputsAux(f: (...a: any[]) => any, args: any[], exprs: Data.Pre
 }
 
 /**
- * Returns a list of interesting expressions that should be modified to get inputs.
+ * Return a list of interesting expressions that should be used during program generation.
+ */
+export function genCandidates(inputs: any[][], f: (...a: any[]) => any) {
+    var res = []
+    for (var i = 0; i < inputs.length; i++) {
+        var ps = Recorder.record(f, inputs[i]).getPrestates()
+        res = res.concat(ps)
+    }
+    res = Util.dedup2(res)
+    return res;
+}
+
+/**
+ * Returns a list of interesting expressions that should be modified to get inputs. Unlike genCandidates,
+ * this method performs some filtering of things that aren't necessary for input generation.
  */
 function genCandidateExpr(f: (...a: any[]) => any, initial: any[]): Data.Prestate[] {
     function filter(input: Data.Prestate[]): Data.Prestate[] {
@@ -135,11 +174,6 @@ function genCandidateExpr(f: (...a: any[]) => any, initial: any[]): Data.Prestat
 
     var state = Recorder.record(f, initial)
     var newArgs = generateInputsAux(f, initial, filter(state.getPrestates()))
-    var res = state.getPrestates()
-    for (var i = 0; i < newArgs.length; i++) {
-        var ps = Recorder.record(f, newArgs[i]).getPrestates()
-        res = res.concat(ps)
-    }
-    res = Util.dedup2(res)
+    var res = genCandidates(newArgs, f).concat(state.getPrestates())
     return filter(res)
 }

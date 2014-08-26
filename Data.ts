@@ -605,6 +605,15 @@ export class Program {
     toString() {
         return "  " + this.body.toString().replace(/\n/g, "\n  ")
     }
+    getVariables(): Var[] {
+        var res = []
+        this.body.children().forEach((n) => {
+            if (n.type === ExprType.Var) {
+                res.push(<Var>n)
+            }
+        })
+        return res
+    }
 }
 
 /**
@@ -638,8 +647,8 @@ export class Trace {
         }
         return true
     }
-    toSkeleton(): string[] {
-        return this.stmts.map((s) => s.toSkeleton())
+    toSkeleton(): string {
+        return this.stmts.map((s) => s.toSkeleton()).join("\n")
     }
     getSkeletonIdx(i: number): Stmt {
         return this.stmts[i]

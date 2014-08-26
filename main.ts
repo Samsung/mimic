@@ -104,30 +104,6 @@ function search(f, a) {
     print(res.result.toString())
 }
 
-function hash(s: string) {
-    var hash = 0, i, chr, len;
-    if (s.length == 0) return hash;
-    for (i = 0, len = s.length; i < len; i++) {
-        chr   = s.charCodeAt(i);
-        hash  = ((hash << 5) - hash) + chr;
-        hash |= 0; // Convert to 32bit integer
-    }
-    return hash;
-}
-
-function categorize(f, a) {
-    var inputs = InputGen.generateInputs(f, a)
-
-    var ts: Recorder.State[] = []
-    for (var i = 0; i < inputs.length; i++) {
-        var input = inputs[i];
-        ts.push(Recorder.record(f, input))
-    }
-
-    var res = ts.map((t) => hash(t.trace.toSkeleton().join("\n"))).sort()
-    print(res.join("\n"))
-}
-
 
 var fs:any = [
     [
@@ -172,16 +148,15 @@ var f = fs[i][0]
 var a = fs[i][1]
 
 
-//search(f, a)
+search(f, a)
 //howMany(f, a, 20, [1500, 0])
-//categorize(f, a);
 
-
+/*
 var ff = f
 var aa = a
 var gen = InputGen.generateInputs(ff, aa)
-log(gen)
-
+Util.logall(gen)
+*/
 /*
 function loop(o) {
     for (var f in o) {

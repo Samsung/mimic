@@ -19,10 +19,15 @@ var print = Util.print
 var log = Util.log
 var line = Util.line
 
+export class RandomMutationInfo {
+    constructor(public candidates: Data.Expr[], public variables: Data.Var[]) {
+    }
+}
+
 /**
  * Randomly mutate the given program.
  */
-export function randomChange(state: Recorder.State, p: Data.Program): Data.Program {
+export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Program {
     var stmts = p.body.allStmts()
     var si = randInt(stmts.length)
     // all possible transformations (they return false if they cannot be applied)
@@ -58,38 +63,38 @@ export function randomChange(state: Recorder.State, p: Data.Program): Data.Progr
                     s = <Data.Assign>ss
                     if (s.lhs.type === Data.ExprType.Field) {
                         if (maybe(0.3334)) {
-                            news = new Data.Assign(s.lhs, randomExpr(state))
+                            news = new Data.Assign(s.lhs, randomExpr(info))
                         } else if (maybe(0.5)) {
-                            var field = new Data.Field((<Data.Field>s.lhs).o, randomExpr(state))
+                            var field = new Data.Field((<Data.Field>s.lhs).o, randomExpr(info))
                             news = new Data.Assign(field, s.rhs)
                         } else {
-                            var field = new Data.Field(randomExpr(state, {obj: true}), (<Data.Field>s.lhs).f)
+                            var field = new Data.Field(randomExpr(info, {obj: true}), (<Data.Field>s.lhs).f)
                             news = new Data.Assign(field, s.rhs)
                         }
                     } else {
                         Util.assert(s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field)
                         var f = <Data.Field>s.rhs
                         if (maybe()) {
-                            news = new Data.Assign(s.lhs, new Data.Field(f.o, randomExpr(state)), s.isDecl)
+                            news = new Data.Assign(s.lhs, new Data.Field(f.o, randomExpr(info)), s.isDecl)
                         } else {
-                            news = new Data.Assign(s.lhs, new Data.Field(randomExpr(state, {lhs: true}), f.f), s.isDecl)
+                            news = new Data.Assign(s.lhs, new Data.Field(randomExpr(info, {lhs: true}), f.f), s.isDecl)
                         }
                     }
                     break
                 case Data.StmtType.Return:
-                    news = new Data.Return(randomExpr(state))
+                    news = new Data.Return(randomExpr(info))
                     break
                 case Data.StmtType.DeleteProp:
                     s = <Data.DeleteProp>ss
                     if (maybe()) {
-                        news = new Data.DeleteProp(randomExpr(state, {arr: true, obj: true}), s.f)
+                        news = new Data.DeleteProp(randomExpr(info, {arr: true, obj: true}), s.f)
                     } else {
-                        news = new Data.DeleteProp(s.o, randomExpr(state))
+                        news = new Data.DeleteProp(s.o, randomExpr(info))
                     }
                     break
                 case Data.StmtType.If:
                     s = <Data.If>ss
-                    news = new Data.If(randomExpr(state, {num: true}), s.thn, s.els)
+                    news = new Data.If(randomExpr(info, {num: true}), s.thn, s.els)
                     break
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
@@ -107,20 +112,20 @@ export function randomChange(state: Recorder.State, p: Data.Program): Data.Progr
 }
 
 
-function randomStmt(state: Recorder.State): Data.Stmt {
+function randomStmt(info: RandomMutationInfo): Data.Stmt {
     var options = [
         () => {
-            return new Data.Return(randomExpr(state))
+            return new Data.Return(randomExpr(info))
         },
         () => {
-            return new Data.Assign(randomExpr(state, {lhs: true}), randomExpr(state))
+            return new Data.Assign(randomExpr(info, {lhs: true}), randomExpr(info))
         },
     ]
     return randArr(options)()
 }
 
 
-function randomExpr(state: Recorder.State, args: any = {}, depth: number = 2): Data.Expr {
+function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2): Data.Expr {
     var lhs = "lhs" in args && args.lhs === true
     var obj = "obj" in args && args.obj === true
     var arr = "arr" in args && args.arr === true
@@ -138,23 +143,23 @@ function randomExpr(state: Recorder.State, args: any = {}, depth: number = 2): D
         }),
         new WeightedPair(6, () => {
             // random candidate expression
-            var ps = state.getPrestates()
+            var ps = info.candidates
             if (ps.length === 0) return undefined
             return randArr(ps)
         }),
         new WeightedPair(4, () => {
             // random value read during generation
-            var vs = state.variables;
+            var vs = info.variables;
             if (vs.length === 0) return undefined
             return randArr(vs)
         }),
         new WeightedPair(zeroD ? 0 : 3, () => {
             // random new field
-            return <Data.Expr>new Data.Field(randomExpr(state, {obj: true}, depth-1), randomExpr(state, {}, depth-1))
+            return <Data.Expr>new Data.Field(randomExpr(info, {obj: true}, depth-1), randomExpr(info, {}, depth-1))
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 2, () => {
             // random new addition
-            return <Data.Expr>new Data.Add(randomExpr(state, {num: true}, depth-1), new Data.Const(maybe() ? 1 : -1))
+            return <Data.Expr>new Data.Add(randomExpr(info, {num: true}, depth-1), new Data.Const(maybe() ? 1 : -1))
         }),
     ]
     // filter out bad expressions

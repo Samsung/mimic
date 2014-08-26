@@ -63,3 +63,20 @@ export function maybe(yesProbability: number = 0.5) {
 export function pick<T>(arr: WeightedPair<T>[]): T {
     return randArrW(arr.map((x) => x.e), arr.map((x) => x.w))
 }
+
+/**
+ * Return at most `n' randomly chosen elements from `arr' in a fresh array.
+ */
+export function pickN<T>(arr: T[], n: number): T[] {
+    if (n >= arr.length) {
+        return arr.slice(0)
+    }
+    var res = []
+    while (res.length < n) {
+        var r = randInt(arr.length)
+        if (res.indexOf(r) === -1) {
+            res.push(r)
+        }
+    }
+    return res.map((i) => arr[i])
+}

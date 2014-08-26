@@ -27,45 +27,79 @@ var line = Util.line
 export function search(f: (...a: any[]) => any, args: any[], config: SearchConfig = new SearchConfig()): SearchResult {
     Ansi.Gray("Recording original execution...")
 
-    var state = Recorder.record(f, args, true)
-    var p = state.trace.asProgram()
-
     Ansi.Gray("Input generation...")
     var inputs = InputGen.generateInputs(f, args)
-    //inputs = [[['a']], [['b', 'c']], [[]]]
-    Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
+    var nCategories = inputs.categories.length;
+    Ansi.Gray("Found " + nCategories + " categories of inputs (" + inputs.all.length + " inputs total).")
+    //Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
 
-    Ansi.Gray("Record correct behavior on inputs...")
-    var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
+    function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, p?: Data.Program) {
+        if (!p) {
+            var state = Recorder.record(f, inputs[0], true)
+            p = state.trace.asProgram()
+        }
 
-    Ansi.Gray("Starting core search...")
+        var candidates = InputGen.genCandidates(inputs, f)
+        var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
 
-    var randomChange = (pp) => ProgramGen.randomChange(state, pp)
-    var mainSearch = core_search(p, {
-        metric: (pp) => Metric.evaluate(pp, inputs, realTraces),
-        iterations: config.iterations,
-        randomChange: randomChange,
-        introIf: (pp) => introIf(f, pp, inputs, realTraces),
-        base: config,
-    }, inputs.length)
-    p = mainSearch.result
+        Ansi.Gray("  Record correct behavior on " + inputs.length + " inputs...")
+        var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
+
+        Ansi.Gray("  Starting search...")
+
+        var result = core_search(p, {
+            metric: (pp) => Metric.evaluate(pp, inputs, realTraces),
+            iterations: iterations,
+            randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
+            base: config,
+        }, inputs.length)
+
+        Ansi.Gray("  Found a program in " + result.iterations + " iterations of score " + result.score.toFixed(2) + ".")
+        return result
+    }
+
+    var p: Data.Program
+    var mainSearch
+    Ansi.Gray(Util.linereturn())
+    if (nCategories > 1) {
+        var res: SearchResult[] = []
+        var iterations = Math.ceil(0.8*config.iterations/nCategories)
+        for (var i = 0; i < nCategories; i++) {
+            Ansi.Gray("Searching a program for input category " + (i+1) + "/" + nCategories + ".")
+            res[i] = straightLineSearch(f, inputs.categories[i].inputs, iterations)
+            Ansi.Gray(Util.linereturn())
+        }
+        Ansi.Gray("Searching a program for all " + inputs.all.length + " inputs.")
+        Util.assert(nCategories === 2, () => "cannot handle more than 2 categories at the moment")
+        p = new Data.Program(new Data.If(new Data.Const(true), res[0].result.body, res[1].result.body))
+        mainSearch = straightLineSearch(f, inputs.all, 0.2*iterations, p)
+    } else {
+        Ansi.Gray("Searching a program for all " + inputs.all.length + " inputs.")
+        mainSearch = straightLineSearch(f, inputs.all, config.iterations)
+        p = mainSearch.result
+        Ansi.Gray(Util.linereturn())
+    }
 
     var secondarySearch
     if (config.cleanupIterations > 0) {
         Ansi.Gray("Starting secondary cleanup search...")
 
+        var candidates = InputGen.genCandidates(inputs.all, f)
+        var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
+        var realTraces = inputs.all.map((i) => Recorder.record(f, i).trace)
+
         // shorten the program
-        p = shorten(p, inputs, realTraces)
+        p = shorten(p, inputs.all, realTraces)
 
         // switch to the finalizing metric
         secondarySearch = core_search(p, {
-            metric: (pp) => Metric.evaluate(pp, inputs, realTraces, true),
+            metric: (pp) => Metric.evaluate(pp, inputs.all, realTraces, true),
             iterations: config.cleanupIterations,
-            randomChange: randomChange,
-            introIf: (pp) => pp,
+            randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
             base: config,
-        }, inputs.length)
+        }, inputs.all.length)
         p = secondarySearch.result
+        Ansi.Gray(Util.linereturn())
     } else {
         secondarySearch = {
             iterations: 0
@@ -111,7 +145,6 @@ interface CoreSearchConfig {
     metric: (p: Data.Program) => number
     iterations: number
     randomChange: (p: Data.Program) => Data.Program
-    introIf: (p: Data.Program) => Data.Program
     base: SearchConfig
 }
 
@@ -125,32 +158,26 @@ function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: num
             // stop search if we found a perfect program
             break;
         }
-        var newp
-        if (i === Math.floor(n*0.5) && badness > 0) {
-            // maybe we should have an if?
-            p = config.introIf(p)
-        } else {
-            newp = config.randomChange(p)
+        var newp = config.randomChange(p)
 
-            var newbadness = config.metric(newp)
-            if (newbadness < badness) {
+        var newbadness = config.metric(newp)
+        if (newbadness < badness) {
+            if (config.base.debug > 0) {
+                Ansi.Gray("   improvement at iteration "+Util.pad(i, 5, ' ')+": " +
+                    Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
+            }
+            p = newp
+            badness = newbadness
+        } else {
+            var W_BETA = 6
+            var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
+            if (maybe(alpha)) {
                 if (config.base.debug > 0) {
-                    Ansi.Gray("   improvement at iteration "+Util.pad(i, 5, ' ')+": " +
+                    Ansi.Gray(" ! improvement at iteration "+Util.pad(i, 5, ' ')+": " +
                         Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
                 }
                 p = newp
                 badness = newbadness
-            } else {
-                var W_BETA = 6
-                var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
-                if (maybe(alpha)) {
-                    if (config.base.debug > 0) {
-                        Ansi.Gray(" ! improvement at iteration "+Util.pad(i, 5, ' ')+": " +
-                            Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
-                    }
-                    p = newp
-                    badness = newbadness
-                }
             }
         }
     }
