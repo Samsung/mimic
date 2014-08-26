@@ -186,9 +186,8 @@ function proxify(state: State, o: Object) {
     ignorec = (a: any) => a
 
     function makeFieldName(target: any, name: string) {
-        var num = parseInt(name, 10);
-        if (Array.isArray(target) && num === num) {
-            return new Data.Const(num)
+        if (Array.isArray(target) && Util.isInt(name)) {
+            return new Data.Const(parseInt(name, 10))
         }
         return new Data.Const(name)
     }
