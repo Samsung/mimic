@@ -148,7 +148,7 @@ var f = fs[i][0]
 var a = fs[i][1]
 
 
-search(f, a)
+//search(f, a)
 //howMany(f, a, 20, [1500, 0])
 
 /*
@@ -174,3 +174,21 @@ loop(Recorder.proxifyWithLogger([1, 2, 3]))
 line()
 loop2(Recorder.proxifyWithLogger([1, 2, 3]))
 */
+
+var a1 = Recorder.proxifyWithLogger([1, 2, 3], "a")
+var a2 = Recorder.proxifyWithLogger([3, 4], "b")
+var pred = Recorder.proxifyWithLogger((n) => n < 2, "f")
+
+print("a1.every(pred)")
+a1.every(pred)
+line()
+print("a1.concat(a2)")
+a1.concat(a2)
+line()
+print("a1.shift()")
+a1.shift()
+line()
+print("a1.join(.)")
+a1.join(".")
+line()
+

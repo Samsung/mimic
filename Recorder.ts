@@ -334,28 +334,29 @@ function proxify(state: State, o: Object) {
 /**
  * Proxify the object `o', and log all behavior (in addition to actually performing the actions).
  */
-export function proxifyWithLogger<T>(o: T, level: number = 0, cache: WeakMap<any, any> = new WeakMap<any, any>()): T {
+export function proxifyWithLogger<T>(o: T, tag: string = " ", level: number = 0, cache: WeakMap<any, any> = new WeakMap<any, any>()): T {
     if (cache.has(o)) {
         return cache.get(o)
     }
     var common = function (target) {
+        Util.printnln(tag + " ")
         if (level === 0) {
-            Util.printnln("  ")
         } else {
             Util.printnln(Ansi.lightgrey("" + level + " "))
         }
     }
+    var recurse = (o) => proxifyWithLogger(o, tag, level+1, cache)
     var logaccess = (a: any) => print(Ansi.lightgrey(a))
     var Handler = {
         get: function(target, name: string, receiver) {
-            common(target)
             var value = Reflect.get(target, name, receiver);
             var s = "get of " + name;
             if (Util.isPrimitive(value)) {
                 s += " (yields " + value + ")"
             } else {
-                value = proxifyWithLogger(value, level+1, cache)
+                value = recurse(value)
             }
+            common(target)
             logaccess(s)
             return value;
         },
@@ -374,13 +375,13 @@ export function proxifyWithLogger<T>(o: T, level: number = 0, cache: WeakMap<any
             return Reflect.has(target, name);
         },
         apply: function(target, receiver, args) {
-            common(target)
             var v = Reflect.apply(target, receiver, args);
+            common(target)
             if (Util.isPrimitive(v)) {
                 logaccess("apply (result: " + v + ")")
             } else {
                 logaccess("apply")
-                v = proxifyWithLogger(v, level+1, cache)
+                v = recurse(v)
             }
             return  v;
         },
@@ -422,7 +423,7 @@ export function proxifyWithLogger<T>(o: T, level: number = 0, cache: WeakMap<any
         enumerate: function(target) {
             common(target)
             logaccess("enumerate")
-            return proxifyWithLogger(Reflect.enumerate(target), level+1, cache)
+            return recurse(Reflect.enumerate(target))
         },
         preventExtensions: function(target) {
             common(target)
