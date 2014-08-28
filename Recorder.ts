@@ -15,6 +15,7 @@ import harmonyrefl = require('harmony-reflect');
 harmonyrefl;
 declare var Proxy: (target: Object, handler: Object) => Object;
 declare var Reflect: any
+declare var global: any
 
 var log = Util.log
 var print = Util.print
@@ -252,6 +253,14 @@ function proxify(state: State, o: Object) {
         },
         apply: function(target, receiver, args) {
             ignorec(".. unhandled call to apply")
+            var v = new Data.Var()
+            var f = getAccessPath(state, target)
+            var args2 = args.map((a) => getAccessPath(state, a))
+            var recv = null
+            if (receiver !== global) {
+                recv = getAccessPath(state, receiver)
+            }
+            state.record(new Data.FuncCall(v, f, args2, recv))
             common(target)
             return Reflect.apply(target, receiver, args);
         },

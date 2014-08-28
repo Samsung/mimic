@@ -16,6 +16,14 @@ export class Node {
         Util.assert(false)
         return []
     }
+    transitiveChildren(): Node[] {
+        var res = this.children()
+        var l = res.length;
+        for (var i = 0; i < l; i++) {
+            res = res.concat(res[i].transitiveChildren())
+        }
+        return res
+    }
     /* Returns all direct children (that are somehow relevant for equality) */
     anychildren(): any[] {
         Util.assert(false)
@@ -336,6 +344,7 @@ export enum StmtType {
     VarDecl,
     If,
     Seq,
+    FuncCall,
 }
 
 /**
@@ -498,6 +507,63 @@ export class Assign extends Stmt {
 }
 
 /**
+ * A function call.
+ */
+export class FuncCall extends Stmt {
+    constructor(public v: Var, public f: Expr, public args: Expr[], public recv: Expr = null) {
+        super(StmtType.FuncCall)
+    }
+    toString() {
+        var s = "var " + this.v.toString() + " = "
+        if (this.recv !== null) {
+            s += this.recv.toString() + "."
+        }
+        var rcvArg = this.recv === null ? "null" : this.recv.toString();
+        var args = this.args.map((a) => a.toString())
+        s += this.f.toString() + ".apply(" + rcvArg + ", [ " + args.join(", ") + " ])"
+        return s
+    }
+    equals(o) {
+        if (!(o instanceof FuncCall)) {
+            return false
+        }
+        if (!(o.v.equals(this.v) && o.f.equals(this.f))) {
+            return false
+        }
+        if (!(this.args.length === o.args.length)) {
+            return false
+        }
+        for (var i = 0; i < this.args.length; i++) {
+            if (!this.args[i].equals(o.args[i])) {
+                return false
+            }
+        }
+        return true
+    }
+    children(): Node[] {
+        var res = [this.v, this.f].concat(this.args);
+        if (this.recv !== null) {
+            res.push(this.recv)
+        }
+        return res
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
+    }
+    toSkeleton(): string {
+        var s = "var " + this.v.toSkeleton() + " = "
+        if (this.recv !== null) {
+            s += this.recv.toSkeleton() + "."
+        }
+        var rcvArg = this.recv === null ? "null" : this.recv.toSkeleton();
+        var args = this.args.map((a) => a.toSkeleton())
+        s += this.f.toSkeleton() + ".apply(" + rcvArg + ", [ " + args.join(", ") + " ])"
+        return s
+    }
+}
+
+/**
  * A return statement.
  */
 export class Return extends Stmt {
@@ -610,7 +676,7 @@ export class Program {
     }
     getVariables(): Var[] {
         var res = []
-        this.body.children().forEach((n) => {
+        this.body.transitiveChildren().forEach((n) => {
             if (n.type === ExprType.Var) {
                 res.push(<Var>n)
             }

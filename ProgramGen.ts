@@ -53,6 +53,12 @@ class MaybeAstFactory {
         }
         return new Data.Assign(a, b, isDecl)
     }
+    static makeFuncCall(v: Data.Var, f: Data.Expr, r: Data.Expr, args: Data.Expr[]): Data.FuncCall {
+        if (v === null || f === null || args.some((a) => a === null)) {
+            return null
+        }
+        return new Data.FuncCall(v, f, args, r)
+    }
     static makeReturn(a: Data.Expr): Data.Return {
         if (a === null) {
             return null
@@ -154,6 +160,13 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                 case Data.StmtType.If:
                     s = <Data.If>ss
                     news = Ast.makeIf(randomExpr(info, {num: true}), s.thn, s.els)
+                    break
+                case Data.StmtType.FuncCall:
+                    s = <Data.FuncCall>ss
+                    if (s.args.length === 0) return null
+                    var idx = randInt(s.args.length)
+                    var newargs = s.args.slice(0).splice(idx, 1, randomExpr(info))
+                    news = Ast.makeFuncCall(s.v, s.f, s.r, newargs)
                     break
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)

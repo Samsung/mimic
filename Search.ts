@@ -83,6 +83,8 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         Ansi.Gray(Util.linereturn())
     }
 
+    print(p)
+
     var secondarySearch: SearchResult
     if (config.cleanupIterations > 0) {
         Ansi.Gray("Starting secondary cleanup search...")

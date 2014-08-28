@@ -8,7 +8,7 @@ import util = require('util');
 import random = require('random-js')
 
 export function print(s: any) {
-    if (typeof s === "object" && "toString" in s) {
+    if (typeof s === "object" && s != null && "toString" in s) {
         console.log(s.toString())
     } else {
         console.log(s)
