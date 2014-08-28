@@ -24,7 +24,7 @@ var log = Util.log
 var line = Util.line
 
 
-export function search(f: (...a: any[]) => any, args: any[], config: SearchConfig = new SearchConfig()): SearchResult {
+export function search(f: (...a: any[]) => any, args: any[][], config: SearchConfig = new SearchConfig()): SearchResult {
     Ansi.Gray("Recording original execution...")
 
     Ansi.Gray("Input generation...")

@@ -68,7 +68,7 @@ function categorize(f, inputs) {
     return res
 }
 
-export function generateInputs(f: (...a: any[]) => any, args: any[]) {
+export function generateInputs(f: (...a: any[]) => any, args: any[][]) {
     var candidates = genCandidateExpr(f, args)
     var allInputs = generateInputsAux(f, args, candidates)
     var categories = categorize(f, allInputs)
@@ -78,9 +78,9 @@ export function generateInputs(f: (...a: any[]) => any, args: any[]) {
     }
 }
 
-function generateInputsAux(f: (...a: any[]) => any, args: any[], exprs: Data.Prestate[]): any[][] {
+function generateInputsAux(f: (...a: any[]) => any, initials: any[][], exprs: Data.Prestate[]): any[][] {
     var helper = function (ps: Data.Expr[]): any[][] {
-        if (ps.length === 0) return [args]
+        if (ps.length === 0) return initials
         var res: any[][] = []
         var p = ps[0]
         var rest = helper(ps.slice(1))
@@ -156,7 +156,7 @@ export function genCandidates(inputs: any[][], f: (...a: any[]) => any) {
  * Returns a list of interesting expressions that should be modified to get inputs. Unlike genCandidates,
  * this method performs some filtering of things that aren't necessary for input generation.
  */
-function genCandidateExpr(f: (...a: any[]) => any, initial: any[]): Data.Prestate[] {
+function genCandidateExpr(f: (...a: any[]) => any, initials: any[][]): Data.Prestate[] {
     function filter(input: Data.Prestate[]): Data.Prestate[] {
         var filtered: Data.Prestate[] = []
         for (var i = 0; i < input.length; i++) {
@@ -181,8 +181,8 @@ function genCandidateExpr(f: (...a: any[]) => any, initial: any[]): Data.Prestat
         return filtered;
     }
 
-    var state = Recorder.record(f, initial)
-    var newArgs = generateInputsAux(f, initial, filter(state.getPrestates()))
-    var res = genCandidates(newArgs, f).concat(state.getPrestates())
+    var first = Util.dedup2(Util.flatten(initials.map((i) => Recorder.record(f, i).getPrestates())))
+    var newArgs = generateInputsAux(f, initials, filter(first))
+    var res = genCandidates(newArgs, f)
     return filter(res)
 }

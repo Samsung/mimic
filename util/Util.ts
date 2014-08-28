@@ -157,3 +157,9 @@ export function hash(s: string) {
 export function indent(s: string, ind: string = '  ') {
     return ind + s.replace(/\n/g, "\n" + ind)
 }
+
+export function flatten<T>(as: T[][]): T[] {
+    return as.reduce(function(a, b) {
+        return a.concat(b);
+    })
+}

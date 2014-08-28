@@ -98,7 +98,11 @@ function search(f, a) {
     var res = Search.search(f, a, config)
     Gray("Found in " + res.iterations + " iterations:")
     Gray(Util.indent(res.getStats()))
-    Gray("  Score: " + res.score)
+    if (res.score > 0) {
+        Ansi.Red("  Score: " + res.score)
+    } else {
+        Gray("  Score: " + res.score)
+    }
     print(res.result.toString())
 }
 
@@ -138,9 +142,10 @@ var fs:any = [
     ],
     [ // 5
         (f, i) => f(i),
-        [(x) => x, 2]
+        [(x) => x, 2],
+        [(x) => 2*x, 2]
     ],
-    [ // 5
+    [ // 6
         () => undefined,
         []
     ],
@@ -150,7 +155,7 @@ var fs:any = [
 
 var i = Util.argv(3)
 var f = fs[i][0]
-var a = fs[i][1]
+var a = fs[i].slice(1)
 
 
 search(f, a)
