@@ -29,13 +29,50 @@ export class RandomMutationInfo {
  * Failure is indicated with `null', and if any of the child nodes failed, then so does the overall creation.
  */
 class MaybeAstFactory {
-    makeField(o: Data.Expr, f: Data.Expr): Data.Expr {
-        if (o === null || f === null) {
+    makeField(a: Data.Expr, b: Data.Expr): Data.Field {
+        if (a === null || b === null) {
             return null
         }
-        return new Data.Field(o, f)
+        return new Data.Field(a, b)
+    }
+    makeAdd(a: Data.Expr, b: Data.Expr): Data.Add {
+        if (a === null || b === null) {
+            return null
+        }
+        return new Data.Add(a, b)
+    }
+    makeDeleteProp(a: Data.Expr, b: Data.Expr): Data.DeleteProp {
+        if (a === null || b === null) {
+            return null
+        }
+        return new Data.DeleteProp(a, b)
+    }
+    makeAssign(a: Data.Expr, b: Data.Expr, isDecl: boolean = false): Data.Assign {
+        if (a === null || b === null) {
+            return null
+        }
+        return new Data.Assign(a, b, isDecl)
+    }
+    makeReturn(a: Data.Expr): Data.Return {
+        if (a === null) {
+            return null
+        }
+        return new Data.Return(a)
+    }
+    makeThrow(a: Data.Expr): Data.Throw {
+        if (a === null) {
+            return null
+        }
+        return new Data.Throw(a)
+    }
+    makeIf(a: Data.Expr, b: Data.Stmt, c: Data.Stmt): Data.If {
+        if (a === null || b === null || c === null) {
+            return null
+        }
+        return new Data.If(a, b, c)
     }
 }
+var factory = new MaybeAstFactory()
 
 /**
  * Randomly mutate the given program.
@@ -46,14 +83,14 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
     // all possible transformations (they return false if they cannot be applied)
     var options = [
         new WeightedPair(0, () => { // remove this statement
-            if (stmts.length < 1) return undefined
+            if (stmts.length < 1) return null
             p.body.replace(si, Data.Seq.Empty)
-            return undefined
+            return null
         }),
         new WeightedPair(0, () => { // insert a new statement
             /*stmts.splice(si, 0, randomStmt(state))
              return true*/
-            return undefined
+            return null
         }),
         new WeightedPair(0, () => { // swap with another statement
             /*if (stmts.length < 2) return undefined
@@ -63,10 +100,10 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
              stmts[si] = stmts[si2]
              stmts[si2] = t
              return true*/
-            return undefined
+            return null
         }),
         new WeightedPair(7, () => { // modify an existing statement
-            if (stmts.length < 1) return undefined
+            if (stmts.length < 1) return null
             var ss = stmts[si]
             var s
             var news
@@ -75,21 +112,21 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     s = <Data.Assign>ss
                     if (s.lhs.type === Data.ExprType.Field) {
                         if (maybe(0.3334)) {
-                            news = new Data.Assign(s.lhs, randomExpr(info))
+                            news = factory.makeAssign(s.lhs, randomExpr(info))
                         } else if (maybe(0.5)) {
-                            var field = new Data.Field((<Data.Field>s.lhs).o, randomExpr(info))
-                            news = new Data.Assign(field, s.rhs)
+                            var field = factory.makeField((<Data.Field>s.lhs).o, randomExpr(info))
+                            news = factory.makeAssign(field, s.rhs)
                         } else {
-                            var field = new Data.Field(randomExpr(info, {obj: true}), (<Data.Field>s.lhs).f)
-                            news = new Data.Assign(field, s.rhs)
+                            var field = factory.makeField(randomExpr(info, {obj: true}), (<Data.Field>s.lhs).f)
+                            news = factory.makeAssign(field, s.rhs)
                         }
                     } else {
                         Util.assert(s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field)
                         var f = <Data.Field>s.rhs
                         if (maybe()) {
-                            news = new Data.Assign(s.lhs, new Data.Field(f.o, randomExpr(info)), s.isDecl)
+                            news = factory.makeAssign(s.lhs, factory.makeField(f.o, randomExpr(info)), s.isDecl)
                         } else {
-                            news = new Data.Assign(s.lhs, new Data.Field(randomExpr(info, {lhs: true}), f.f), s.isDecl)
+                            news = factory.makeAssign(s.lhs, factory.makeField(randomExpr(info, {lhs: true}), f.f), s.isDecl)
                         }
                     }
                     break
@@ -98,9 +135,9 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     if (s.rhs.type === Data.ExprType.Field) {
                         var e = <Data.Field>s.rhs
                         if (maybe()) {
-                            news = new Data.Return(new Data.Field(e.o, randomExpr(info)))
+                            news = factory.makeReturn(factory.makeField(e.o, randomExpr(info)))
                         } else {
-                            news = new Data.Return(new Data.Field(randomExpr(info, {lhs: true}), e.f))
+                            news = factory.makeReturn(factory.makeField(randomExpr(info, {lhs: true}), e.f))
                         }
                     } else {
                         news = new Data.Return(randomExpr(info))
@@ -109,26 +146,29 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                 case Data.StmtType.DeleteProp:
                     s = <Data.DeleteProp>ss
                     if (maybe()) {
-                        news = new Data.DeleteProp(randomExpr(info, {arr: true, obj: true}), s.f)
+                        news = factory.makeDeleteProp(randomExpr(info, {arr: true, obj: true}), s.f)
                     } else {
-                        news = new Data.DeleteProp(s.o, randomExpr(info))
+                        news = factory.makeDeleteProp(s.o, randomExpr(info))
                     }
                     break
                 case Data.StmtType.If:
                     s = <Data.If>ss
-                    news = new Data.If(randomExpr(info, {num: true}), s.thn, s.els)
+                    news = factory.makeIf(randomExpr(info, {num: true}), s.thn, s.els)
                     break
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
                     break
+            }
+            if (news === null) {
+                return null
             }
             return new Data.Program(p.body.replace(si, news))
         }),
     ]
     // randomly choose an action (and execute it)
     var res
-    while ((res = pick(options)()) === undefined) {}
-    Util.assert(res instanceof Data.Program)
+    var i = 0
+    while ((res = pick(options)()) === null && i < 25) { i += 1 }
     return res
 }
 
@@ -136,10 +176,10 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
 function randomStmt(info: RandomMutationInfo): Data.Stmt {
     var options = [
         () => {
-            return new Data.Return(randomExpr(info))
+            return factory.makeReturn(randomExpr(info))
         },
         () => {
-            return new Data.Assign(randomExpr(info, {lhs: true}), randomExpr(info))
+            return factory.makeAssign(randomExpr(info, {lhs: true}), randomExpr(info))
         },
     ]
     return randArr(options)()
@@ -165,27 +205,27 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
         new WeightedPair(6, () => {
             // random candidate expression
             var ps = info.candidates
-            if (ps.length === 0) return undefined
+            if (ps.length === 0) return null
             return randArr(ps)
         }),
         new WeightedPair(4, () => {
             // random value read during generation
             var vs = info.variables;
-            if (vs.length === 0) return undefined
+            if (vs.length === 0) return null
             return randArr(vs)
         }),
         new WeightedPair(zeroD ? 0 : 3, () => {
             // random new field
-            return <Data.Expr>new Data.Field(randomExpr(info, {obj: true}, depth-1), randomExpr(info, {}, depth-1))
+            return <Data.Expr>factory.makeField(randomExpr(info, {obj: true}, depth-1), randomExpr(info, {}, depth-1))
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 2, () => {
             // random new addition
-            return <Data.Expr>new Data.Add(randomExpr(info, {num: true}, depth-1), new Data.Const(maybe() ? 1 : -1))
+            return <Data.Expr>factory.makeAdd(randomExpr(info, {num: true}, depth-1), new Data.Const(maybe() ? 1 : -1))
         }),
     ]
     // filter out bad expressions
     var filter = (e: Data.Expr) => {
-        if (e === undefined) return e
+        if (e === null) return e
 
         // filter by requirement
         if (e.hasValue() && hasRequirement) {
@@ -195,17 +235,18 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
             }
             if (t === "object" && (obj || arr || lhs)) {
                 if (lhs && e.getValue() === null) {
-                    return undefined
+                    return null
                 }
                 return e
             }
-            return undefined // no match
+            return null // no match
         }
         // filter by depth
-        if (e.depth > depth) return undefined
+        if (e.depth > depth) return null
         return e
     }
     var res
-    while ((res = filter(pick(options)())) === undefined) {}
+    var i = 0
+    while ((res = filter(pick(options)())) === null && i < 25) { i += 1 }
     return res
 }
