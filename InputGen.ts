@@ -39,6 +39,9 @@ export function generate(init: any, n: number): any[] {
     } else if (type === "undefined") {
         // TODO better strategy
         return [undefined]
+    } else if (type === "function") {
+        // TODO better strategy
+        return []
     }
 
     Util.assert(false, () => "unknown type encountered: " + type)

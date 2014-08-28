@@ -25,6 +25,19 @@ export class RandomMutationInfo {
 }
 
 /**
+ * A factory for ast creation, where creation can sometimes fail, and failure is propagated correctly.
+ * Failure is indicated with `null', and if any of the child nodes failed, then so does the overall creation.
+ */
+class MaybeAstFactory {
+    makeField(o: Data.Expr, f: Data.Expr): Data.Expr {
+        if (o === null || f === null) {
+            return null
+        }
+        return new Data.Field(o, f)
+    }
+}
+
+/**
  * Randomly mutate the given program.
  */
 export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Program {
@@ -115,7 +128,6 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
     // randomly choose an action (and execute it)
     var res
     while ((res = pick(options)()) === undefined) {}
-
     Util.assert(res instanceof Data.Program)
     return res
 }
