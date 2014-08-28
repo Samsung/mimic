@@ -338,31 +338,31 @@ export function proxifyWithLogger<T>(o: T, tag: string = " ", level: number = 0,
     if (cache.has(o)) {
         return cache.get(o)
     }
-    var common = function (target) {
-        Util.printnln(tag + " ")
+    var common = function (target): string {
+        var s = tag + " "
         if (level === 0) {
         } else {
-            Util.printnln(Ansi.lightgrey("" + level + " "))
+            s += "" + level + " "
         }
+        return s
     }
     var recurse = (o) => proxifyWithLogger(o, tag, level+1, cache)
     var logaccess = (a: any) => print(Ansi.lightgrey(a))
     var Handler = {
         get: function(target, name: string, receiver) {
             var value = Reflect.get(target, name, receiver);
-            var s = "get of " + name;
+            var s = common(target) + "get of " + name;
             if (Util.isPrimitive(value)) {
                 s += " (yields " + value + ")"
             } else {
                 value = recurse(value)
             }
-            common(target)
             logaccess(s)
             return value;
         },
         set: function(target, name: string, value, receiver) {
-            common(target)
-            var s = "set of " + name;
+            var s = common(target)
+            s += "set of " + name;
             if (Util.isPrimitive(value)) {
                 s += " (with value " + value + ")"
             }
@@ -370,74 +370,74 @@ export function proxifyWithLogger<T>(o: T, tag: string = " ", level: number = 0,
             return Reflect.set(target, name, value, receiver);
         },
         has: function(target, name: string) {
-            common(target)
-            logaccess("has of " + name)
+            var s = common(target)
+            logaccess(s + "has of " + name)
             return Reflect.has(target, name);
         },
         apply: function(target, receiver, args) {
             var v = Reflect.apply(target, receiver, args);
-            common(target)
+            var s = common(target)
             if (Util.isPrimitive(v)) {
-                logaccess("apply (result: " + v + ")")
+                logaccess(s + "apply (result: " + v + ")")
             } else {
-                logaccess("apply")
+                logaccess(s + "apply")
                 v = recurse(v)
             }
             return  v;
         },
         construct: function(target, args) {
-            common(target)
-            logaccess("construct")
+            var s = common(target)
+            logaccess(s + "construct")
             return Reflect.construct(target, args);
         },
         getOwnPropertyDescriptor: function(target, name: string) {
-            common(target)
-            logaccess("getOwnPropertyDescriptor for " + name)
+            var s = common(target)
+            logaccess(s + "getOwnPropertyDescriptor for " + name)
             return Reflect.getOwnPropertyDescriptor(target, name);
         },
         defineProperty: function(target, name: string, desc) {
-            common(target)
-            logaccess("defineProperty for " + name)
+            var s = common(target)
+            logaccess(s + "defineProperty for " + name)
             return Reflect.defineProperty(target, name, desc);
         },
         getOwnPropertyNames: function(target) {
-            common(target)
-            logaccess("getOwnPropertyNames")
+            var s = common(target)
+            logaccess(s + "getOwnPropertyNames")
             return Reflect.getOwnPropertyNames(target);
         },
         getPrototypeOf: function(target) {
-            common(target)
-            logaccess("getPrototypeOf")
+            var s = common(target)
+            logaccess(s + "getPrototypeOf")
             return Reflect.getPrototypeOf(target);
         },
         setPrototypeOf: function(target, newProto) {
-            common(target)
-            logaccess("setPrototypeOf")
+            var s = common(target)
+            logaccess(s + "setPrototypeOf")
             return Reflect.setPrototypeOf(target, newProto);
         },
         deleteProperty: function(target, name: string) {
-            common(target)
-            logaccess("deleteProperty for " + name)
+            var s = common(target)
+            logaccess(s + "deleteProperty for " + name)
             return Reflect.deleteProperty(target, name);
         },
         enumerate: function(target) {
-            common(target)
-            logaccess("enumerate")
+            var s = common(target)
+            logaccess(s + "enumerate")
             return recurse(Reflect.enumerate(target))
         },
         preventExtensions: function(target) {
-            common(target)
-            logaccess("preventExtensions")
+            var s = common(target)
+            logaccess(s + "preventExtensions")
             return Reflect.preventExtensions(target);
         },
         isExtensible: function(target) {
-            common(target)
-            logaccess("isExtensible")
+            var s = common(target)
+            logaccess(s + "isExtensible")
             return Reflect.isExtensible(target);
         },
         ownKeys: function(target) {
-            common(target)
-            logaccess("ownKeys")
+            var s = common(target)
+            logaccess(s + "ownKeys")
             return Reflect.ownKeys(target);
         }
     }

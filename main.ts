@@ -24,7 +24,7 @@ var print = Util.print
 var log = Util.log
 var line = Util.line
 var Gray = Ansi.Gray
-
+var proxify = Recorder.proxifyWithLogger
 
 
 // --------------------------
@@ -137,6 +137,10 @@ var fs:any = [
             }
         },
         [['a', 'b', 'c'], 2]
+    ],
+    [ // 5
+        (f, i) => f(i),
+        [(x) => x, 2]
     ]
 ]
 
@@ -148,7 +152,7 @@ var f = fs[i][0]
 var a = fs[i][1]
 
 
-//search(f, a)
+search(f, a)
 //howMany(f, a, 20, [1500, 0])
 
 /*
@@ -158,9 +162,10 @@ var gen = InputGen.generateInputs(ff, aa)
 Util.logall(gen)
 */
 /*
-function loop(o) {
+function loop(o, b) {
     for (var f in o) {
         o[f]++
+        if (b) break
     }
 }
 function loop2(o) {
@@ -168,16 +173,19 @@ function loop2(o) {
         o[i]++
     }
 }
-loop(Recorder.proxifyWithLogger({a: 0, b: 2, c: 3}))
+loop(proxify({a: 0, b: 2, c: 3}), false)
 line()
-loop(Recorder.proxifyWithLogger([1, 2, 3]))
+loop(proxify({a: 0, b: 2, c: 3}), true)
 line()
-loop2(Recorder.proxifyWithLogger([1, 2, 3]))
+loop(proxify([1, 2, 3]), false)
+line()
+loop2(proxify([1, 2, 3]))
 */
 
-var a1 = Recorder.proxifyWithLogger([1, 2, 3], "a")
-var a2 = Recorder.proxifyWithLogger([3, 4], "b")
-var pred = Recorder.proxifyWithLogger((n) => n < 2, "f")
+/*
+var a1 = proxify([1, 2, 3], "a")
+var a2 = proxify([3, 4], "b")
+var pred = proxify((n) => n < 2, "f")
 
 print("a1.every(pred)")
 a1.every(pred)
@@ -191,4 +199,5 @@ line()
 print("a1.join(.)")
 a1.join(".")
 line()
+*/
 
