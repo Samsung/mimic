@@ -80,9 +80,7 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
         } else {
             Gray("  no success in " + res.iterations + " iterations")
         }
-        Gray("  " + res.speed)
-
-        //Gray(res.result.toString())
+        Gray(Util.indent(res.getStats()))
     }
 
     print("Tried " + n + " searches, with " + success + " successful ones.")
@@ -99,7 +97,7 @@ function search(f, a) {
     Gray("Configuration: " + config.toString())
     var res = Search.search(f, a, config)
     Gray("Found in " + res.iterations + " iterations:")
-    Gray("  " + res.speed)
+    Gray(Util.indent(res.getStats()))
     Gray("  Score: " + res.score)
     print(res.result.toString())
 }
@@ -147,7 +145,6 @@ var fs:any = [
         []
     ],
 ]
-
 
 
 

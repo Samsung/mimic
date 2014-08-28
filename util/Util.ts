@@ -153,3 +153,7 @@ export function hash(s: string) {
     }
     return hash;
 }
+
+export function indent(s: string, ind: string = '  ') {
+    return ind + s.replace(/\n/g, "\n" + ind)
+}

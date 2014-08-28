@@ -53,13 +53,14 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
             base: config,
         }, inputs.length)
+        result.executions = inputs.length * result.iterations
 
         Ansi.Gray("  Found a program in " + result.iterations + " iterations of score " + result.score.toFixed(2) + ".")
         return result
     }
 
     var p: Data.Program
-    var mainSearch
+    var mainSearch = SearchResult.Empty
     Ansi.Gray(Util.linereturn())
     if (nCategories > 1) {
         var res: SearchResult[] = []
@@ -67,12 +68,13 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
         for (var i = 0; i < nCategories; i++) {
             Ansi.Gray("Searching a program for input category " + (i+1) + "/" + nCategories + ".")
             res[i] = straightLineSearch(f, inputs.categories[i].inputs, iterations)
+            mainSearch = mainSearch.combine(res[i])
             Ansi.Gray(Util.linereturn())
         }
         Ansi.Gray("Searching a program for all " + inputs.all.length + " inputs.")
         Util.assert(nCategories === 2, () => "cannot handle more than 2 categories at the moment")
         p = new Data.Program(new Data.If(new Data.Const(true), res[0].result.body, res[1].result.body))
-        mainSearch = straightLineSearch(f, inputs.all, 0.2*iterations, p)
+        mainSearch = straightLineSearch(f, inputs.all, 0.2*iterations, p).combine(mainSearch)
         p = mainSearch.result
     } else {
         Ansi.Gray("Searching a program for all " + inputs.all.length + " inputs.")
@@ -81,7 +83,7 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
         Ansi.Gray(Util.linereturn())
     }
 
-    var secondarySearch
+    var secondarySearch: SearchResult
     if (config.cleanupIterations > 0) {
         Ansi.Gray("Starting secondary cleanup search...")
 
@@ -99,27 +101,52 @@ export function search(f: (...a: any[]) => any, args: any[], config: SearchConfi
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
             base: config,
         }, inputs.all.length)
+        secondarySearch.executions = inputs.all.length * secondarySearch.iterations
         p = secondarySearch.result
         Ansi.Gray(Util.linereturn())
     } else {
-        secondarySearch = {
-            iterations: 0
-        }
+        secondarySearch = SearchResult.Empty
     }
 
-    return {
-        result: p,
-        iterations: mainSearch.iterations + secondarySearch.iterations,
-        score: mainSearch.score,
-        speed: mainSearch.speed,
-    }
+    var result = mainSearch.combine(secondarySearch)
+    result.result = p
+    return result
 }
 
-export interface SearchResult {
-    iterations: number
-    result: Data.Program
-    score: number
-    speed: string
+export class SearchResult {
+    static Empty = new SearchResult({
+        iterations: 0,
+        result: <Data.Program>null,
+        score: -1,
+        executions: 0,
+        time: 0,
+    })
+    public iterations: number
+    public result: Data.Program
+    public score: number
+    public executions: number
+    public time: number
+    constructor(o: { iterations: any; result: Data.Program; score: number; executions: number; time: number; }) {
+        this.iterations = o.iterations
+        this.result = o.result
+        this.score = o.score
+        this.executions = o.executions
+        this.time = o.time
+    }
+    combine(o: SearchResult): SearchResult {
+        return new SearchResult({
+            iterations: this.iterations + o.iterations,
+            result: this.result,
+            score: this.score,
+            executions: this.executions + o.executions,
+            time: this.time + o.time
+        })
+    }
+    getStats(): string {
+        var ex = (this.executions * 1000 / this.time).toFixed(2)
+        var it = (this.iterations * 1000 / this.time).toFixed(2)
+        return ex + " executions per second\n" + it + " iterations per second"
+    }
 }
 
 export class SearchConfig {
@@ -186,13 +213,13 @@ function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: num
 
     var time = Util.stop(start)
 
-    return {
+    return new SearchResult({
         iterations: i,
         result: p,
         score: badness,
-        speed: (i*nexecutions*1000/time).toFixed(2) + " executions per second, or " +
-            (i*1000/time).toFixed(2) + " iterations per second",
-    }
+        executions: -1,
+        time:time,
+    })
 }
 
 function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
