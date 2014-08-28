@@ -101,7 +101,7 @@ function generateInputsAux(f: (...a: any[]) => any, args: any[], exprs: Data.Pre
             for (var i = 0; i < vals.length; i++) {
 
                 // skip if the update would be a noop
-                if (p.isUpdateNop(args, vals[i])) {
+                if (p.isUpdateNop(r, vals[i])) {
                     continue
                 }
 
