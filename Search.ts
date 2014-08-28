@@ -159,6 +159,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: num
             // stop search if we found a perfect program
             break;
         }
+        if (p.body.numberOfStmts() === 0) break;
         var newp = config.randomChange(p)
 
         var newbadness = config.metric(newp)
@@ -197,7 +198,9 @@ function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: num
 function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
 
     var badness = Metric.evaluate(p, inputs, realTraces)
-    for (var i = 0; i < 300 && p.body.numberOfStmts() > 0; i++) {
+    for (var i = 0; i < 300; i++) {
+        if (p.body.numberOfStmts() === 0) return p
+
         var j = randInt(p.body.numberOfStmts())
         var newp = new Data.Program(p.body.replace(j, Data.Seq.Empty))
 
@@ -209,21 +212,5 @@ function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
         }
     }
     return p
-}
-
-function introIf(f, p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): Data.Program {
-    var code = Recorder.compile(p)
-    var tds = []
-    for (var i = 0; i < inputs.length; i++) {
-        var candidateTrace = Recorder.record(code, inputs[i]).trace
-        tds[i] = {
-            i: i,
-            val: Metric.traceDistance(realTraces[i], candidateTrace),
-        }
-    }
-    tds = tds.sort((a, b) => b.val - a.val)
-    var fulltrace = Recorder.record(f, inputs[tds[0].i], true)
-    var stmt = new Data.If(new Data.Const(true), p.body, fulltrace.trace.asStmt())
-    return new Data.Program(stmt)
 }
 

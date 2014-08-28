@@ -603,6 +603,9 @@ export class Program {
         Util.assert(this.body != undefined)
     }
     toString() {
+        if (this.body.numberOfStmts() === 0) {
+            return "  // <empty program>"
+        }
         return "  " + this.body.toString().replace(/\n/g, "\n  ")
     }
     getVariables(): Var[] {

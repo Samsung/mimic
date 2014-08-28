@@ -29,50 +29,50 @@ export class RandomMutationInfo {
  * Failure is indicated with `null', and if any of the child nodes failed, then so does the overall creation.
  */
 class MaybeAstFactory {
-    makeField(a: Data.Expr, b: Data.Expr): Data.Field {
+    static makeField(a: Data.Expr, b: Data.Expr): Data.Field {
         if (a === null || b === null) {
             return null
         }
         return new Data.Field(a, b)
     }
-    makeAdd(a: Data.Expr, b: Data.Expr): Data.Add {
+    static makeAdd(a: Data.Expr, b: Data.Expr): Data.Add {
         if (a === null || b === null) {
             return null
         }
         return new Data.Add(a, b)
     }
-    makeDeleteProp(a: Data.Expr, b: Data.Expr): Data.DeleteProp {
+    static makeDeleteProp(a: Data.Expr, b: Data.Expr): Data.DeleteProp {
         if (a === null || b === null) {
             return null
         }
         return new Data.DeleteProp(a, b)
     }
-    makeAssign(a: Data.Expr, b: Data.Expr, isDecl: boolean = false): Data.Assign {
+    static makeAssign(a: Data.Expr, b: Data.Expr, isDecl: boolean = false): Data.Assign {
         if (a === null || b === null) {
             return null
         }
         return new Data.Assign(a, b, isDecl)
     }
-    makeReturn(a: Data.Expr): Data.Return {
+    static makeReturn(a: Data.Expr): Data.Return {
         if (a === null) {
             return null
         }
         return new Data.Return(a)
     }
-    makeThrow(a: Data.Expr): Data.Throw {
+    static makeThrow(a: Data.Expr): Data.Throw {
         if (a === null) {
             return null
         }
         return new Data.Throw(a)
     }
-    makeIf(a: Data.Expr, b: Data.Stmt, c: Data.Stmt): Data.If {
+    static makeIf(a: Data.Expr, b: Data.Stmt, c: Data.Stmt): Data.If {
         if (a === null || b === null || c === null) {
             return null
         }
         return new Data.If(a, b, c)
     }
 }
-var factory = new MaybeAstFactory()
+var Ast = MaybeAstFactory
 
 /**
  * Randomly mutate the given program.
@@ -112,21 +112,21 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     s = <Data.Assign>ss
                     if (s.lhs.type === Data.ExprType.Field) {
                         if (maybe(0.3334)) {
-                            news = factory.makeAssign(s.lhs, randomExpr(info))
+                            news = Ast.makeAssign(s.lhs, randomExpr(info))
                         } else if (maybe(0.5)) {
-                            var field = factory.makeField((<Data.Field>s.lhs).o, randomExpr(info))
-                            news = factory.makeAssign(field, s.rhs)
+                            var field = Ast.makeField((<Data.Field>s.lhs).o, randomExpr(info))
+                            news = Ast.makeAssign(field, s.rhs)
                         } else {
-                            var field = factory.makeField(randomExpr(info, {obj: true}), (<Data.Field>s.lhs).f)
-                            news = factory.makeAssign(field, s.rhs)
+                            var field = Ast.makeField(randomExpr(info, {obj: true}), (<Data.Field>s.lhs).f)
+                            news = Ast.makeAssign(field, s.rhs)
                         }
                     } else {
                         Util.assert(s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field)
                         var f = <Data.Field>s.rhs
                         if (maybe()) {
-                            news = factory.makeAssign(s.lhs, factory.makeField(f.o, randomExpr(info)), s.isDecl)
+                            news = Ast.makeAssign(s.lhs, Ast.makeField(f.o, randomExpr(info)), s.isDecl)
                         } else {
-                            news = factory.makeAssign(s.lhs, factory.makeField(randomExpr(info, {lhs: true}), f.f), s.isDecl)
+                            news = Ast.makeAssign(s.lhs, Ast.makeField(randomExpr(info, {lhs: true}), f.f), s.isDecl)
                         }
                     }
                     break
@@ -135,9 +135,9 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     if (s.rhs.type === Data.ExprType.Field) {
                         var e = <Data.Field>s.rhs
                         if (maybe()) {
-                            news = factory.makeReturn(factory.makeField(e.o, randomExpr(info)))
+                            news = Ast.makeReturn(Ast.makeField(e.o, randomExpr(info)))
                         } else {
-                            news = factory.makeReturn(factory.makeField(randomExpr(info, {lhs: true}), e.f))
+                            news = Ast.makeReturn(Ast.makeField(randomExpr(info, {lhs: true}), e.f))
                         }
                     } else {
                         news = new Data.Return(randomExpr(info))
@@ -146,14 +146,14 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                 case Data.StmtType.DeleteProp:
                     s = <Data.DeleteProp>ss
                     if (maybe()) {
-                        news = factory.makeDeleteProp(randomExpr(info, {arr: true, obj: true}), s.f)
+                        news = Ast.makeDeleteProp(randomExpr(info, {arr: true, obj: true}), s.f)
                     } else {
-                        news = factory.makeDeleteProp(s.o, randomExpr(info))
+                        news = Ast.makeDeleteProp(s.o, randomExpr(info))
                     }
                     break
                 case Data.StmtType.If:
                     s = <Data.If>ss
-                    news = factory.makeIf(randomExpr(info, {num: true}), s.thn, s.els)
+                    news = Ast.makeIf(randomExpr(info, {num: true}), s.thn, s.els)
                     break
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
@@ -176,10 +176,10 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
 function randomStmt(info: RandomMutationInfo): Data.Stmt {
     var options = [
         () => {
-            return factory.makeReturn(randomExpr(info))
+            return Ast.makeReturn(randomExpr(info))
         },
         () => {
-            return factory.makeAssign(randomExpr(info, {lhs: true}), randomExpr(info))
+            return Ast.makeAssign(randomExpr(info, {lhs: true}), randomExpr(info))
         },
     ]
     return randArr(options)()
@@ -216,11 +216,11 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
         }),
         new WeightedPair(zeroD ? 0 : 3, () => {
             // random new field
-            return <Data.Expr>factory.makeField(randomExpr(info, {obj: true}, depth-1), randomExpr(info, {}, depth-1))
+            return <Data.Expr>Ast.makeField(randomExpr(info, {obj: true}, depth-1), randomExpr(info, {}, depth-1))
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 2, () => {
             // random new addition
-            return <Data.Expr>factory.makeAdd(randomExpr(info, {num: true}, depth-1), new Data.Const(maybe() ? 1 : -1))
+            return <Data.Expr>Ast.makeAdd(randomExpr(info, {num: true}, depth-1), new Data.Const(maybe() ? 1 : -1))
         }),
     ]
     // filter out bad expressions
