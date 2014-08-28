@@ -377,10 +377,10 @@ export class If extends Stmt {
         super(StmtType.If)
     }
     toString() {
-        return "if (" + this.c.toString() + ") {\n  " +
-            this.thn.toString().replace(/\n/g, "\n  ") +
-            "\n} else {\n  " +
-            this.els.toString().replace(/\n/g, "\n  ") +
+        return "if (" + this.c.toString() + ") {\n" +
+            Util.indent(this.thn.toString()) +
+            "\n} else {\n" +
+            Util.indent(this.els.toString()) +
             "\n}"
     }
     children(): Node[] {
@@ -606,7 +606,7 @@ export class Program {
         if (this.body.numberOfStmts() === 0) {
             return "  // <empty program>"
         }
-        return "  " + this.body.toString().replace(/\n/g, "\n  ")
+        return Util.indent(this.body.toString())
     }
     getVariables(): Var[] {
         var res = []
