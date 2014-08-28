@@ -38,21 +38,6 @@ export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trac
         Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
     }
-    /*var W_LENGTH = 0.001
-     var stmts = 0
-     p.stmts.forEach((s) => {
-     // don't count return statements
-     if (s.type === Data.StmtType.Return)
-     return false
-     // don't count assignments to local variables, at least initially
-     if (s.type === Data.StmtType.Assign && !finalizing) {
-     var as = <Data.Assign>s
-     if (as.lhs.type === Data.ExprType.Var)
-     return false
-     }
-     stmts++
-     })
-     return badness + W_LENGTH*stmts*/
     if (finalizing) {
         var W_LENGTH = 0.0001
         badness += W_LENGTH * p.toString().length
