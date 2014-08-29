@@ -146,6 +146,11 @@ var fs:any = [
         [(x) => 2*x, 2]
     ],
     [ // 6
+        (setX, o, x, v) => setX(o, x, v),
+        [(o, x, v) => o[x] = v, {}, 0, 0],
+        [(o, x, v) => undefined, {}, 0, 0],
+    ],
+    [ // 7
         () => undefined,
         []
     ],

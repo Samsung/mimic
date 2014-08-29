@@ -38,6 +38,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
             var state = Recorder.record(f, inputs[0], true)
             p = state.trace.asProgram()
         }
+        print(p)
 
         var candidates = InputGen.genCandidates(inputs, f)
         var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
@@ -56,6 +57,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         result.executions = inputs.length * result.iterations
 
         Ansi.Gray("  Found a program in " + result.iterations + " iterations of score " + result.score.toFixed(2) + ".")
+        print(result.result)
         return result
     }
 
@@ -82,8 +84,6 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         p = mainSearch.result
         Ansi.Gray(Util.linereturn())
     }
-
-    print(p)
 
     var secondarySearch: SearchResult
     if (config.cleanupIterations > 0) {
