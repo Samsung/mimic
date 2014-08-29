@@ -267,9 +267,10 @@ function proxify(state: State, o: Object) {
                     recv = getAccessPath(state, receiver)
                 }
                 state.record(new Data.FuncCall(v, f, args2, recv))
+                var prevDoRecord = state.doRecord
                 state.doRecord = false
                 var result = Reflect.apply(target, receiver, args)
-                state.doRecord = true
+                state.doRecord = prevDoRecord
             }
             return result
         },

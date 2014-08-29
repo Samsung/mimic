@@ -31,7 +31,6 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     var inputs = InputGen.generateInputs(f, args)
     var nCategories = inputs.categories.length;
     Ansi.Gray("Found " + nCategories + " categories of inputs (" + inputs.all.length + " inputs total).")
-    //Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
 
     function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, p?: Data.Program) {
         if (!p) {
@@ -43,6 +42,8 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         var candidates = InputGen.genCandidates(inputs, f)
         var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
 
+        Ansi.Gray("  Using the following inputs:")
+        Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
         Ansi.Gray("  Record correct behavior on " + inputs.length + " inputs...")
         var realTraces = inputs.map((i) => Recorder.record(f, i).trace)
 
