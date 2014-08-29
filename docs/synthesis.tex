@@ -1,0 +1,198 @@
+%
+%
+\documentclass[]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+%\usepackage{lmodern}
+%\usepackage{textcomp}
+%\usepackage[scaled=0.88]{beramono}
+\usepackage{graphicx}
+
+\usepackage{ucs}
+\usepackage{longtable}
+
+% At least 80% of every float page must be taken up by
+% floats; there will be no page with more than 20% white space.
+\def\topfraction{.95}
+\def\dbltopfraction{\topfraction}
+\def\floatpagefraction{\topfraction}     % default .5
+\def\dblfloatpagefraction{\topfraction}  % default .5
+\def\textfraction{.05}
+
+\usepackage{amsthm}
+
+\usepackage{listings}
+\lstset{
+    language=Java,
+    basicstyle=\ttfamily\mdseries,
+    identifierstyle=,
+    stringstyle=\color{gray},
+    numbers=left,
+    numbersep=5pt,
+    inputencoding=utf8x,
+    xleftmargin=8pt,
+    xrightmargin=8pt,
+    keywordstyle=[1]\bfseries,
+    keywordstyle=[2]\bfseries,
+    keywordstyle=[3]\bfseries,
+    keywordstyle=[4]\bfseries,
+    numberstyle=\tiny,
+    stepnumber=1,
+    breaklines=true,
+    frame=lines,
+    showstringspaces=false,
+    tabsize=2,
+    commentstyle=\color{gray},
+    captionpos=b
+}
+\newcommand{\code}[1]{\lstinline{#1}}
+
+\newcommand{\bigO}[1]{\mathcal O\left(#1\right)} % big-o notation
+
+\usepackage{fullpage}
+
+\def\sectionautorefname{Section}
+\def\subsectionautorefname{Section}
+\def\subsubsectionautorefname{Section}
+\def\paragraphautorefname{Section}
+\def\definitionautorefname{Definition}
+\def\subsubsubsection{\paragraph}
+\setcounter{secnumdepth}{4}
+
+
+% macros for bnf grammers
+\newenvironment{bnfgrammar}{\begin{center}\renewcommand{\arraystretch}{1.5}\begin{tabular}{rcl}}{\end{tabular}\end{center}}
+\newcommand{\nonterminal}[1]{$\langle \textit{#1} \rangle$}
+\newcommand{\production}[2]{#1 &$::=$& #2\\}
+\newcommand{\literal}[1]{`$\text{\code{#1}}$'}
+\newcommand{\alt}{$~\!\!\mid~$}
+\newcommand{\altline}[1]{&$\mid$&#1\\}
+
+\usepackage{mathtools}
+\usepackage{amssymb,amsfonts,amsmath}
+\usepackage[svgnames]{xcolor}
+\usepackage[colorlinks=true,pdfborder={0 0 0},citecolor=DarkGreen,linkcolor=DarkBlue,urlcolor=DarkBlue]{hyperref}
+
+\usepackage{amsthm}
+% \usepackage{thmtools}
+%\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+\usepackage{framed}
+\newenvironment{workinprogress}
+{\color{gray} \begin{leftbar}}
+{\end{leftbar}}
+
+\newenvironment{new}{\begin{framed}}{\end{framed}}
+
+\usepackage{booktabs}
+
+\newcommand{\todo}[1]{{\textcolor{DarkRed}{ [\textbf{TODO}: #1]}}}
+
+\parindent 0em
+\setlength{\parskip}{.5em}
+
+\title{Synthesis of Library Models via Dynamic Probing}
+\author{
+  Stefan Heule\\\url{sheule@cs.stanford.edu}
+  \and
+  Manu Sridharan\\\url{m.sridharan@samsung.com}
+}
+
+\begin{document}
+
+\maketitle
+
+
+
+\section*{Motivation}
+
+For any program analysis, static or dynamic, a key problem is handling of code
+that, for one reason or another, cannot be analyzed.  Some code is either
+unavailable or implemented in a difficult-to-analyze native language, e.g.,
+implementations of the standard ECMAScript and DOM libraries in the browser.
+Other code is simply difficult to analyze due to its size and complexity, e.g.,
+frameworks like jQuery or even the Java standard library.  In realistic systems,
+such code is often handled via hand-written models that expose its behavior to
+analyses.  However, as the amount of such unanalyzable code grows, manual
+writing of models becomes intractable. Models must often be customized to
+individual analyses in order to be useful, making it very difficult to re-use
+models written for one analysis when a new analysis is developed.  A system to
+automatically generate library models in a manner customized to the desired
+client analysis could be of great use in making program analyses more easily
+applicable to real systems.  \todo{clarify usefulness for scenario of performing
+  dynamic analysis where code is available.  Could provide speedups?}
+
+
+\section*{Our approach}
+
+We propose a technique for synthesizing library models via dynamic probing and
+randomized search.  To learn the behaviors of a function without needing to
+instrument its code, we repeatedly invoke the function with proxied objects as
+arguments.  A proxied object allows for various low-level operations on the
+object, such as field accesses, to be intercepted and customized.  Leveraging
+this proxy functionality, we can dynamically probe the execution of library
+functions and observe details of its behavior, even if the function’s code is
+unavailable.  Proxy functionality is supported by a number of dynamic languages,
+such as JavaScript, Python, and Ruby.
+
+Executing a function with proxied arguments yields a trace of certain types of
+operations it performed.    \todo{Add example} Given this core trace generation
+functionality, our model synthesis proceeds as follows.   We are given as inputs
+to the synthesizer a function $f$ to model and an initial set of inputs $i$
+to $f$.  We first generate several other inputs to $f$ by an iterative process:
+We use the current set of inputs to probe how the function uses these arguments,
+and in particular which parts of the arguments get accessed by the function.
+We create new inputs that differ in those parts, and use some further heuristics
+to create interesting inputs (e.g., passing the empty array where an array is
+expected, or passing both \code{true} and \code{false} for boolean arguments).
+We then run $f$ on
+all inputs from the generated set $I$ to get a corresponding set of traces $T$.
+
+Given $T$, we generate an initial model m for f; for now, assume a model is simply
+a JavaScript program with straight-line code.  By running m on each input in I,
+we get a set of traces T'.  We can then compare the corresponding traces in T
+and T' to compute a fitness score for m, corresponding to how well it models f.
+Critically, this comparison of traces incorporates a predicate provided by the
+desired analysis, so that trace aspects irrelevant to the analysis can be
+ignored.  \todo{example} Given the model-scoring functionality, we perform a
+hill-climbing search by randomly mutating m, keeping mutations that improve its
+fitness score.  Mutations include \todo{give examples} When we have generated a
+model m that obtains a ``perfect'' fitness score, i.e., the traces for that
+model perfectly match the original function (incorporating the needs of the
+analysis), we terminate.
+
+We can extend the above technique to also generate models with conditionals, as
+follows.  \todo{describe conditional handling}
+
+
+\section*{Other Concerns}
+
+\begin{itemize}
+  \item hard-to-execute functions which require a bunch of other setup code to
+  run first
+  \item handling DOM methods, where it's hard to undo changes.  In general,
+  handling methods that have side effects on the network, file system, etc.
+  \item what happens when we miss a case and model is insufficient for dynamic
+  analysis.  Simple answer: we just ask the analysis writer to provide a model in
+  those cases.  (Could also ask them to provide a template of a model.)  Or, we
+  could take the input that is not handled and re-run the synthesis technique with
+  that input added.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+% \bibliographystyle{alpha}
+% \bibliography{bib.bib}
+
+\end{document}
+
