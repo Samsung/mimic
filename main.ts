@@ -166,7 +166,7 @@ var f = fs[i][0]
 var a = fs[i].slice(1)
 
 
-search(f, a)
+//search(f, a)
 //howMany(f, a, 20, [1500, 0])
 
 /*
@@ -215,3 +215,10 @@ a1.join(".")
 line()
 */
 
+
+
+proxify([1, 2, 3, 5, 6]).shift()
+line()
+proxify([1, 2, 3, 5]).shift()
+line()
+proxify([]).shift()
