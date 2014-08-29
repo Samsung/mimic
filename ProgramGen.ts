@@ -165,7 +165,9 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     s = <Data.FuncCall>ss
                     if (s.args.length === 0) return null
                     var idx = randInt(s.args.length)
-                    var newargs = s.args.slice(0).splice(idx, 1, randomExpr(info))
+                    var newExpr = randomExpr(info);
+                    var newargs = s.args.slice(0)
+                    newargs.splice(idx, 1, newExpr)
                     news = Ast.makeFuncCall(s.v, s.f, s.r, newargs)
                     break
                 default:
