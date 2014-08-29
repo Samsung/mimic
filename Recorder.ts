@@ -103,6 +103,7 @@ export class State {
     private readPrestateObj: Map<any, Data.Prestate> = new Map<any, Data.Prestate>()
     private readPrestate: Data.Prestate[] = []
     variables: Data.Var[] = []
+    public doRecord = true
     constructor(public extended: boolean) {
     }
     addPrestate(a: any, e: Data.Prestate) {
@@ -196,54 +197,57 @@ function proxify(state: State, o: Object) {
     var Handler = {
         get: function(target, name: string, receiver) {
             common(target)
-            if (!(name in target) || target.hasOwnProperty(name)) {
-                var val = target[name];
-                var field = new Data.Field(state.getPath(target), makeFieldName(target, name))
-                state.addCandidate(val, field)
-                //log("reading " + name + " and got " + val)
-                if (state.hasPrestate(target)) {
-                    // we cannot use "field" directly, because that is only valid in the current state
-                    // however, here we need an expression that is valid in the prestate
-                    state.addPrestate(val, new Data.Field(state.getPrestate(target), makeFieldName(target, name)))
-                }
-                if (Util.isPrimitive(val)) {
-                    if (state.extended) {
+            if (state.doRecord) {
+                if (!(name in target) || target.hasOwnProperty(name)) {
+                    var val = target[name];
+                    var field = new Data.Field(state.getPath(target), makeFieldName(target, name))
+                    state.addCandidate(val, field)
+                    //log("reading " + name + " and got " + val)
+                    if (state.hasPrestate(target)) {
+                        // we cannot use "field" directly, because that is only valid in the current state
+                        // however, here we need an expression that is valid in the prestate
+                        state.addPrestate(val, new Data.Field(state.getPrestate(target), makeFieldName(target, name)))
+                    }
+                    if (Util.isPrimitive(val)) {
+                        if (state.extended) {
+                            var variable = new Data.Var()
+                            variable.setValue(val)
+                            var ass = new Data.Assign(variable, field, true)
+                            state.record(ass)
+                        }
+                        return val;
+                    } else {
                         var variable = new Data.Var()
                         variable.setValue(val)
                         var ass = new Data.Assign(variable, field, true)
                         state.record(ass)
+                        var p = proxify(state, val)
+                        state.setPath(p, variable)
+                        return p
                     }
-                    return val;
                 } else {
-                    var variable = new Data.Var()
-                    variable.setValue(val)
-                    var ass = new Data.Assign(variable, field, true)
-                    state.record(ass)
-                    var p = proxify(state, val)
-                    state.setPath(p, variable)
-                    return p
+                    // TODO handle properties that are somewhere else
+                    ignorec("ignoring access to '" + name + "'.")
                 }
-            } else {
-                // TODO handle properties that are somewhere else
-                ignorec("ignoring access to '" + name + "'.")
             }
             return Reflect.get(target, name, receiver);
         },
         set: function(target, name: string, value, receiver) {
             common(target)
-            // TODO: record ALL candidate paths (maybe?)
-            var field = new Data.Field(state.getPath(target), makeFieldName(target, name));
-            if (state.extended) {
-                // record the old value in a variable
-                var variable = new Data.Var()
-                var ass = new Data.Assign(variable, field, true)
+            if (state.doRecord) {
+                var field = new Data.Field(state.getPath(target), makeFieldName(target, name));
+                if (state.extended) {
+                    // record the old value in a variable
+                    var variable = new Data.Var()
+                    var ass = new Data.Assign(variable, field, true)
+                    state.record(ass)
+                }
+                var p = getAccessPath(state, value);
+                var ass = new Data.Assign(field, p)
                 state.record(ass)
+                state.addCandidate(value, field)
+                state.setPath(value, p)
             }
-            var p = getAccessPath(state, value);
-            var ass = new Data.Assign(field, p)
-            state.record(ass)
-            state.addCandidate(value, field)
-            state.setPath(value, p)
             return Reflect.set(target, name, value, receiver);
         },
         has: function(target, name: string) {
@@ -252,17 +256,22 @@ function proxify(state: State, o: Object) {
             return Reflect.has(target, name);
         },
         apply: function(target, receiver, args) {
-            ignorec(".. unhandled call to apply")
-            var v = new Data.Var()
-            var f = getAccessPath(state, target)
-            var args2 = args.map((a) => getAccessPath(state, a))
-            var recv = null
-            if (receiver !== global) {
-                recv = getAccessPath(state, receiver)
-            }
-            state.record(new Data.FuncCall(v, f, args2, recv))
             common(target)
-            return Reflect.apply(target, receiver, args);
+            if (state.doRecord) {
+                ignorec(".. unhandled call to apply")
+                var v = new Data.Var()
+                var f = getAccessPath(state, target)
+                var args2 = args.map((a) => getAccessPath(state, a))
+                var recv = null
+                if (receiver !== global) {
+                    recv = getAccessPath(state, receiver)
+                }
+                state.record(new Data.FuncCall(v, f, args2, recv))
+                state.doRecord = false
+                var result = Reflect.apply(target, receiver, args)
+                state.doRecord = true
+            }
+            return result
         },
         construct: function(target, args) {
             ignorec(".. unhandled call to construct")
@@ -276,12 +285,14 @@ function proxify(state: State, o: Object) {
         },
         defineProperty: function(target, name: string, desc) {
             common(target)
-            if ("value" in desc) {
-                // TODO
-                ignorec(".. unhandled call to defineProperty (ignore for now)")
-                //state.record(new Data.DefineProp(getAccessPath(state, o), name, getAccessPath(state, desc.value)))
-            } else {
-                ignorec(".. unhandled call to defineProperty (unhandled type of descriptor)")
+            if (state.doRecord) {
+                if ("value" in desc) {
+                    // TODO
+                    ignorec(".. unhandled call to defineProperty (ignore for now)")
+                    //state.record(new Data.DefineProp(getAccessPath(state, o), name, getAccessPath(state, desc.value)))
+                } else {
+                    ignorec(".. unhandled call to defineProperty (unhandled type of descriptor)")
+                }
             }
             return Reflect.defineProperty(target, name, desc);
         },
@@ -302,16 +313,18 @@ function proxify(state: State, o: Object) {
         },
         deleteProperty: function(target, name: string) {
             common(target)
-            var obj = getAccessPath(state, o);
-            var f = makeFieldName(target, name);
-            var field = new Data.Field(obj, f);
-            if (state.extended) {
-                // record the old value in a variable
-                var variable = new Data.Var()
-                var ass = new Data.Assign(variable, field, true)
-                state.record(ass)
+            if (state.doRecord) {
+                var obj = getAccessPath(state, o);
+                var f = makeFieldName(target, name);
+                var field = new Data.Field(obj, f);
+                if (state.extended) {
+                    // record the old value in a variable
+                    var variable = new Data.Var()
+                    var ass = new Data.Assign(variable, field, true)
+                    state.record(ass)
+                }
+                state.record(new Data.DeleteProp(obj, f))
             }
-            state.record(new Data.DeleteProp(obj, f))
             return Reflect.deleteProperty(target, name);
         },
         enumerate: function(target) {
