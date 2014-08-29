@@ -24,6 +24,9 @@ var W_ASSIGN_MISSING = 2
 var W_DELETE_FIELD = 1
 var W_DELETE_MISSING = 2
 
+var W_WRONG_PARAM = 1
+var W_CALL_MISSING = 2
+
 /**
  * Evaluate how well program `p' behaves on the given inputs (the traces in `realTraces' are used as the
  * gold standard).  Returns a non-negative value, where 0 means the program behaves identically (w.r.t. to our
@@ -111,7 +114,7 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
             notInB++
         }
     })
-    badness += (notInA + notInB) * W_ASSIGN_MISSING
+    badness += (notInA + notInB) * W_CALL_MISSING
 
     // compare all delete properties
     aa = <Data.DeleteProp[]>a.stmts.filter((s) => s.type === Data.StmtType.DeleteProp)
@@ -137,6 +140,46 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
                     found = true
                     notInA--
                     break
+                }
+            }
+        }
+        if (!found) {
+            notInB++
+        }
+    })
+    badness += (notInA + notInB) * W_DELETE_MISSING
+
+    // compare all calls
+    aa = <Data.FuncCall[]>a.stmts.filter((s) => s.type === Data.StmtType.FuncCall)
+    bb = <Data.FuncCall[]>b.stmts.filter((s) => s.type === Data.StmtType.FuncCall)
+    notInB = 0
+    used = new Map<number, boolean>()
+    notInA = bb.length
+    aa.forEach((astmt) => {
+        var arecv = astmt.rrecv
+        var af = astmt.f
+        var aargs = astmt.args
+        var found = false
+        for (var i = 0; i < bb.length; i++) {
+            if (!used.has(i)) {
+                var bstmt = bb[i]
+                var brecv = bstmt.rrecv
+                var bf = bstmt.f
+                var bargs = bstmt.args
+                if (arecv === brecv || nodeEquiv(arecv, brecv, ds)) {
+                    if (nodeEquiv(af, bf, ds)) {
+                        Util.assert(aargs.length === bargs.length)
+                        for (var i = 0; i < aargs.length; i++) {
+                            if (!nodeEquiv(aargs[i], bargs[i], ds)) {
+                                // receiver and function matches, but not this argument
+                                badness += W_WRONG_PARAM * exprDistance(aargs[i], bargs[i], ds) / DISTANCE_NORM
+                            }
+                        }
+                        used.set(i, true)
+                        found = true
+                        notInA--
+                        break
+                    }
                 }
             }
         }
