@@ -183,10 +183,14 @@ function proxify<T>(state: State, o: T): T {
         },
         set: function(target, name: string, value, receiver) {
             var ttarget = common(target)
+            var res
             if (state.doRecord) {
 
                 var tval = state.texpr(value)
-                state.record(new Data.ESet(ttarget, new Data.TraceConst(name), tval))
+                var event = new Data.ESet(ttarget, new Data.TraceConst(name), tval)
+                state.record(event)
+                res = Reflect.set(target, name, value, receiver)
+                state.addCurState(res, event.variable)
                 /*
                 var field = new Data.Field(state.getPath(target), makeFieldName(target, name));
                 if (state.extended) {
@@ -201,8 +205,10 @@ function proxify<T>(state: State, o: T): T {
                 state.addCandidate(value, field)
                 state.setPath(value, p)
                 */
+            } else {
+                res = Reflect.set(target, name, value, receiver)
             }
-            return Reflect.set(target, name, value, receiver);
+            return res
         },
         has: function(target, name: string) {
             var ttarget = common(target)

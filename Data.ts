@@ -30,7 +30,7 @@ export class Node {
         return []
     }
     toSkeleton(): string {
-        Util.assert(false, () => "toSkeleton not implemented for " + this)
+        Util.assert(false, () => "getSkeleton not implemented for " + this)
         return null
     }
 }
@@ -721,10 +721,8 @@ export class Trace {
     toString() {
         return "Trace:\n  " + this.events.join("\n  ")
     }
-    toSkeleton(): string {
-        //return this.stmts.map((s) => s.toSkeleton()).join("\n")
-        Util.assert(false)
-        return ""
+    getSkeleton(): string {
+        return this.events.map((s) => s.getSkeleton()).join("\n")
     }
     asProgram(): Program {
         return new Program(this.asStmt())
@@ -754,26 +752,78 @@ export class Event {
     public variable: Var = new Var()
     constructor(public kind: EventKind, public target: TraceExpr, public otherArgs: TraceExpr[]) {
     }
+    getSkeleton(): string {
+        Util.assert(false)
+        return ""
+    }
+    toString(): string {
+        Util.assert(false)
+        return ""
+    }
 }
 
 export class EGet extends Event {
     constructor(public target: TraceExpr, public name: TraceConst) {
         super(EventKind.EGet, target, [name])
     }
+    getSkeleton(): string {
+        return "get"
+    }
+    toString(): string {
+        var s = this.target.toString()
+        s += ".get("
+        s += this.name.toString()
+        s += ")"
+        return s
+    }
 }
 export class ESet extends Event {
     constructor(public target: TraceExpr, public name: TraceConst, public value: TraceExpr) {
         super(EventKind.ESet, target, [name, value])
+    }
+    getSkeleton(): string {
+        return "set"
+    }
+    toString(): string {
+        var s = this.target.toString()
+        s += ".set("
+        s += this.name.toString()
+        s += ", "
+        s += this.value.toString()
+        s += ")"
+        return s
     }
 }
 export class EApply extends Event {
     constructor(public target: TraceExpr, public receiver: TraceExpr, public args: TraceExpr[]) {
         super(EventKind.EApply, target, [receiver].concat(args))
     }
+    getSkeleton(): string {
+        return "apply"
+    }
+    toString(): string {
+        var s = this.target.toString()
+        s += ".apply("
+        s += this.receiver.toString()
+        s += ", ["
+        s += this.args.join(", ")
+        s += "])"
+        return s
+    }
 }
 export class EDeleteProperty extends Event {
     constructor(public target: TraceExpr, public name: TraceConst) {
         super(EventKind.EDeleteProperty, target, [name])
+    }
+    getSkeleton(): string {
+        return "deleteProperty"
+    }
+    toString(): string {
+        var s = this.target.toString()
+        s += ".deleteProperty("
+        s += this.name.toString()
+        s += ")"
+        return s
     }
 }
 

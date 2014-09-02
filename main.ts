@@ -166,7 +166,8 @@ var f = fs[i][0]
 var a = fs[i].slice(1)
 
 
-search(f, a)
+print(Recorder.record(f, a))
+//search(f, a)
 //howMany(f, a, 20, [1500, 0])
 
 /*

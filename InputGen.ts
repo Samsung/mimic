@@ -54,7 +54,7 @@ function categorize(f, inputs) {
     var cat = 0
     for (var i = 0; i < inputs.length; i++) {
         var input = inputs[i];
-        var skeleton = Recorder.record(f, input).toSkeleton()
+        var skeleton = Recorder.record(f, input).getSkeleton()
         if (!map.has(skeleton)) {
             map.set(skeleton, cat)
             res[cat] = {
