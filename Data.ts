@@ -693,6 +693,7 @@ export class Trace {
     public isNormalReturn: boolean
     public result: TraceExpr = null
     public exception: TraceExpr = null
+    public prestates: Prestate[] = null
     constructor() {
     }
     extend(e: Event) {
@@ -707,6 +708,15 @@ export class Trace {
         this.isNormalReturn = true
         this.exception = null
         this.result = val
+    }
+    setPrestates(ps: Prestate[]) {
+        this.prestates = ps
+    }
+    getPrestates() {
+        return this.prestates
+    }
+    eventsOfKind(kind: EventKind): Event[] {
+        return this.events.filter((s) => s.kind === kind)
     }
     toString() {
         return "Trace:\n  " + this.events.join("\n  ")
@@ -747,22 +757,22 @@ export class Event {
 }
 
 export class EGet extends Event {
-    constructor(target: TraceExpr, public name: TraceConst) {
+    constructor(public target: TraceExpr, public name: TraceConst) {
         super(EventKind.EGet, target, [name])
     }
 }
 export class ESet extends Event {
-    constructor(target: TraceExpr, public name: TraceConst, public value: TraceExpr) {
+    constructor(public target: TraceExpr, public name: TraceConst, public value: TraceExpr) {
         super(EventKind.ESet, target, [name, value])
     }
 }
 export class EApply extends Event {
-    constructor(target: TraceExpr, public receiver: TraceExpr, public args: TraceExpr[]) {
+    constructor(public target: TraceExpr, public receiver: TraceExpr, public args: TraceExpr[]) {
         super(EventKind.EApply, target, [receiver].concat(args))
     }
 }
 export class EDeleteProperty extends Event {
-    constructor(target: TraceExpr, public name: TraceConst) {
+    constructor(public target: TraceExpr, public name: TraceConst) {
         super(EventKind.EDeleteProperty, target, [name])
     }
 }
@@ -776,6 +786,24 @@ export class EDeleteProperty extends Event {
  */
 export class TraceExpr {
     constructor(public preState: Expr[], public curState: Expr[]) {
+        var isConst = false
+        Util.assert(preState.length > 0 && curState.length > 0)
+        if (preState.length === 1 && curState.length === 1) {
+            // only allow constants if both are constants
+            if (preState[0].type === ExprType.Const) {
+                Util.assert(curState[0].type === ExprType.Const)
+                isConst = true
+            }
+        }
+        Util.assert(isConst || preState.every((e) => e.type !== ExprType.Const))
+        Util.assert(isConst || curState.every((e) => e.type !== ExprType.Const))
+    }
+    private pss_cache: string[] = null
+    preStateStrings(): string[] {
+        if (this.pss_cache === null) {
+            this.pss_cache = this.preState.map((s) => s.toString())
+        }
+        return this.pss_cache
     }
 }
 export class TraceConst extends TraceExpr {

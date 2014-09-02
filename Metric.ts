@@ -7,6 +7,7 @@
 import Data = require('./Data')
 import Util = require('./util/Util')
 import Recorder = require('./Recorder')
+import Compile = require('./Compile')
 
 var print = Util.print
 var log = Util.log
@@ -34,9 +35,9 @@ var W_CALL_MISSING = 2
  */
 export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
     var badness = 0
-    var code = Recorder.compile(p);
+    var code = Compile.compile(p);
     for (var i = 0; i < inputs.length; i++) {
-        var candidateTrace = Recorder.record(code, inputs[i]).trace
+        var candidateTrace = Recorder.record(code, inputs[i])
         var td = traceDistance(realTraces[i], candidateTrace)
         Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
@@ -55,53 +56,32 @@ export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trac
 export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     var badness = 0
 
-    // build a variable mapping
-    var ds = new Data.VariableMap()
-    a.stmts.forEach((s) => {
-        var ss
-        if (s.type === Data.StmtType.Assign) {
-            ss = <Data.Assign>s
-            if (ss.lhs.type === Data.ExprType.Var) {
-                ds.addFromA(<Data.Var>ss.lhs, ss.rhs)
-            }
-        }
-    })
-    b.stmts.forEach((s) => {
-        var ss
-        if (s.type === Data.StmtType.Assign) {
-            ss = <Data.Assign>s
-            if (ss.lhs.type === Data.ExprType.Var) {
-                ds.addFromB(<Data.Var>ss.lhs, ss.rhs)
-            }
-        }
-    })
-
-    // compare all assignments
-    var aa: any = <Data.Assign[]>a.stmts.filter((s) => s.type === Data.StmtType.Assign && (<Data.Assign>s).lhs.type !== Data.ExprType.Var)
-    var bb: any = <Data.Assign[]>b.stmts.filter((s) => s.type === Data.StmtType.Assign && (<Data.Assign>s).lhs.type !== Data.ExprType.Var)
+    // compare all set events
+    var aa0 = <Data.ESet[]>a.eventsOfKind(Data.EventKind.ESet)
+    var bb0 = <Data.ESet[]>b.eventsOfKind(Data.EventKind.ESet)
     var notInB = 0
     var used = new Map<number, boolean>()
-    var notInA = bb.length
-    aa.forEach((astmt) => {
-        var ao = (<Data.Field>astmt.lhs).o
-        var af = (<Data.Field>astmt.lhs).f
-        var av = astmt.rhs
+    var notInA = bb0.length
+    aa0.forEach((aevent) => {
+        var ao = aevent.target
+        var af = aevent.name
+        var av = aevent.value
         var found = false
-        for (var i = 0; i < bb.length; i++) {
+        for (var i = 0; i < bb0.length; i++) {
             if (!used.has(i)) {
-                var bstmt = bb[i]
-                var bo = (<Data.Field>bstmt.lhs).o
-                var bf = (<Data.Field>bstmt.lhs).f
-                var bv = bstmt.rhs
-                if (nodeEquiv(ao, bo, ds)) {
-                    if (nodeEquiv(af, bf, ds)) {
-                        if (!nodeEquiv(av, bv, ds)) {
+                var bevent = bb0[i]
+                var bo = bevent.target
+                var bf = bevent.name
+                var bv = bevent.value
+                if (exprEquiv(ao, bo)) {
+                    if (exprEquiv(af, bf)) {
+                        if (!exprEquiv(av, bv)) {
                             // receiver and field matches, but not the value
-                            badness += W_ASSIGN_VALUE * exprDistance(av, bv, ds) / DISTANCE_NORM
+                            badness += W_ASSIGN_VALUE * exprDistance(av, bv) / DISTANCE_NORM
                         }
                     } else {
                         // receiver matches, but not field
-                        badness += W_ASSIGN_FIELD * exprDistance(af, bf, ds) / DISTANCE_NORM
+                        badness += W_ASSIGN_FIELD * exprDistance(af, bf) / DISTANCE_NORM
                     }
                     used.set(i, true)
                     found = true
@@ -116,25 +96,25 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     })
     badness += (notInA + notInB) * W_CALL_MISSING
 
-    // compare all delete properties
-    aa = <Data.DeleteProp[]>a.stmts.filter((s) => s.type === Data.StmtType.DeleteProp)
-    bb = <Data.DeleteProp[]>b.stmts.filter((s) => s.type === Data.StmtType.DeleteProp)
+    // compare all delete property events
+    var aa1 = <Data.EDeleteProperty[]>a.eventsOfKind(Data.EventKind.EDeleteProperty)
+    var bb1 = <Data.EDeleteProperty[]>b.eventsOfKind(Data.EventKind.EDeleteProperty)
     notInB = 0
     used = new Map<number, boolean>()
-    notInA = bb.length
-    aa.forEach((astmt) => {
-        var ao = astmt.o
-        var af = astmt.f
+    notInA = bb0.length
+    aa1.forEach((aevent) => {
+        var ao = aevent.target
+        var af = aevent.name
         var found = false
-        for (var i = 0; i < bb.length; i++) {
+        for (var i = 0; i < bb1.length; i++) {
             if (!used.has(i)) {
-                var bstmt = bb[i]
-                var bo = bstmt.o
-                var bf = bstmt.f
-                if (nodeEquiv(ao, bo, ds)) {
-                    if (!nodeEquiv(af, bf, ds)) {
+                var bevent = bb1[i]
+                var bo = bevent.target
+                var bf = bevent.name
+                if (exprEquiv(ao, bo)) {
+                    if (!exprEquiv(af, bf)) {
                         // receiver matches, but not field
-                        badness += W_DELETE_FIELD * exprDistance(af, bf, ds) / DISTANCE_NORM
+                        badness += W_DELETE_FIELD * exprDistance(af, bf) / DISTANCE_NORM
                     }
                     used.set(i, true)
                     found = true
@@ -149,30 +129,30 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     })
     badness += (notInA + notInB) * W_DELETE_MISSING
 
-    // compare all calls
-    aa = <Data.FuncCall[]>a.stmts.filter((s) => s.type === Data.StmtType.FuncCall)
-    bb = <Data.FuncCall[]>b.stmts.filter((s) => s.type === Data.StmtType.FuncCall)
+    // compare all apply events
+    var aa2 = <Data.EApply[]>a.eventsOfKind(Data.EventKind.EApply)
+    var bb2 = <Data.EApply[]>b.eventsOfKind(Data.EventKind.EApply)
     notInB = 0
     used = new Map<number, boolean>()
-    notInA = bb.length
-    aa.forEach((astmt) => {
-        var arecv = astmt.rrecv
-        var af = astmt.f
-        var aargs = astmt.args
+    notInA = bb0.length
+    aa2.forEach((aevent) => {
+        var arecv = aevent.receiver
+        var af = aevent.target
+        var aargs = aevent.args
         var found = false
-        for (var i = 0; i < bb.length; i++) {
+        for (var i = 0; i < bb2.length; i++) {
             if (!used.has(i)) {
-                var bstmt = bb[i]
-                var brecv = bstmt.rrecv
-                var bf = bstmt.f
-                var bargs = bstmt.args
-                if (arecv === brecv || nodeEquiv(arecv, brecv, ds)) {
-                    if (nodeEquiv(af, bf, ds)) {
+                var bevent = bb2[i]
+                var brecv = bevent.receiver
+                var bf = bevent.target
+                var bargs = bevent.args
+                if (arecv === brecv || exprEquiv(arecv, brecv)) {
+                    if (exprEquiv(af, bf)) {
                         Util.assert(aargs.length === bargs.length)
                         for (var i = 0; i < aargs.length; i++) {
-                            if (!nodeEquiv(aargs[i], bargs[i], ds)) {
+                            if (!exprEquiv(aargs[i], bargs[i])) {
                                 // receiver and function matches, but not this argument
-                                badness += W_WRONG_PARAM * exprDistance(aargs[i], bargs[i], ds) / DISTANCE_NORM
+                                badness += W_WRONG_PARAM * exprDistance(aargs[i], bargs[i]) / DISTANCE_NORM
                             }
                         }
                         used.set(i, true)
@@ -190,105 +170,44 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     badness += (notInA + notInB) * W_DELETE_MISSING
 
     // compare the last statement (return or throw)
-    if (a.lastStmt().type === b.lastStmt().type) {
-        if (a.lastStmt().type === Data.StmtType.Throw) {
-            badness += W_EXIT * exprDistance((<Data.Throw>a.lastStmt()).rhs, (<Data.Throw>b.lastStmt()).rhs, ds)/DISTANCE_NORM
+    if (a.isNormalReturn === b.isNormalReturn) {
+        if (a.isNormalReturn) {
+            badness += W_EXIT * exprDistance(a.result, b.result)/DISTANCE_NORM
         } else {
-            badness += W_EXIT * exprDistance((<Data.Return>a.lastStmt()).rhs, (<Data.Return>b.lastStmt()).rhs, ds)/DISTANCE_NORM
+            badness += W_EXIT * exprDistance(a.exception, b.exception)/DISTANCE_NORM
         }
     } else {
-        // one must be return, the other throw
+        // different way to return
         badness += W_ERROR_EXIT
     }
 
     return badness
 }
 
-
-function exprDistance(real: Data.Expr, candidate: Data.Expr, ds: Data.VariableMap) {
-    if (real.type !== candidate.type) {
-        return DISTANCE_NORM
-    }
-    var l, r
-    switch (real.type) {
-        case Data.ExprType.Arg:
-            if ((<Data.Argument>real).i === (<Data.Argument>candidate).i) {
-                return 0
-            }
-            return DISTANCE_NORM
-        case Data.ExprType.Field:
-            l = <Data.Field>real
-            r = <Data.Field>candidate
-            return exprDistance(l.o, r.o, ds)/2 + exprDistance(l.f, r.f, ds)/2
-        case Data.ExprType.Const:
-            l = (<Data.Const>real).val
-            r = (<Data.Const>candidate).val
-            if (l === r) {
-                return 0
-            }
-            if (typeof l !== typeof r) {
-                return DISTANCE_NORM
-            }
-            if (typeof l === 'number') {
-                return DISTANCE_NORM
-                /*
-                 var n = Math.min(Math.abs(l - r), DISTANCE_NORM);
-                 return n !== n ? DISTANCE_NORM : n // handle NaN
-                 */
-            }
-            if (typeof l === 'string') {
-                return DISTANCE_NORM
-            }
-            Util.assert(false, () => "unhandled const distance: " + real + " - " + candidate)
-            return 0
-        case Data.ExprType.Var:
-            l = <Data.Var>real
-            r = <Data.Var>candidate
-            if (ds.areEqual(l, r)) {
-                return 0
-            }
-            return DISTANCE_NORM
-        default:
-            Util.assert(false, () => "unhandled expr distance: " + real)
-    }
-    return 0
-}
-
-function nodeEquiv(n1: Data.Node, n2: Data.Node, ds: Data.VariableMap) {
-    if (n1.type !== n2.type) {
+/**
+ * Compare two TraceExpr by considering their pre-state expressions.
+ * Returns true if the two expressions are either the same primitive constant, or refer to the same
+ * object (in the pre-state).
+ */
+function exprEquiv(a: Data.TraceExpr, b: Data.TraceExpr): boolean {
+    if (a instanceof Data.TraceConst) {
+        if (b instanceof Data.TraceConst) {
+            return (<Data.TraceConst>a).val === (<Data.TraceConst>b).val
+        } else {
+            return false
+        }
+    } else if (b instanceof Data.TraceConst) {
         return false
     }
-    // on variable declaration, save correspondence
-    if (n1.type === Data.StmtType.Assign) {
-        var an1 = <Data.Assign>n1
-        var an2 = <Data.Assign>n2
-        if (an1.isDecl && an2.isDecl) {
-            ds.addFromA(<Data.Var>an1.lhs, an1.rhs)
-            ds.addFromB(<Data.Var>an2.lhs, an2.rhs)
-        }
+    var as = a.preStateStrings()
+    var bs = b.preStateStrings()
+    return as.some((a) => bs.indexOf(a) !== -1)
+}
+
+
+function exprDistance(a: Data.TraceExpr, b: Data.TraceExpr) {
+    if (exprEquiv(a, b)) {
+        return 0
     }
-    // check that all children are equivalent
-    var cs1 = n1.anychildren()
-    var cs2 = n2.anychildren()
-    Util.assert(cs1.length === cs2.length)
-    for (var i = 0; i < cs1.length; i++) {
-        var c1 = cs1[i]
-        var c2 = cs2[i]
-        if (Util.isPrimitive(c1)) {
-            if (c1 !== c2) {
-                return false
-            }
-        } else if (c1.type === Data.ExprType.Var) {
-            if (!ds.areEqual(<Data.Var>c1, <Data.Var>c2)) {
-                return false
-            }
-        } else {
-            Util.assert(c1 instanceof Data.Node)
-            Util.assert(c2 instanceof Data.Node)
-            if (!nodeEquiv(c1, c2, ds)) {
-                return false
-            }
-        }
-    }
-    return true
+    return DISTANCE_NORM
 }

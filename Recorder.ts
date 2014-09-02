@@ -68,107 +68,9 @@ export function record(f: (..._: any[]) => any, args: any[]): Data.Trace {
         }
     }
 
+    trace.setPrestates(state.preStates)
+
     return trace
-}
-
-/**
- * Given a program, compile it into a regular function.
- */
-export function compile(prog: Data.Program): (...a: any[]) => any {
-    return compile2(prog.toString())
-}
-/**
- * Like `compile', directly takes a string as input.
- */
-export function compile2(prog: string): (...a: any[]) => any {
-    return function (...a: any[]): any {
-        return new Function('"use strict";' + prog).apply(null, a)
-    }
-}
-
-export class State2 {
-    // maps objects to an expression that can be used to access it
-    private exprs: Map<any, Data.Expr> = new Map<any, Data.Expr>()
-    // maps any value to a set of potential expressions that might be the
-    // source of that value. for primitive, there is uncertainty in whether
-    // these expressions really were the source, or whether they are the same
-    // just by coincidence
-    private candidates: Map<any, Data.Expr[]> = new Map<any, Data.Expr[]>()
-    // map objects to their proxified object
-    mapping: Map<Object, Object> = new Map<Object, Object>()
-    // map proxified objects to their target
-    mapping2: Map<Object, Object> = new Map<Object, Object>()
-    public trace: Data.Trace = new Data.Trace()
-    // all prestate expressions that are read
-    private readPrestateObj: Map<any, Data.Prestate> = new Map<any, Data.Prestate>()
-    private readPrestate: Data.Prestate[] = []
-    variables: Data.Var[] = []
-    public doRecord = true
-    constructor(public extended: boolean) {
-    }
-    addPrestate(a: any, e: Data.Prestate) {
-        e.setValue(a)
-        if (Util.isPrimitive(a)) {
-            this.readPrestate.push(e)
-        } else {
-            this.readPrestate.push(e)
-            this.readPrestateObj.set(a, e)
-        }
-    }
-    hasPrestate(a: any) {
-        return this.readPrestateObj.has(this.mapping.get(a))
-    }
-    getPrestate(a: any) {
-        return this.readPrestateObj.get(this.mapping.get(a))
-    }
-    getPrestates(): Data.Prestate[] {
-        var res = this.readPrestate.slice(0)
-        //this.readPrestateObj.forEach((v, k) => res.push(v))
-        return Util.dedup2(res)
-    }
-    getPath(a: any): Data.Expr {
-        Util.assert(!Util.isPrimitive(a))
-        var p = this.exprs.get(a)
-        if (p !== undefined) return p
-        return this.exprs.get(this.mapping.get(a))
-    }
-    setPath(a: any, v: Data.Expr) {
-        this.exprs.set(a, v)
-    }
-    getCandidates(a: any): Data.Expr[] {
-        var c = this.candidates.get(a) || []
-        c = c.slice(0)
-        if (Util.isPrimitive(a)) {
-            c.push(new Data.Const(a))
-        }
-        return Util.dedup2(c)
-    }
-    addCandidate(a: any, v: Data.Expr) {
-        this.candidates.set(a, [v].concat(this.getCandidates(a) || []))
-    }
-    setMapping(o: Object, p: Object) {
-        Util.assert(!this.mapping.has(o));
-        this.mapping.set(o, p)
-        this.mapping2.set(p, o)
-    }
-    getMapping(o: Object) {
-        return this.mapping.get(o)
-    }
-    getMapping2(o: Object) {
-        return this.mapping2.get(o)
-    }
-    record(stmt: Data.Stmt) {
-        if (stmt.type === Data.StmtType.Assign) {
-            var lhs = (<Data.Assign>stmt).lhs;
-            if (lhs.type === Data.ExprType.Var) {
-                this.variables.push(<Data.Var>lhs)
-            }
-        }
-        //this.trace.extend(stmt)
-    }
-    toString() {
-        return "State2:\n  " //+ this.trace.stmts.join("\n  ")
-    }
 }
 
 class State {
@@ -182,6 +84,7 @@ class State {
     public trace: Data.Trace = new Data.Trace()
     public preState = new Map<Object, Data.Prestate[]>()
     public curState = new Map<Object, Data.Expr[]>()
+    public preStates: Data.Prestate[] = []
     /** record an event */
     record(ev: Data.Event) {
         this.trace.extend(ev)
@@ -202,19 +105,12 @@ class State {
     }
     /** add a list of expressions as the pre-state expression of a value */
     addPreState(v: any, es: Data.Prestate[]) {
+        this.preStates = this.preStates.concat(es)
         if (Util.isPrimitive(v)) return
         var state = this.preState.get(v) || []
         state = state.concat(es)
         this.preState.set(v, state)
     }
-}
-
-function getAccessPath(state: State2, v: any): Data.Expr {
-    if (Util.isPrimitive(v)) {
-        return new Data.Const(v)
-    }
-    Util.assert(state.getPath(v) !== undefined, () => "getAccessPath(" + state + "," + Util.inspect(v, true) + ")")
-    return state.getPath(v)
 }
 
 function proxify<T>(state: State, o: T): T {
