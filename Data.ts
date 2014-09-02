@@ -689,76 +689,97 @@ export class Program {
  * A program trace.  Note that some statements like conditionals will never occur in traces.
  */
 export class Trace {
-    public stmts: Stmt[] = []
-    constructor(s?: Stmt) {
-        if (s) {
-            if (s.type === StmtType.Seq) {
-                this.stmts = (<Seq>s).stmts.slice(0)
-            } else {
-                this.stmts = [s]
-            }
-        }
+    public events: Event[] = []
+    public isNormalReturn: boolean
+    public result: TraceExpr = null
+    public exception: TraceExpr = null
+    constructor() {
     }
-    extend(s: Stmt) {
-        this.stmts.push(s)
+    extend(e: Event) {
+        this.events.push(e)
+    }
+    setException(ex: TraceExpr) {
+        this.isNormalReturn = false
+        this.exception = ex
+        this.result = null
+    }
+    setResult(val: TraceExpr) {
+        this.isNormalReturn = true
+        this.exception = null
+        this.result = val
     }
     toString() {
-        return "Trace:\n  " + this.stmts.join("\n  ")
-    }
-    equals(o) {
-        if (!(o instanceof Trace))
-            return false
-        if (o.stmts.length !== this.stmts.length)
-            return false
-        for (var i = 0; i < o.stmts.length; i++) {
-            if (!o.stmts[i].equals(this.stmts[i]))
-                return false
-        }
-        return true
+        return "Trace:\n  " + this.events.join("\n  ")
     }
     toSkeleton(): string {
-        return this.stmts.map((s) => s.toSkeleton()).join("\n")
-    }
-    getSkeletonIdx(i: number): Stmt {
-        return this.stmts[i]
-    }
-    lastStmt(): Stmt {
-        return this.stmts[this.stmts.length-1]
+        //return this.stmts.map((s) => s.toSkeleton()).join("\n")
+        Util.assert(false)
+        return ""
     }
     asProgram(): Program {
         return new Program(this.asStmt())
     }
     asStmt(): Stmt {
-        return new Seq(this.stmts)
+        //return new Seq(this.stmts)
+        Util.assert(false)
+        return null
     }
 }
 
 /**
- * A variable map to compare two traces with potentially different variable names.
+ * An enum for all statements.
  */
-export class VariableMap {
-    private a: Map<string, Var[]> = new Map<string, Var[]>()
-    private b: Map<string, Var[]> = new Map<string, Var[]>()
-    private eq: Map<string, boolean> = new Map<string, boolean>()
-    addFromA(v: Var, e: Expr) {
-        var s = e.toString()
-        if (this.b.has(s)) {
-            this.b.get(s).forEach((v2) => this.eq.set(v.name + "|" + v2.name, true))
-        }
-        var old = this.a.get(s) || []
-        old.push(v)
-        this.a.set(s, old)
+export enum EventKind {
+    EGet = 2000,
+    ESet,
+    EApply,
+    EDeleteProperty,
+    EReturn,
+}
+
+/**
+ * An event that occurred when recording a trace.
+ */
+export class Event {
+    public variable: Var = new Var()
+    constructor(public kind: EventKind, public target: TraceExpr, public otherArgs: TraceExpr[]) {
     }
-    addFromB(v: Var, e: Expr) {
-        var s = e.toString()
-        if (this.a.has(s)) {
-            this.a.get(s).forEach((v2) => this.eq.set(v2.name + "|" + v.name, true))
-        }
-        var old = this.b.get(s) || []
-        old.push(v)
-        this.b.set(s, old)
+}
+
+export class EGet extends Event {
+    constructor(target: TraceExpr, public name: TraceConst) {
+        super(EventKind.EGet, target, [name])
     }
-    areEqual(a: Var, b: Var) {
-        return this.eq.has(a.name + "|" + b.name)
+}
+export class ESet extends Event {
+    constructor(target: TraceExpr, public name: TraceConst, public value: TraceExpr) {
+        super(EventKind.ESet, target, [name, value])
+    }
+}
+export class EApply extends Event {
+    constructor(target: TraceExpr, public receiver: TraceExpr, public args: TraceExpr[]) {
+        super(EventKind.EApply, target, [receiver].concat(args))
+    }
+}
+export class EDeleteProperty extends Event {
+    constructor(target: TraceExpr, public name: TraceConst) {
+        super(EventKind.EDeleteProperty, target, [name])
+    }
+}
+
+/**
+ * An expression used when recording a trace.  Because there are often many possible expression
+ * when recording a trace (e.g., because there were aliases in the input), a list of expressions
+ * is used.  Furthermore, both expressions that are valid (only) in the pre-state are recorded
+ * (used for equality checking of traces), as well as expressions that may only be valid at
+ * that particular point in the trace (used for program generation from a trace).
+ */
+export class TraceExpr {
+    constructor(public preState: Expr[], public curState: Expr[]) {
+    }
+}
+export class TraceConst extends TraceExpr {
+    constructor(public val: any) {
+        super([new Const(val)], [new Const(val)])
     }
 }
