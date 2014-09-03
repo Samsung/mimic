@@ -87,12 +87,12 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     }
 
     var secondarySearch: SearchResult
+    var realTraces = inputs.all.map((i) => Recorder.record(f, i))
     if (config.cleanupIterations > 0) {
         Ansi.Gray("Starting secondary cleanup search...")
 
         var candidates = InputGen.genCandidates(inputs.all, f)
         var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
-        var realTraces = inputs.all.map((i) => Recorder.record(f, i))
 
         // shorten the program
         p = shorten(p, inputs.all, realTraces)
@@ -118,6 +118,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
     var result = mainSearch.combine(secondarySearch)
     result.result = p
+    result.score = Metric.evaluate(p, inputs.all, realTraces)
     return result
 }
 
