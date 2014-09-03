@@ -15,8 +15,8 @@ function proxy<T>(target: T, handler: any): T {
 // /<reference path="ansicolors.d.ts" />
 //import Ansi = require('ansicolors');
 
-// /<reference path="assert.d.ts" />
-//import assrt = require("assert");
+// /<reference path="ass.d.ts" />
+//import assrt = require("ass");
 function assert(condition: any, message?: string) {
     if (!condition) {
         throw (message || "Assertion failed") + "\n" + console.trace()

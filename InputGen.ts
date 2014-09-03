@@ -48,7 +48,7 @@ export function generate(init: any, n: number): any[] {
     return []
 }
 
-function categorize(f, inputs) {
+export function categorize(f, inputs) {
     var map = new Map<string, number>()
     var res = []
     var cat = 0

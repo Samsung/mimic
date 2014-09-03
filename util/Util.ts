@@ -63,6 +63,14 @@ export function assert(condition: boolean, message?: () => string) {
         throw new AssertionError("Assertion failed\n" + console.trace())
     }
 }
+export function assert2(condition: boolean, message?: string) {
+    if (!condition) {
+        if (message) {
+            throw new AssertionError("" + message + "\n" + console.trace())
+        }
+        throw new AssertionError("Assertion failed\n" + console.trace())
+    }
+}
 export function dedup<T>(a: T[]): T[] {
     return a.filter(function(elem, pos) {
         return a.indexOf(elem) == pos;

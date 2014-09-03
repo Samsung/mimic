@@ -109,6 +109,7 @@ function search(f, a) {
 
 var fs:any = [
     [ // 0
+        "random heap modifications",
         (obj1, obj2, str, int) => {
             obj1.a = obj2
             obj2[str] = obj2.g
@@ -119,18 +120,22 @@ var fs:any = [
         [{}, {g: "a", f: {}}, "a", 0]
     ],
     [ // 1
+        "Array.prototype.pop",
         (arr) => arr.pop(),
         [['a', 'b', 'c']]
     ],
     [ // 2
+        "Array.prototype.push",
         (arr, v) => arr.push(v),
         [['a', 'b', 'c'], 'd']
     ],
     [ // 3
+        "array index",
         (arr, i) => arr[i],
         [['a', 'b', 'c'], 2]
     ],
     [ // 4
+        "array function with conditional",
         (arr, i) => {
             if (i) {
                 return arr
@@ -141,29 +146,35 @@ var fs:any = [
         [['a', 'b', 'c'], 2]
     ],
     [ // 5
+        "simple higher order function",
         (f, i) => f(i),
         [(x) => x, 2],
         [(x) => 2*x, 2]
     ],
     [ // 6
+        "heap modifing higher order function",
         (setX, o, x, v) => setX(o, x, v),
         [(o, x, v) => o[x] = v, {}, 0, 0],
         [(o, x, v) => undefined, {}, 0, 0],
     ],
     [ // 7
+        "empty function",
         () => undefined,
         []
     ],
     [ // 8
+        "Array.prototype.shift",
         (a) => a.shift(),
         [[1,2,3]]
     ],
 ]
 
 
+
 var i = Util.argv(3)
-var f = fs[i][0]
-var a = fs[i].slice(1)
+var name = fs[i][0]
+var f = fs[i][1]
+var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 20, [1500, 0])

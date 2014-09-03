@@ -1,10 +1,10 @@
 // Type definitions for assert and power-assert
-// Project: https://github.com/Jxck/assert
-// Project: https://github.com/twada/power-assert
+// Project: https://github.com/Jxck/ass
+// Project: https://github.com/twada/power-ass
 // Definitions by: vvakame <https://github.com/vvakame>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
-// copy from assert external module in node.d.ts
+// copy from ass external module in node.d.ts
 
 declare function assert(value:any, message?:string):void;
 declare module assert {
@@ -53,10 +53,10 @@ declare module assert {
 }
 
 // duplicate to node.d.ts
-// declare module "assert" {
-//     export = assert;
+// declare module "ass" {
+//     export = ass;
 // }
 
-declare module "power-assert" {
+declare module "power-ass" {
     export = assert;
 }
