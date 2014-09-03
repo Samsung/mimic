@@ -166,10 +166,11 @@ var f = fs[i][0]
 var a = fs[i].slice(1)
 var a0 = a[0]
 
-print(Recorder.record(f, a0))
-print(Recorder.record(f, a0).asProgram())
-//search(f, a)
 //howMany(f, a, 20, [1500, 0])
+search(f, a)
+
+
+//print(Recorder.record(f, a0))
 
 /*
 var ff = f

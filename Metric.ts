@@ -101,7 +101,7 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     var bb1 = <Data.EDeleteProperty[]>b.eventsOfKind(Data.EventKind.EDeleteProperty)
     notInB = 0
     used = new Map<number, boolean>()
-    notInA = bb0.length
+    notInA = bb1.length
     aa1.forEach((aevent) => {
         var ao = aevent.target
         var af = aevent.name
@@ -134,7 +134,7 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     var bb2 = <Data.EApply[]>b.eventsOfKind(Data.EventKind.EApply)
     notInB = 0
     used = new Map<number, boolean>()
-    notInA = bb0.length
+    notInA = bb2.length
     aa2.forEach((aevent) => {
         var arecv = aevent.receiver
         var af = aevent.target

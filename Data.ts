@@ -524,7 +524,7 @@ export class FuncCall extends Stmt {
         if (this.recv !== null) {
             s += this.recv.toString() + "."
         }
-        var rcvArg = this.recv === null ? "null" : this.recv.toString();
+        var rcvArg = this.recv === null ? "global" : this.recv.toString();
         var args = this.args.map((a) => a.toString())
         s += this.f.toString() + ".apply(" + rcvArg + ", [ " + args.join(", ") + " ])"
         return s
@@ -776,6 +776,11 @@ export class Trace {
                     Util.assert(false, () => "unknown event kind: " + e)
             }
         })
+        if (this.isNormalReturn) {
+            stmts.push(new Return(expr(this.result)))
+        } else {
+            stmts.push(new Throw(expr(this.exception)))
+        }
         return new Seq(stmts)
     }
 }

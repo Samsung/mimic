@@ -9,6 +9,7 @@ import Util = require('./util/Util')
 import Random = require('./util/Random')
 import Recorder = require('./Recorder')
 import Metric = require('./Metric')
+import Compile = require('./Compile')
 import InputGen = require('./InputGen')
 import ProgramGen = require('./ProgramGen')
 import Ansi = require('./util/Ansicolors')
@@ -109,6 +110,11 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     } else {
         secondarySearch = SearchResult.Empty
     }
+
+    //print(inputs.all.map((i) => Recorder.record(f, i)).join("\n"))
+    //line()
+    //var f2 = Compile.compile(p)
+    //print(inputs.all.map((i) => Recorder.record(f2, i)).join("\n"))
 
     var result = mainSearch.combine(secondarySearch)
     result.result = p
