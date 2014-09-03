@@ -228,6 +228,7 @@ function proxify<T>(state: State, o: T): T {
                 var event = new Data.EApply(ttarget, recv, targs)
                 state.record(event)
                 var prevDoRecord = state.doRecord
+                state.doRecord = false
                 result = Reflect.apply(target, receiver, args)
                 state.doRecord = prevDoRecord
                 state.addCurState(result, event.variable)
