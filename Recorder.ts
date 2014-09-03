@@ -34,17 +34,13 @@ export function record(f: (..._: any[]) => any, args: any[]): Data.Trace {
     // instrument args
     var iargs = []
     for (var i = 0; i < args.length; i++) {
-        if (Util.isPrimitive(args[i])) {
-            iargs[i] = args[i]
-        } else {
-            iargs[i] = proxify(state, args[i])
-        }
+        iargs[i] = proxify(state, args[i])
         var ai = new Data.Argument(i)
-        state.addCurState(ai, iargs[i])
-        state.addPreState(ai, [iargs[i]])
+        state.addCurState(iargs[i], ai)
+        state.addPreState(iargs[i], [ai])
     }
     try {
-        var res = f.apply(null, iargs);
+        var res = f.apply(null, iargs)
         trace.setResult(state.texpr(res))
     } catch (e) {
         if (e instanceof Util.AssertionError) {
@@ -94,11 +90,13 @@ class State {
         if (Util.isPrimitive(v)) {
             return new Data.TraceConst(v)
         }
-        Util.assert(this.object2proxy.has(v), () => "texpr only accepts proxied inputs")
+        Util.assert(this.proxy2object.has(v), () => "texpr only accepts proxied inputs")
+        return new Data.TraceExpr(this.preState.get(v), this.curState.get(v))
     }
     /** add an expression as the current state expression of a value */
     addCurState(v: any, e: Data.Expr) {
         if (Util.isPrimitive(v)) return
+        Util.assert(this.proxy2object.has(v), () => "addCurState only accepts proxied inputs")
         var state = this.curState.get(v) || []
         state.push(e)
         this.curState.set(v, state)
@@ -107,6 +105,7 @@ class State {
     addPreState(v: any, es: Data.Prestate[]) {
         this.preStates = this.preStates.concat(es)
         if (Util.isPrimitive(v)) return
+        Util.assert(this.proxy2object.has(v), () => "addPreState only accepts proxied inputs")
         var state = this.preState.get(v) || []
         state = state.concat(es)
         this.preState.set(v, state)
@@ -115,9 +114,11 @@ class State {
 
 function proxify<T>(state: State, o: T): T {
     if (Util.isPrimitive(o)) return o
-    if (state.object2proxy.has(o) !== undefined) return <T>state.object2proxy.get(o)
+    if (state.object2proxy.has(o)) return <T>state.object2proxy.get(o)
+    Util.assert(!state.proxy2object.has(o), () => "object was already proxied")
     var common = function (target: Object): Data.TraceExpr {
-        var res = state.texpr(target);
+        Util.assert(state.object2proxy.has(target), () => "target not proxied")
+        var res = state.texpr(state.object2proxy.get(target))
         Util.assert(res !== undefined, () => "target TraceExpr undefined")
         return res
     }

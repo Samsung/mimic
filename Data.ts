@@ -719,7 +719,14 @@ export class Trace {
         return this.events.filter((s) => s.kind === kind)
     }
     toString() {
-        return "Trace:\n  " + this.events.join("\n  ")
+        var res
+        if (this.isNormalReturn) {
+            res = this.result.toString()
+        } else {
+            res = "Exception: " + this.exception.toString()
+        }
+        return "Trace:\n  " + this.events.join("\n  ") +
+            "\n  Result: " + res
     }
     getSkeleton(): string {
         return this.events.map((s) => s.getSkeleton()).join("\n")
@@ -757,8 +764,10 @@ export class Event {
         return ""
     }
     toString(): string {
-        Util.assert(false)
-        return ""
+        var s = ""
+        s += this.variable.toString()
+        s += " := "
+        return s
     }
 }
 
@@ -770,10 +779,12 @@ export class EGet extends Event {
         return "get"
     }
     toString(): string {
-        var s = this.target.toString()
-        s += ".get("
+        var s = ""
+        s += super.toString()
+        s += "get property "
         s += this.name.toString()
-        s += ")"
+        s += " of "
+        s += this.target.toString()
         return s
     }
 }
@@ -785,12 +796,14 @@ export class ESet extends Event {
         return "set"
     }
     toString(): string {
-        var s = this.target.toString()
-        s += ".set("
+        var s = ""
+        s += super.toString()
+        s += "set property "
         s += this.name.toString()
-        s += ", "
+        s += " of "
+        s += this.target.toString()
+        s += " to "
         s += this.value.toString()
-        s += ")"
         return s
     }
 }
@@ -802,10 +815,13 @@ export class EApply extends Event {
         return "apply"
     }
     toString(): string {
-        var s = this.target.toString()
-        s += ".apply("
+        var s = ""
+        s += super.toString()
+        s += "apply "
+        s += this.target.toString()
+        s += " with receiver "
         s += this.receiver.toString()
-        s += ", ["
+        s += " and arguments ["
         s += this.args.join(", ")
         s += "])"
         return s
@@ -819,10 +835,12 @@ export class EDeleteProperty extends Event {
         return "deleteProperty"
     }
     toString(): string {
-        var s = this.target.toString()
-        s += ".deleteProperty("
+        var s = ""
+        s += super.toString()
+        s += "delete property"
         s += this.name.toString()
-        s += ")"
+        s += " of "
+        s += this.target.toString()
         return s
     }
 }
@@ -855,9 +873,35 @@ export class TraceExpr {
         }
         return this.pss_cache
     }
+    toString(): string {
+        var f = (exprs: Expr[]) => {
+            if (exprs.length === 1) {
+                return exprs[0].toString()
+            } else {
+                return "[" + exprs.join(",") + "]"
+            }
+        }
+        if (this.preState.join("|") === this.curState.join("|")) {
+            return f(this.preState)
+        }
+        var s = ""
+        s += "<"
+        s += f(this.preState)
+        s += ", "
+        s += f(this.curState)
+        s += ">"
+        return s
+    }
 }
 export class TraceConst extends TraceExpr {
     constructor(public val: any) {
         super([new Const(val)], [new Const(val)])
+    }
+    toString(): string {
+        var s = ""
+        //s += "<"
+        s += this.val
+        //s += ">"
+        return s
     }
 }
