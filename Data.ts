@@ -481,34 +481,28 @@ export class Seq extends Stmt {
  * An assignment statement.
  */
 export class Assign extends Stmt {
-    public lhss: Expr[] = []
-    constructor(lhs: Expr, public rhs: Expr, public isDecl: boolean = false) {
+    constructor(public lhs: Expr, public rhs: Expr, public isDecl: boolean = false) {
         super(StmtType.Assign)
-        this.lhss.push(lhs)
-    }
-    addLhs(lhs: Expr) {
-        Util.assert(!this.isDecl)
-        this.lhss.unshift(lhs)
     }
     toString() {
         var prefix = ""
         if (this.isDecl) {
             prefix = "var "
         }
-        return prefix + this.lhss.join(" = ") + " = " + this.rhs.toString()
+        return prefix + this.lhs.toString() + " = " + this.rhs.toString()
     }
     equals(o) {
-        return o instanceof Assign && Util.arrayEquals(o.lhss, this.lhss) && o.rhs.equals(this.rhs)
+        return o instanceof Assign && o.lhs.equals(this.lhs) && o.rhs.equals(this.rhs)
     }
     children(): Node[] {
-        return this.lhss.concat([this.rhs])
+        return [this.lhs, this.rhs]
     }
     anychildren(): any[] {
         var res: any[] = this.children()
         return res
     }
     toSkeleton(): string {
-        return this.lhss.map((l) => l.toSkeleton()).join("=") + "=" + this.rhs.toSkeleton()
+        return this.lhs.toSkeleton() + "=" + this.rhs.toSkeleton()
     }
 }
 
@@ -756,9 +750,7 @@ export class Trace {
                     ev = <ESet>e
                     // save old value in local variable
                     stmts.push(new Assign(new Var(), new Field(expr(ev.target), expr(ev.name)), true))
-                    var assign = new Assign(new Field(expr(ev.target), expr(ev.name)), expr(ev.value))
-                    assign.addLhs(e.variable)
-                    stmts.push(assign)
+                    stmts.push(new Assign(new Field(expr(ev.target), expr(ev.name)), expr(ev.value)))
                     break
                 case EventKind.EApply:
                     ev = <EApply>e
@@ -770,6 +762,8 @@ export class Trace {
                     break
                 case EventKind.EDeleteProperty:
                     ev = <EDeleteProperty>e
+                    // save old value in local variable
+                    stmts.push(new Assign(new Var(), new Field(expr(ev.target), expr(ev.name)), true))
                     stmts.push(new DeleteProp(expr(ev.target), expr(ev.name)))
                     break
                 default:
@@ -799,8 +793,11 @@ export enum EventKind {
  * An event that occurred when recording a trace.
  */
 export class Event {
-    public variable: Var = new Var()
+    public variable: Var = null
     constructor(public kind: EventKind, public target: TraceExpr, public otherArgs: TraceExpr[]) {
+        if (kind === EventKind.EApply || kind === EventKind.EGet) {
+            this.variable = new Var()
+        }
     }
     getSkeleton(): string {
         Util.assert(false)
@@ -840,7 +837,7 @@ export class ESet extends Event {
     }
     toString(): string {
         var s = ""
-        s += super.toString()
+        //s += super.toString()
         s += "set property "
         s += this.name.toString()
         s += " of "
@@ -883,7 +880,7 @@ export class EDeleteProperty extends Event {
     }
     toString(): string {
         var s = ""
-        s += super.toString()
+        //s += super.toString()
         s += "delete property"
         s += this.name.toString()
         s += " of "

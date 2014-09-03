@@ -115,7 +115,7 @@ class State {
 function proxify<T>(state: State, o: T): T {
     if (Util.isPrimitive(o)) return o
     if (state.object2proxy.has(o)) return <T>state.object2proxy.get(o)
-    Util.assert(!state.proxy2object.has(o), () => "object was already proxied")
+    if (state.proxy2object.has(o)) return o
     var common = function (target: Object): Data.TraceExpr {
         Util.assert(state.object2proxy.has(target), () => "target not proxied")
         var res = state.texpr(state.object2proxy.get(target))
