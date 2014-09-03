@@ -163,3 +163,15 @@ export function flatten<T>(as: T[][]): T[] {
         return a.concat(b);
     })
 }
+
+export function arrayEquals<T>(a: T[], b: T[]): boolean {
+    if (a.length !== b.length) {
+        return false
+    }
+    for (var i = 0; i < a.length; i++) {
+        if (!a[i].equals(b[i])) {
+            return false
+        }
+    }
+    return true
+}

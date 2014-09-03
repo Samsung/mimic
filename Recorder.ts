@@ -221,9 +221,15 @@ function proxify<T>(state: State, o: T): T {
             var result
             if (state.doRecord) {
                 var targs = args.map((a) => state.texpr(a))
-                var event = new Data.EApply(ttarget, state.texpr(receiver), targs)
+                var recv = null
+                if (receiver !== global) {
+                    recv = state.texpr(receiver)
+                }
+                var event = new Data.EApply(ttarget, recv, targs)
                 state.record(event)
+                var prevDoRecord = state.doRecord
                 result = Reflect.apply(target, receiver, args)
+                state.doRecord = prevDoRecord
                 state.addCurState(result, event.variable)
                 /*ignorec(".. unhandled call to apply")
                 var v = new Data.Var()

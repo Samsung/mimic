@@ -481,28 +481,34 @@ export class Seq extends Stmt {
  * An assignment statement.
  */
 export class Assign extends Stmt {
-    constructor(public lhs: Expr, public rhs: Expr, public isDecl: boolean = false) {
+    public lhss: Expr[] = []
+    constructor(lhs: Expr, public rhs: Expr, public isDecl: boolean = false) {
         super(StmtType.Assign)
+        this.lhss.push(lhs)
+    }
+    addLhs(lhs: Expr) {
+        Util.assert(!this.isDecl)
+        this.lhss.unshift(lhs)
     }
     toString() {
         var prefix = ""
         if (this.isDecl) {
             prefix = "var "
         }
-        return prefix + this.lhs.toString() + " = " + this.rhs.toString()
+        return prefix + this.lhss.join(" = ") + " = " + this.rhs.toString()
     }
     equals(o) {
-        return o instanceof Assign && o.lhs.equals(this.lhs) && o.rhs.equals(this.rhs)
+        return o instanceof Assign && Util.arrayEquals(o.lhss, this.lhss) && o.rhs.equals(this.rhs)
     }
     children(): Node[] {
-        return [this.lhs, this.rhs]
+        return this.lhss.concat([this.rhs])
     }
     anychildren(): any[] {
         var res: any[] = this.children()
         return res
     }
     toSkeleton(): string {
-        return this.lhs.toSkeleton() + "=" + this.rhs.toSkeleton()
+        return this.lhss.map((l) => l.toSkeleton()).join("=") + "=" + this.rhs.toSkeleton()
     }
 }
 
@@ -735,9 +741,42 @@ export class Trace {
         return new Program(this.asStmt())
     }
     asStmt(): Stmt {
-        //return new Seq(this.stmts)
-        Util.assert(false)
-        return null
+        var stmts: Stmt[] = []
+        var expr = (e: TraceExpr) => {
+            return e.curState[e.curState.length-1]
+        }
+        this.events.forEach((e) => {
+            var ev
+            switch (e.kind) {
+                case EventKind.EGet:
+                    ev = <EGet>e
+                    stmts.push(new Assign(e.variable, new Field(expr(ev.target), expr(ev.name)), true))
+                    break
+                case EventKind.ESet:
+                    ev = <ESet>e
+                    // save old value in local variable
+                    stmts.push(new Assign(new Var(), new Field(expr(ev.target), expr(ev.name)), true))
+                    var assign = new Assign(new Field(expr(ev.target), expr(ev.name)), expr(ev.value))
+                    assign.addLhs(e.variable)
+                    stmts.push(assign)
+                    break
+                case EventKind.EApply:
+                    ev = <EApply>e
+                    var recv = null
+                    if (ev.receiver !== null) {
+                        recv = expr(ev.receiver)
+                    }
+                    stmts.push(new FuncCall(ev.variable, expr(ev.target), ev.args.map(expr), recv))
+                    break
+                case EventKind.EDeleteProperty:
+                    ev = <EDeleteProperty>e
+                    stmts.push(new DeleteProp(expr(ev.target), expr(ev.name)))
+                    break
+                default:
+                    Util.assert(false, () => "unknown event kind: " + e)
+            }
+        })
+        return new Seq(stmts)
     }
 }
 
@@ -749,7 +788,6 @@ export enum EventKind {
     ESet,
     EApply,
     EDeleteProperty,
-    EReturn,
 }
 
 /**
@@ -819,11 +857,15 @@ export class EApply extends Event {
         s += super.toString()
         s += "apply "
         s += this.target.toString()
-        s += " with receiver "
-        s += this.receiver.toString()
-        s += " and arguments ["
+        if (this.receiver != null) {
+            s += " with receiver "
+            s += this.receiver.toString()
+            s += " and arguments ["
+        } else {
+            s += " with arguments ["
+        }
         s += this.args.join(", ")
-        s += "])"
+        s += "]"
         return s
     }
 }

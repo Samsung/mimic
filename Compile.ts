@@ -1,5 +1,5 @@
 /**
- * Functionality to compile a Data.Program to JavaScript, and to compile a Data.Trace to a Data.Program.
+ * Functionality to compile a Data.Program to JavaScript.
  *
  * @author Stefan Heule <stefanheule@gmail.com>
  */
