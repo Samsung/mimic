@@ -47,7 +47,7 @@ var fs:any = [
         (arr) => arr.pop(),
         [['a', 'b', 'c']],
         {
-            categories: 1,
+            categories: 2,
         }
     ],
     [ // 2
@@ -77,7 +77,7 @@ var fs:any = [
         },
         [['a', 'b', 'c'], 2],
         {
-            categories: 1,
+            categories: 2,
         }
     ],
     [ // 5
@@ -108,34 +108,36 @@ var fs:any = [
     ],
 ]
 
+function recorder_test(f, a, a0, name, oracle) {
+    it('should record for ' + name, () => {
+        Recorder.record(f, a0)
+    })
+}
+
+function inputgen_test(f, a, a0, name, oracle) {
+    it('number of categories for ' + name, () => {
+        var inputs = InputGen.generateInputs(f, a)
+        ass.equal(InputGen.categorize(f, inputs.all).length, oracle.categories)
+    })
+}
 
 
+var tests = [
+    ["Recorder", recorder_test],
+    ["InputGen.categorize", inputgen_test],
+]
 
-describe('Recorder', () => {
-    for (var i = 0; i < fs.length; i++) {
-        var name = fs[i][0]
-        var f = fs[i][1]
-        var a = fs[i].slice(2, fs[i].length-1)
-        var a0 = a[0]
-        var oracle = fs[i][fs[i].length - 1]
-        it('should record for ' + name, () => {
-            Recorder.record(f, a0)
-        })
-    }
-})
 
-describe('InputGen', () => {
-    describe('categories', () => {
+for (var k = 0; k < tests.length; k++) {
+    describe(tests[k][0], () => {
         for (var i = 0; i < fs.length; i++) {
             var name = fs[i][0]
             var f = fs[i][1]
-            var a = fs[i].slice(2, fs[i].length-1)
+            var a = fs[i].slice(2, fs[i].length - 1)
             var a0 = a[0]
             var oracle = fs[i][fs[i].length - 1]
-            it('should have ' + oracle.categories + ' categories', () => {
-                var inputs = InputGen.generateInputs(f, a)
-                ass.equal(InputGen.categorize(f, inputs.all).length, oracle.categories)
-            })
+            var test: any = tests[k][1];
+            test(f, a, a0, name, oracle)
         }
     })
-})
+}

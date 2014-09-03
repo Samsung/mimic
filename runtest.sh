@@ -1,3 +1,3 @@
 #!/bin/bash
 
-mocha --harmony
+mocha --harmony #--reporter progress
