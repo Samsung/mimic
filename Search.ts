@@ -27,6 +27,8 @@ var line = Util.line
 
 export function search(f: (...a: any[]) => any, args: any[][], config: SearchConfig = new SearchConfig()): SearchResult {
     Ansi.Gray("Recording original execution...")
+    var trace = Recorder.record(f, args[0])
+    print(trace)
 
     Ansi.Gray("Input generation...")
     var inputs = InputGen.generateInputs(f, args)
