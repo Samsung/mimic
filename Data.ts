@@ -865,12 +865,12 @@ export class EApply extends Event {
         if (this.receiver != null) {
             s += " with receiver "
             s += this.receiver.toString()
-            s += " and arguments ["
+            s += " and arguments ( "
         } else {
-            s += " with arguments ["
+            s += " with arguments ( "
         }
         s += this.args.join(", ")
-        s += "]"
+        s += " )"
         return s
     }
 }
