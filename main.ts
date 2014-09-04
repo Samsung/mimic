@@ -178,7 +178,7 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 20, [1500, 0])
-search(f, a)
+//search(f, a)
 
 
 //print(Recorder.record(f, a0))
@@ -235,4 +235,86 @@ line()
 proxify([1, 2, 3, 5]).shift()
 line()
 proxify([]).shift()
+*/
+
+
+
+
+// trace recording
+/*
+var gl
+function init() {
+    gl = {
+        a: Recorder.proxifyWithLogger([1,2,3,4,5,6], "a"),
+        b: Recorder.proxifyWithLogger(['a','b','c','d'], "b"),
+        c: Recorder.proxifyWithLogger([6,4,2,1,5,3], "a"),
+        f: (x) => x % 2 == 0
+    }
+}
+
+
+line()
+print("Configuration:")
+print("  a = [1,2,3,4,5,6]")
+print("  b = ['a','b','c','d']")
+print("  c = [6,4,2,1,5,3]")
+print("  f = (x) => x % 2 == 0")
+line()
+print("a.shift()")
+init()
+gl.a.shift()
+line()
+print("a.unshift('a')")
+init()
+gl.a.unshift('a')
+line()
+print("a.concat(b)")
+init()
+gl.a.concat(gl.b)
+line()
+print("a.every(f)")
+init()
+gl.a.every(gl.f)
+line()
+print("a.filter(f)")
+init()
+gl.a.filter(gl.f)
+line()
+print("a.some(f)")
+init()
+gl.a.some(gl.f)
+line()
+print("a.forEach(f)")
+init()
+gl.a.forEach(gl.f)
+line()
+print("a.indexOf(4)")
+init()
+gl.a.indexOf(4)
+line()
+print("a.indexOf(7)")
+init()
+gl.a.indexOf(7)
+line()
+print("a.join(',')")
+init()
+gl.a.join(',')
+line()
+print("a.lastIndexOf(4)")
+init()
+gl.a.lastIndexOf(4)
+line()
+print("a.map(f)")
+init()
+gl.a.map(gl.f)
+line()
+print("a.reverse()")
+init()
+gl.a.reverse()
+line()
+print("c.sort()")
+init()
+//gl.c.sort()
+print("actually fails with an illegal access violation")
+line()
 */
