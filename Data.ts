@@ -133,7 +133,7 @@ export class Field extends Prestate {
         if (this.f.type === ExprType.Const) {
             var c = <Const>this.f
             if (typeof c.val === "string") {
-                if (/[a-zA-Z]+/.test(c.val)) {
+                if (/[a-zA-Z_][_a-zA-Z0-9]*/.test(c.val)) {
                     return this.o.toString() + "." + c.val
                 }
                 if (/[0-9]+/.test(c.val)) {
