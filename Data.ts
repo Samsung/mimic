@@ -696,6 +696,9 @@ export class Trace {
     public prestates: Prestate[] = null
     constructor() {
     }
+    getLength(): number {
+        return this.events.length
+    }
     extend(e: Event) {
         this.events.push(e)
     }
@@ -729,7 +732,17 @@ export class Trace {
             "\n  Result: " + res
     }
     getSkeleton(): string {
-        return this.events.map((s) => s.getSkeleton()).join("\n")
+        return this.events.map((s) => s.getSkeleton()).join("")
+    }
+    getSubSkeleton(start: number, length?: number): string {
+        if (length === undefined) {
+            length = this.events.length - start
+        }
+        var res = ""
+        for (var i = 0; i < length; i++) {
+            res += this.events[start+i].getSkeleton()
+        }
+        return res
     }
     asProgram(): Program {
         return new Program(this.asStmt())
@@ -816,7 +829,7 @@ export class EGet extends Event {
         super(EventKind.EGet, target, [name])
     }
     getSkeleton(): string {
-        return "get"
+        return "get;"
     }
     toString(): string {
         var s = ""
@@ -833,7 +846,7 @@ export class ESet extends Event {
         super(EventKind.ESet, target, [name, value])
     }
     getSkeleton(): string {
-        return "set"
+        return "set;"
     }
     toString(): string {
         var s = ""
@@ -852,7 +865,7 @@ export class EApply extends Event {
         super(EventKind.EApply, target, [receiver].concat(args))
     }
     getSkeleton(): string {
-        return "apply"
+        return "apply;"
     }
     toString(): string {
         var s = ""
@@ -876,7 +889,7 @@ export class EDeleteProperty extends Event {
         super(EventKind.EDeleteProperty, target, [name])
     }
     getSkeleton(): string {
-        return "deleteProperty"
+        return "deleteProperty;"
     }
     toString(): string {
         var s = ""
