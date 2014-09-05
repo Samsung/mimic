@@ -9,6 +9,7 @@
 import Util = require('./util/Util')
 import Ansi = require('./util/Ansicolors')
 import Data = require('./Data')
+import Random = require('./util/Random')
 
 // enable proxies
 import harmonyrefl = require('harmony-reflect');
@@ -312,12 +313,14 @@ export function proxifyWithLogger<T>(o: T, tag: string = " ", level: number = 0,
             return Reflect.has(target, name);
         },
         apply: function(target, receiver, args) {
-            var v = Reflect.apply(target, receiver, args);
             var s = common(target)
+            var id = "0x" + Util.pad(Random.randInt(Math.pow(16, 4)).toString(16), 4, "0")
+            logaccess(s + "apply start "+id)
+            var v = Reflect.apply(target, receiver, args);
             if (Util.isPrimitive(v)) {
-                logaccess(s + "apply (result: " + v + ")")
+                logaccess(s + "apply end " + id + " (result: " + v + ")")
             } else {
-                logaccess(s + "apply")
+                logaccess(s + "apply end " + id)
                 v = recurse(v)
             }
             return  v;
