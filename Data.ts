@@ -130,6 +130,17 @@ export class Field extends Prestate {
         super(ExprType.Field, 1+Math.max(o.depth, f.depth))
     }
     toString() {
+        if (this.f.type === ExprType.Const) {
+            var c = <Const>this.f
+            if (typeof c.val === "string") {
+                if (/[a-zA-Z]+/.test(c.val)) {
+                    return this.o.toString() + "." + c.val
+                }
+                if (/[0-9]+/.test(c.val)) {
+                    return this.o.toString() + "[" + c.val + "]"
+                }
+            }
+        }
         return this.o.toString() + "[" + this.f.toString() + "]"
     }
     eval(args: any[]): any {
