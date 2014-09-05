@@ -13,25 +13,11 @@ var print = Util.print
 var log = Util.log
 var line = Util.line
 
-
-export function test() {
-    var f = (a) => a.shift()
-    var inputs = [
-        [[]],
-        [[1,2,3]],
-        [[1,2,3,4,5,6]],
-    ]
-    var traces = inputs.map((i) => Recorder.record(f, i))
-    var candidates = findLoop(traces)
-    print(candidates.join("\n"))
-}
-
-
-export class StructureProposal {
+export class Proposal {
     constructor(public regex: string, public loopStart: number, public loopLength: number) {
     }
     equals(o) {
-        if (!(o instanceof StructureProposal)) {
+        if (!(o instanceof Proposal)) {
             return false
         }
         return this.regex === o.regex
@@ -43,8 +29,8 @@ export class StructureProposal {
 
 
 
-export function findLoop(traces: Data.Trace[], minIterations: number = 3, minBodyLength: number = 1, maxBodyLength: number = 100000) {
-    var candidates: StructureProposal[] = []
+export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLength: number = 1, maxBodyLength: number = 100000) {
+    var candidates: Proposal[] = []
     for (var k = 0; k < traces.length; k++) {
         var trace = traces[k]
         var tlen = trace.getLength()
@@ -68,7 +54,7 @@ export function findLoop(traces: Data.Trace[], minIterations: number = 3, minBod
                 while (true) {
                     iterations++
                     var regex = trace.getSubSkeleton(0, start) + "(" + body + ")*" + trace.getSubSkeleton(start+iterations*len)
-                    candidates.push(new StructureProposal(regex, start, len))
+                    candidates.push(new Proposal(regex, start, len))
                     if (body !== trace.getSubSkeleton(start + iterations*len, len)) {
                         break
                     }

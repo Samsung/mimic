@@ -744,52 +744,6 @@ export class Trace {
         }
         return res
     }
-    asProgram(): Program {
-        return new Program(this.asStmt())
-    }
-    asStmt(): Stmt {
-        var stmts: Stmt[] = []
-        var expr = (e: TraceExpr) => {
-            return e.curState[e.curState.length-1]
-        }
-        this.events.forEach((e) => {
-            var ev
-            switch (e.kind) {
-                case EventKind.EGet:
-                    ev = <EGet>e
-                    stmts.push(new Assign(e.variable, new Field(expr(ev.target), expr(ev.name)), true))
-                    break
-                case EventKind.ESet:
-                    ev = <ESet>e
-                    // save old value in local variable
-                    stmts.push(new Assign(new Var(), new Field(expr(ev.target), expr(ev.name)), true))
-                    stmts.push(new Assign(new Field(expr(ev.target), expr(ev.name)), expr(ev.value)))
-                    break
-                case EventKind.EApply:
-                    ev = <EApply>e
-                    var recv = null
-                    if (ev.receiver !== null) {
-                        recv = expr(ev.receiver)
-                    }
-                    stmts.push(new FuncCall(ev.variable, expr(ev.target), ev.args.map(expr), recv))
-                    break
-                case EventKind.EDeleteProperty:
-                    ev = <EDeleteProperty>e
-                    // save old value in local variable
-                    stmts.push(new Assign(new Var(), new Field(expr(ev.target), expr(ev.name)), true))
-                    stmts.push(new DeleteProp(expr(ev.target), expr(ev.name)))
-                    break
-                default:
-                    Util.assert(false, () => "unknown event kind: " + e)
-            }
-        })
-        if (this.isNormalReturn) {
-            stmts.push(new Return(expr(this.result)))
-        } else {
-            stmts.push(new Throw(expr(this.exception)))
-        }
-        return new Seq(stmts)
-    }
 }
 
 /**

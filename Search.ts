@@ -37,7 +37,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
     function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, p?: Data.Program) {
         if (!p) {
-            p = Recorder.record(f, inputs[0]).asProgram()
+            p = Compile.compileTrace(Recorder.record(f, inputs[0]))
         }
         print(p)
 

@@ -17,6 +17,7 @@ import Data = require('./Data')
 import Metric = require('./Metric')
 import InputGen = require('./InputGen')
 import Recorder = require('./Recorder')
+import Compile = require('./Compile')
 import ProgramGen = require('./ProgramGen')
 import Search = require('./Search')
 import List = require('./LinkedList')
@@ -168,7 +169,7 @@ var fs:any = [
     [ // 8
         "Array.prototype.shift",
         (a) => a.shift(),
-        [[1,2,3]]
+        [[1,2,3,4,5]]
     ],
 ]
 
@@ -184,8 +185,12 @@ var a0 = a[0]
 //search(f, a)
 
 
-StructureInference.test()
-
+var traces = a.map((i) => Recorder.record(f, i))
+var loops = StructureInference.infer(traces)
+var loop = loops[0]
+var trace: Data.Trace = traces[0]
+print(Compile.compileTrace(trace))
+print(Compile.compileTrace(trace, loop))
 
 //print(Recorder.record(f, a0))
 
