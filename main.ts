@@ -19,6 +19,9 @@ import InputGen = require('./InputGen')
 import Recorder = require('./Recorder')
 import ProgramGen = require('./ProgramGen')
 import Search = require('./Search')
+import List = require('./LinkedList')
+import StructureInference = require('./StructureInference')
+
 
 var print = Util.print
 var log = Util.log
@@ -181,6 +184,9 @@ var a0 = a[0]
 //search(f, a)
 
 
+StructureInference.test()
+
+
 //print(Recorder.record(f, a0))
 
 /*
@@ -317,4 +323,52 @@ init()
 //gl.c.sort()
 print("actually fails with an illegal access violation")
 line()
+
+
+
+
+
+var gl2
+function init2() {
+    gl2 = {
+        l: Recorder.proxifyWithLogger(List.LinkedList.make([1,2,3,4,5]), "l"),
+    }
+}
+
+line()
+print("Configuration:")
+print("  l = <1,2,3,4,5,6>")
+print("Methods ending in R are recursive, everything else is iterative")
+line()
+init2()
+print("l.itemAt(3)")
+gl2.l.itemAt(3)
+line()
+init2()
+print("l.getSize()")
+gl2.l.getSize()
+line()
+init2()
+print("l.getLast()")
+gl2.l.getLast()
+line()
+init2()
+print("l.addFront(0)")
+gl2.l.addFront(0)
+line()
+init2()
+print("l.addBack(0)")
+gl2.l.addBack(0)
+line()
+init2()
+print("l.removeFirst()")
+gl2.l.removeFirst()
+line()
+
+init2()
+print("l.itemAtR(3)")
+gl2.l.itemAtR(3)
+line()
+
+
 */
