@@ -22,17 +22,29 @@ export function test() {
         [[1,2,3,4,5,6]],
     ]
     var traces = inputs.map((i) => Recorder.record(f, i))
-    print(traces.map((t)=>t.getSkeleton()).join("\n"))
-    findLoop(traces)
+    var candidates = findLoop(traces)
+    print(candidates.join("\n"))
+}
+
+
+export class StructureProposal {
+    constructor(public regex: string, public loopStart: number, public loopLength: number) {
+    }
+    equals(o) {
+        if (!(o instanceof StructureProposal)) {
+            return false
+        }
+        return this.regex === o.regex
+    }
+    toString(): string {
+        return this.regex
+    }
 }
 
 
 
-
-function findLoop(traces: Data.Trace[], minIterations: number = 3, minBodyLength: number = 1, maxBodyLength: number = 100000) {
-    // start with the longest trace
-    var candidates: string[] = []
-
+export function findLoop(traces: Data.Trace[], minIterations: number = 3, minBodyLength: number = 1, maxBodyLength: number = 100000) {
+    var candidates: StructureProposal[] = []
     for (var k = 0; k < traces.length; k++) {
         var trace = traces[k]
         var tlen = trace.getLength()
@@ -56,7 +68,7 @@ function findLoop(traces: Data.Trace[], minIterations: number = 3, minBodyLength
                 while (true) {
                     iterations++
                     var regex = trace.getSubSkeleton(0, start) + "(" + body + ")*" + trace.getSubSkeleton(start+iterations*len)
-                    candidates.push(regex)
+                    candidates.push(new StructureProposal(regex, start, len))
                     if (body !== trace.getSubSkeleton(start + iterations*len, len)) {
                         break
                     }
@@ -64,14 +76,9 @@ function findLoop(traces: Data.Trace[], minIterations: number = 3, minBodyLength
             }
         }
     }
-    candidates = Util.dedup(candidates)
-    var howMany = (a: string) => traces.filter((t) => new RegExp("^" + a + "$").test(t.getSkeleton())).length
-    candidates.sort((a,b) => {
-        var r = howMany(b) - howMany(a)
-        if (r === 0) {
-            return a.length - b.length
-        }
-        return r
-    })
-    print(candidates.map((c)=> c + " - " + howMany(c)).join("\n"))
+    candidates = Util.dedup2(candidates)
+    var howMany = (a) => traces.filter((t) => new RegExp("^" + a.regex + "$").test(t.getSkeleton())).length
+    // sort by number of traces it matches, and then by the length of the regular expression
+    Util.sortBy(candidates, [(a) => -howMany(a), (a) => a.regex.length])
+    return candidates
 }

@@ -88,6 +88,21 @@ export function indexOfEquals<T>(a: T[], item: T, start: number = 0): number {
     j--
     return (j === count) ? -1 : j
 }
+
+/** Sort the array `arr' in-place, using a list of functions that map an element to an integer property by which to sort. */
+export function sortBy<T>(arr: T[], fns: { (a: T): number; }[]) {
+    arr.sort((a, b) => {
+        var r = 0
+        for (var i = 0; i < fns.length; i++) {
+            r = fns[i](a) - fns[i](b)
+            if (r !== 0) {
+                return r
+            }
+        }
+        return r
+    })
+}
+
 // non-ideal clone method
 // taken from: http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
 export function clone<T>(obj: T): T {
