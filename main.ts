@@ -190,6 +190,7 @@ var loops = StructureInference.infer(traces)
 var loop = loops[0]
 var trace: Data.Trace = traces[0]
 print(Compile.compileTrace(trace))
+line()
 print(Compile.compileTrace(trace, loop))
 
 //print(Recorder.record(f, a0))

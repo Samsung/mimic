@@ -343,6 +343,7 @@ export enum StmtType {
     DefineProp,
     VarDecl,
     If,
+    For,
     Seq,
     FuncCall,
 }
@@ -393,7 +394,7 @@ export class If extends Stmt {
             "\n}"
     }
     children(): Node[] {
-        return (<Node[]>[this.c]).concat(this.thn).concat(this.els)
+        return [this.c, this.thn, this.els]
     }
     anychildren(): any[] {
         var res: any[] = this.children()
@@ -420,6 +421,56 @@ export class If extends Stmt {
         return [<Stmt>this].concat(this.thn.allStmts()).concat(this.els.allStmts())
     }
 }
+/**
+ * Conditional statement.
+ */
+export class For extends Stmt {
+    constructor(public init: Stmt, public cond: Expr, public inc: Stmt, public body: Stmt) {
+        super(StmtType.For)
+    }
+    toString() {
+        var res = ""
+        res += "for ("
+        res += this.init.toString()
+        res += "; "
+        res += this.cond.toString()
+        res += "; "
+        res += this.inc.toString()
+        res += ") {\n"
+        res += Util.indent(this.body.toString())
+        res += "\n}"
+        return res
+    }
+    children(): Node[] {
+        return [this.init, this.cond, this.inc, this.body]
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
+    }
+    numberOfStmts(): number {
+        return 1 + this.init.numberOfStmts() + this.inc.numberOfStmts() + this.body.numberOfStmts()
+    }
+    replace(i: number, news: Stmt) {
+        /*Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
+        if (i === 0) {
+            return news
+        }
+        i -= 1
+        if (i < this.thn.numberOfStmts()) {
+            // recurse for thn
+            return new If(this.c, this.thn.replace(i, news), this.els)
+        }
+        i -= this.thn.numberOfStmts()
+        // recurse for els
+        return new If(this.c, this.thn, this.els.replace(i, news))*/
+        Util.assert(false)
+        return null
+    }
+    allStmts(): Stmt[] {
+        return [<Stmt>this].concat(this.init.allStmts()).concat(this.inc.allStmts()).concat(this.body.allStmts())
+    }
+}
 
 /**
  * A sequence of statements (has no behavior other that that of it's children).
@@ -430,6 +481,9 @@ export class Seq extends Stmt {
         super(StmtType.Seq)
     }
     toString() {
+        if (this.numberOfStmts() === 0) {
+            return "/* nop */"
+        }
         return this.stmts.join("\n")
     }
     children(): Node[] {

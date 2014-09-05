@@ -14,7 +14,7 @@ var log = Util.log
 var line = Util.line
 
 export class Proposal {
-    constructor(public regex: string, public loopStart: number, public loopLength: number) {
+    constructor(public regex: string, public loopStart: number, public loopLength: number, public numIterations: number) {
     }
     equals(o) {
         if (!(o instanceof Proposal)) {
@@ -56,7 +56,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                 while (true) {
                     iterations++
                     var regex = trace.getSubSkeleton(0, start) + "(" + body + ")*" + trace.getSubSkeleton(start+iterations*len)
-                    candidates.push(new Proposal(regex, start, len))
+                    candidates.push(new Proposal(regex, start, len, iterations))
                     if (body !== trace.getSubSkeleton(start + iterations*len, len)) {
                         break
                     }

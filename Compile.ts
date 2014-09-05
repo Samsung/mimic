@@ -27,12 +27,24 @@ export function compile2(prog: string): (...a: any[]) => any {
     }
 }
 
-export function compileTrace(trace: Data.Trace, loop?: StructureInference.Proposal): Data.Program {
-    var stmts: Data.Stmt[] = []
-    var expr = (e: Data.TraceExpr) => {
-        return e.curState[e.curState.length-1]
-    }
-    trace.events.forEach((e) => {
+/** Compile a trace expression. */
+function expr(e: Data.TraceExpr) {
+    return e.curState[e.curState.length-1]
+}
+
+/**
+ * Compile a list of events
+ */
+function compileEventList(events: Data.Event[], loop?: StructureInference.Proposal) {
+    var stmts:Data.Stmt[] = []
+    for (var i = 0; i < events.length; i++) {
+        var e = events[i]
+        if (loop !== undefined && loop.loopStart === i) {
+            var body = new Data.Seq(compileEventList(events.slice(i, i+loop.loopLength)))
+            stmts.push(new Data.For(Data.Seq.Empty, new Data.Const(false), Data.Seq.Empty, body))
+            i += (loop.loopLength * loop.numIterations)-1
+            continue
+        }
         var ev
         switch (e.kind) {
             case Data.EventKind.EGet:
@@ -62,7 +74,14 @@ export function compileTrace(trace: Data.Trace, loop?: StructureInference.Propos
             default:
                 Util.assert(false, () => "unknown event kind: " + e)
         }
-    })
+    }
+    return stmts;
+}
+/**
+ * Compile a trace to a program.
+ */
+export function compileTrace(trace: Data.Trace, loop?: StructureInference.Proposal): Data.Program {
+    var stmts = compileEventList(trace.events, loop)
     if (trace.isNormalReturn) {
         stmts.push(new Data.Return(expr(trace.result)))
     } else {
