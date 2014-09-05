@@ -27,8 +27,10 @@ export class Proposal {
     }
 }
 
-
-
+/**
+ * Tries to infer a loop structure of the given traces.  Returns a set of proposals, ordered by
+ * confidence in them (best proposal first).
+ */
 export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLength: number = 1, maxBodyLength: number = 100000) {
     var candidates: Proposal[] = []
     for (var k = 0; k < traces.length; k++) {
