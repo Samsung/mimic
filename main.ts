@@ -194,9 +194,6 @@ print(p0)
 line()
 print(Compile.compileTrace(trace, loop))
 
-print(Compile.compile(p0).call(null, [1,2,3,4,5]))
-
-//print(Recorder.record(f, a0))
 
 /*
 var ff = f

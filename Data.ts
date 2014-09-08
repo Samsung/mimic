@@ -278,9 +278,9 @@ export class Argument extends Prestate {
 export class Var extends Expr {
     private static count = 0
     name: string
-    constructor() {
+    constructor(prefix: string = "n") {
         super(ExprType.Var, 0)
-        this.name = "n" + Var.count
+        this.name = prefix + Var.count
         Var.count++
     }
     toString(config = {}) {
@@ -447,16 +447,22 @@ export class If extends Stmt {
  * Conditional statement.
  */
 export class For extends Stmt {
-    constructor(public init: Stmt, public cond: Expr, public inc: Stmt, public body: Stmt) {
+    constructor(public start: Expr, public end: Expr, public inc: Expr, public body: Stmt, public variable: Var = new Var("i")) {
         super(StmtType.For)
     }
     toString() {
         var res = ""
         res += "for ("
-        res += this.init.toString()
+        res += this.variable.toString()
+        res += " = "
+        res += this.start.toString()
         res += "; "
-        res += this.cond.toString()
+        res += this.variable.toString()
+        res += " < "
+        res += this.end.toString()
         res += "; "
+        res += this.variable.toString()
+        res += " += "
         res += this.inc.toString()
         res += ") {\n"
         res += Util.indent(this.body.toString())
@@ -464,33 +470,24 @@ export class For extends Stmt {
         return res
     }
     children(): Node[] {
-        return [this.init, this.cond, this.inc, this.body]
+        return [this.variable, this.start, this.end, this.inc, this.body]
     }
     anychildren(): any[] {
         var res: any[] = this.children()
         return res
     }
     numberOfStmts(): number {
-        return 1 + this.init.numberOfStmts() + this.inc.numberOfStmts() + this.body.numberOfStmts()
+        return 1 + this.body.numberOfStmts()
     }
     replace(i: number, news: Stmt) {
-        /*Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
+        Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
         if (i === 0) {
             return news
         }
-        i -= 1
-        if (i < this.thn.numberOfStmts()) {
-            // recurse for thn
-            return new If(this.c, this.thn.replace(i, news), this.els)
-        }
-        i -= this.thn.numberOfStmts()
-        // recurse for els
-        return new If(this.c, this.thn, this.els.replace(i, news))*/
-        Util.assert(false)
-        return null
+        return new For(this.start, this.end, this.inc, this.body.replace(i, news), this.variable)
     }
     allStmts(): Stmt[] {
-        return [<Stmt>this].concat(this.init.allStmts()).concat(this.inc.allStmts()).concat(this.body.allStmts())
+        return [<Stmt>this].concat(this.body.allStmts())
     }
 }
 

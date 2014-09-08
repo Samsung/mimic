@@ -11,6 +11,7 @@ import StructureInference = require('./StructureInference')
 
 var log = Util.log
 var print = Util.print
+var line = Util.line
 
 /**
  * Given a program, compile it into a regular function.
@@ -56,7 +57,12 @@ function compileEventList(events: Data.Event[], loop?: StructureInference.Propos
         var e = events[i]
         if (loop !== undefined && loop.loopStart === i) {
             var body = new Data.Seq(compileEventList(events.slice(i, i+loop.loopLength)))
-            stmts.push(new Data.For(Data.Seq.Empty, new Data.Const(false), Data.Seq.Empty, body))
+            stmts.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), body))
+            /*for (var k = 0; k < loop.numIterations; k++) {
+                line()
+                print(events.slice(i+k*loop.loopLength, i+k*loop.loopLength+loop.loopLength).join("\n"))
+                line()
+            }*/
             i += (loop.loopLength * loop.numIterations)-1
             continue
         }
