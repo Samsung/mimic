@@ -50,7 +50,8 @@
 
 \newcommand{\bigO}[1]{\mathcal O\left(#1\right)} % big-o notation
 
-\usepackage{fullpage}
+% I find the text difficult to read with this enabled --MS
+%\usepackage{fullpage}
 
 \def\sectionautorefname{Section}
 \def\subsectionautorefname{Section}
@@ -116,7 +117,7 @@ Other code is simply difficult to analyze due to its size and complexity, e.g.,
 frameworks like jQuery or even the Java standard library.  In realistic systems,
 such code is often handled via hand-written models that expose its behavior to
 analyses.  However, as the amount of such unanalyzable code grows, manual
-writing of models becomes intractable. Models must often be customized to
+writing of models becomes intractable. Furthermore, models must often be customized to
 individual analyses in order to be useful, making it very difficult to re-use
 models written for one analysis when a new analysis is developed.  A system to
 automatically generate library models in a manner customized to the desired
@@ -125,6 +126,25 @@ applicable to real systems.
 \todo{clarify usefulness for scenario of performing
   dynamic analysis where code is available.  Could provide speedups?}
 
+Specifically, automatic generation of library models could be useful in the following scenarios:
+\begin{itemize}
+\item Static pointer analyses for JavaScript such as WALA and TAJS
+  \todo{citations?}  require models of built-in library routines in
+  order to do a proper analysis of real-world programs, almost of
+  which make use of these routines.  Both projects have invested
+  significant efforts into manually writing such models, but still are
+  missing models for many library routines, particularly browser DOM
+  APIs.  With our proposed technique, at least some of these models
+  could be automatically generated, saving significant effort.
+\item Similarly, dynamic analyses also have a need for library models.
+  For dynamic analysis, an unmodeled library method can simply be
+  executed, and in principle its effects on its inputs could be
+  observed and handled by the analysis.  However, in the presence of
+  mutable heap data, directly observing effects at every library call
+  would become far too complex and expensive.  Hence, manually-written
+  models are often employed in practice, and automatic generation of
+  these models would again be beneficial.
+\end{itemize}
 
 \section*{Our approach}
 
@@ -133,8 +153,8 @@ randomized search.  To learn the behaviors of a function without needing to
 instrument its code, we repeatedly invoke the function with proxied objects as
 arguments.  A proxied object allows for various low-level operations on the
 object, such as field accesses, to be intercepted and customized.  Leveraging
-this proxy functionality, we can dynamically probe the execution of library
-functions and observe details of its behavior, even if the function’s code is
+this proxy functionality, we can dynamically probe the execution of a library
+function and observe details of its behavior, even if the function’s code is
 unavailable.  Proxy functionality is supported by a number of dynamic languages,
 such as JavaScript, Python, and Ruby.
 
@@ -147,8 +167,8 @@ For instance, consider the following JavaScript function:
     o1[field] = o2[field];
   }
 \end{lstlisting}
-If it is run with the inputs \code{\{\}}, \code{\{f: 10\}} and \code{"f"}, then it's trace looks
-as follows:
+If it is run with the inputs \code{\{\}}, \code{\{f: 10\}} and \code{"f"}, then its trace looks
+like the following:
 \begin{verbatim}
   read of field "f" of object o2, with resulting value 10
   write to field "f" of object o1 with value 10
@@ -235,3 +255,6 @@ discover the correct termination condition.
 
 \end{document}
 
+%%% Local Variables:
+%%% TeX-master: "synthesis"
+%%% End:
