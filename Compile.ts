@@ -51,11 +51,11 @@ function expr(e: Data.TraceExpr) {
 /**
  * Compile a list of events
  */
-function compileEventList(events: Data.Event[], loop?: StructureInference.Proposal) {
+function compileEventList(events: Data.Event[], loop: StructureInference.Proposal = null) {
     var stmts:Data.Stmt[] = []
     for (var i = 0; i < events.length; i++) {
         var e = events[i]
-        if (loop !== undefined && loop.loopStart === i) {
+        if (loop !== null && loop.loopStart === i) {
             var body = new Data.Seq(compileEventList(events.slice(i, i+loop.loopLength)))
             stmts.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), body))
             /*for (var k = 0; k < loop.numIterations; k++) {
