@@ -6,6 +6,10 @@
 
 import Util = require('./util/Util')
 
+var print = Util.print
+var log = Util.log
+var line = Util.line
+
 /**
  * Common ancestor for expressions and statements.
  */
@@ -484,7 +488,7 @@ export class For extends Stmt {
         if (i === 0) {
             return news
         }
-        return new For(this.start, this.end, this.inc, this.body.replace(i, news), this.variable)
+        return new For(this.start, this.end, this.inc, this.body.replace(i-1, news), this.variable)
     }
     allStmts(): Stmt[] {
         return [<Stmt>this].concat(this.body.allStmts())
