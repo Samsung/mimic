@@ -32,22 +32,26 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     print(trace)
 
     Ansi.Gray("Input generation...")
-    var inputs = InputGen.generateInputs(f, args)
+    var inputs = Random.pickN(InputGen.generateInputs(f, args), 10)
     var traces = inputs.map((i) => Recorder.record(f, i))
     Ansi.Gray("Found " + inputs.length + " inputs.")
 
     Ansi.Gray("Loop inference...")
     var loops = StructureInference.infer(traces)
-    var loop = loops[0]
+    var loop = null
+    if (loops.length > 0) {
+        // for now, only use first loop
+        loop = loops[0]
+    }
     Ansi.Gray("Found " + loops.length + " possible loops.")
 
     Ansi.Gray("Input categorization...")
-    var categories = InputGen.categorize(inputs, traces)
+    var categories = InputGen.categorize(inputs, traces, loop)
     Ansi.Gray("Found " + categories.length + " categories of inputs.")
 
-    function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, p?: Data.Program) {
+    function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, loop: StructureInference.Proposal, p?: Data.Program) {
         if (!p) {
-            p = Compile.compileTrace(Recorder.record(f, inputs[0]))
+            p = Compile.compileTrace(Recorder.record(f, inputs[0]), loop)
         }
         print(p)
 
@@ -82,18 +86,21 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         var iterations = Math.ceil(0.8*config.iterations/categories.length)
         for (var i = 0; i < categories.length; i++) {
             Ansi.Gray("Searching a program for input category " + (i+1) + "/" + categories.length + ".")
-            res[i] = straightLineSearch(f, categories[i].inputs, iterations)
+            if (i > 0) {
+                loop = null
+            }
+            res[i] = straightLineSearch(f, categories[i].inputs, iterations, loop)
             mainSearch = mainSearch.combine(res[i])
             Ansi.Gray(Util.linereturn())
         }
         Ansi.Gray("Searching a program for all " + inputs.length + " inputs.")
         Util.assert(categories.length === 2, () => "cannot handle more than 2 categories at the moment")
         p = new Data.Program(new Data.If(new Data.Const(true), res[0].result.body, res[1].result.body))
-        mainSearch = straightLineSearch(f, inputs, 0.2*iterations, p).combine(mainSearch)
+        mainSearch = straightLineSearch(f, inputs, 0.2*iterations, null, p).combine(mainSearch)
         p = mainSearch.result
     } else {
         Ansi.Gray("Searching a program for all " + inputs.length + " inputs.")
-        mainSearch = straightLineSearch(f, inputs, config.iterations)
+        mainSearch = straightLineSearch(f, inputs, config.iterations, loop)
         p = mainSearch.result
         Ansi.Gray(Util.linereturn())
     }

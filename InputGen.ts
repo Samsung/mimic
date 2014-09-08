@@ -4,6 +4,7 @@
 
 import Data = require('./Data')
 import Recorder = require('./Recorder')
+import StructureInference = require('./StructureInference')
 
 import Util = require('./util/Util')
 var log = Util.log
@@ -48,30 +49,39 @@ export function generate(init: any, n: number): any[] {
     return []
 }
 
-export function categorize(inputs, traces: Data.Trace[]) {
+export function categorize(inputs, traces: Data.Trace[], loop: StructureInference.Proposal = null) {
     var map = new Map<string, number>()
     var res = []
-    var cat = 0
+    var cat = 1
     for (var i = 0; i < inputs.length; i++) {
-        var input = inputs[i];
-        var skeleton = traces[i].getSkeleton()
-        if (!map.has(skeleton)) {
-            map.set(skeleton, cat)
-            res[cat] = {
-                id: cat,
+        var input = inputs[i]
+        var idx
+        if (loop != null && loop.worksFor.indexOf(i) !== -1) {
+            // belongs to loop category
+            idx = "<loop>"
+        } else {
+            idx = traces[i].getSkeleton()
+        }
+        if (!map.has(idx)) {
+            var catt = cat
+            if (idx == "<loop>") {
+                catt = 0
+            }
+            map.set(idx, catt)
+            res[catt] = {
+                id: catt,
                 inputs: [],
             }
             cat += 1
         }
-        res[map.get(skeleton)].inputs.push(input)
+        res[map.get(idx)].inputs.push(input)
     }
     return res
 }
 
 export function generateInputs(f: (...a: any[]) => any, args: any[][]) {
     var candidates = genCandidateExpr(f, args)
-    var allInputs = generateInputsAux(f, args, candidates)
-    return allInputs
+    return generateInputsAux(f, args, candidates)
 }
 
 function generateInputsAux(f: (...a: any[]) => any, initials: any[][], exprs: Data.Prestate[]): any[][] {
