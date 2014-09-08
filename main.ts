@@ -94,7 +94,7 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
 
 function search(f, a) {
     var config = new Search.SearchConfig({
-        iterations: 5000,
+        iterations: 20000,
         cleanupIterations: 700,
         debug: 1,
     })
@@ -184,6 +184,24 @@ var a0 = a[0]
 search(f, a)
 
 
+
+
+/*
+function f2(arg0) {
+    var n2522 = arg0[arg0[3]]
+    var n2523 = arg0[0]
+    for (var i2528 = 0; i2528 < 3; i2528 += 1) {
+        var n2524 = arg0[i2528+1]
+        arg0[i2528] = n2524
+    }
+    delete arg0["4"]
+    arg0[i2528] = n2522
+    return n2523
+}
+
+print(Recorder.record(f, a0))
+print(Recorder.record(f2, a0))
+*/
 
 
 /*

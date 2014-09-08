@@ -91,11 +91,12 @@ var Ast = MaybeAstFactory
  */
 export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Program {
     var stmts = p.body.allStmts()
-    var si = randInt(stmts.length)
+
     // all possible transformations (they return false if they cannot be applied)
     var options = [
         new WeightedPair(0, () => { // remove this statement
             if (stmts.length < 1) return null
+            var si = randInt(stmts.length)
             p.body.replace(si, Data.Seq.Empty)
             return null
         }),
@@ -116,6 +117,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
         }),
         new WeightedPair(7, () => { // modify an existing statement
             if (stmts.length < 1) return null
+            var si = randInt(stmts.length)
             var ss = stmts[si]
             var s
             var news
@@ -133,6 +135,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                             news = Ast.makeAssign(field, s.rhs)
                         }
                     } else {
+                        return null
                         Util.assert(s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field)
                         var f = <Data.Field>s.rhs
                         if (maybe()) {
@@ -196,6 +199,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
     var res
     var i = 0
     while ((res = pick(options)()) === null && i < 25) { i += 1 }
+    Util.assert(res != null)
     return res
 }
 

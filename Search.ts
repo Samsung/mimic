@@ -241,6 +241,10 @@ function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: num
                 badness = newbadness
             }
         }
+
+        if (i % 1000 === 0) {
+            print(Util.stop(start))
+        }
     }
 
     var time = Util.stop(start)
