@@ -185,6 +185,8 @@ var a0 = a[0]
 
 
 
+
+/*
 var inputs = InputGen.generateInputs(f, a)
 var traces = inputs.map((i) => Recorder.record(f, i))
 var loops = StructureInference.infer(traces)
@@ -196,7 +198,7 @@ line()
 print(loops.join("\n"))
 line()
 print(Compile.compileTrace(trace, loop))
-
+*/
 
 /*
 var ff = f

@@ -157,3 +157,24 @@ for (var k = 0; k < tests.length; k++) {
         }
     })
 }
+
+
+describe("Recorder", () => {
+    var budget = 100
+    it("should run out of budget", () => {
+        var trace = Recorder.record((n, b) => {
+            for (var i = 0; i < n; i++) {
+                var k = b.f
+            }
+        }, [budget*1.2, {}], budget)
+        Util.assert(trace.isExhaustedBudget)
+    })
+    it("should run out of budget", () => {
+        var trace = Recorder.record((n, b) => {
+            for (var i = 0; i < n; i++) {
+                var k = b.f
+            }
+        }, [budget*0.5, {}], budget)
+        Util.assert(!trace.isExhaustedBudget)
+    })
+})

@@ -813,6 +813,11 @@ export class Trace {
     }
     toString(config = {}) {
         var res
+
+        if (this.isExhaustedBudget) {
+            return "// exhausted computational budget"
+        }
+
         if (this.isNormalReturn) {
             res = this.result.toString(config)
         } else {
