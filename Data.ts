@@ -456,7 +456,7 @@ export class For extends Stmt {
     }
     toString() {
         var res = ""
-        res += "for ("
+        res += "for (var "
         res += this.variable.toString()
         res += " = "
         res += this.start.toString()
