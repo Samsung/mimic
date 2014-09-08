@@ -53,6 +53,9 @@ export function categorize(inputs, traces: Data.Trace[], loop: StructureInferenc
     var map = new Map<string, number>()
     var res = []
     var cat = 1
+    if (loop === null) {
+        cat = 0
+    }
     for (var i = 0; i < inputs.length; i++) {
         var input = inputs[i]
         var idx
@@ -66,13 +69,14 @@ export function categorize(inputs, traces: Data.Trace[], loop: StructureInferenc
             var catt = cat
             if (idx == "<loop>") {
                 catt = 0
+            } else {
+                cat += 1
             }
             map.set(idx, catt)
             res[catt] = {
                 id: catt,
                 inputs: [],
             }
-            cat += 1
         }
         res[map.get(idx)].inputs.push(input)
     }
