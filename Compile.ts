@@ -23,6 +23,21 @@ export function compile(prog: Data.Program): (...a: any[]) => any {
  */
 export function compile2(prog: string): (...a: any[]) => any {
     return function (...a: any[]): any {
+        if (a.length === 0) {
+            return new Function('"use strict";' + prog).apply(null, a)
+        } else if (a.length === 1) {
+            return new Function("arg0", '"use strict";' + prog).apply(null, a)
+        } else if (a.length === 2) {
+            return new Function("arg0", "arg1", '"use strict";' + prog).apply(null, a)
+        } else if (a.length === 3) {
+            return new Function("arg0", "arg1", "arg2", '"use strict";' + prog).apply(null, a)
+        } else if (a.length === 4) {
+            return new Function("arg0", "arg1", "arg2", "arg3", '"use strict";' + prog).apply(null, a)
+        } else if (a.length === 5) {
+            return new Function("arg0", "arg1", "arg2", "arg3", "arg4", '"use strict";' + prog).apply(null, a)
+        } else if (a.length === 6) {
+            return new Function("arg0", "arg1", "arg2", "arg3", "arg4", "arg5", '"use strict";' + prog).apply(null, a)
+        }
         return new Function('"use strict";' + prog).apply(null, a)
     }
 }
@@ -54,7 +69,7 @@ function compileEventList(events: Data.Event[], loop?: StructureInference.Propos
             case Data.EventKind.ESet:
                 ev = <Data.ESet>e
                 // save old value in local variable
-                stmts.push(new Data.Assign(new Data.Var(), new Data.Field(expr(ev.target), expr(ev.name)), true))
+                //stmts.push(new Data.Assign(new Data.Var(), new Data.Field(expr(ev.target), expr(ev.name)), true))
                 stmts.push(new Data.Assign(new Data.Field(expr(ev.target), expr(ev.name)), expr(ev.value)))
                 break
             case Data.EventKind.EApply:
@@ -68,7 +83,7 @@ function compileEventList(events: Data.Event[], loop?: StructureInference.Propos
             case Data.EventKind.EDeleteProperty:
                 ev = <Data.EDeleteProperty>e
                 // save old value in local variable
-                stmts.push(new Data.Assign(new Data.Var(), new Data.Field(expr(ev.target), expr(ev.name)), true))
+                //stmts.push(new Data.Assign(new Data.Var(), new Data.Field(expr(ev.target), expr(ev.name)), true))
                 stmts.push(new Data.DeleteProp(expr(ev.target), expr(ev.name)))
                 break
             default:

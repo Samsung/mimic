@@ -16,6 +16,7 @@ import Random = require('../util/Random')
 import Data = require('../Data')
 import Metric = require('../Metric')
 import InputGen = require('../InputGen')
+import Compile = require('../Compile')
 import Recorder = require('../Recorder')
 import ProgramGen = require('../ProgramGen')
 import Search = require('../Search')
@@ -121,10 +122,24 @@ function inputgen_test(f, a, a0, name, oracle) {
     })
 }
 
+function compile_test(f, a, a0, name, oracle) {
+    it('should compile for ' + name, () => {
+        var t0 = Recorder.record(f, a0)
+        var p = Compile.compileTrace(t0)
+        var f1 = Compile.compile(p)
+        var t1 = Recorder.record(f1, a0)
+        var actual = t0.toString({novar: true});
+        if (actual.indexOf("inspect") === -1) {
+            ass.equal(actual, t1.toString({novar:true}))
+        }
+    })
+}
+
 
 var tests = [
     ["Recorder", recorder_test],
     ["InputGen.categorize", inputgen_test],
+    ["Compile", compile_test],
 ]
 
 

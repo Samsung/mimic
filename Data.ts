@@ -111,6 +111,11 @@ export class Expr extends Node {
         Util.assert(false)
         return false
     }
+
+    toString(config = {}): string {
+        Util.assert(false)
+        return ""
+    }
 }
 
 /**
@@ -129,19 +134,19 @@ export class Field extends Prestate {
     constructor(public o: Expr, public f: Expr) {
         super(ExprType.Field, 1+Math.max(o.depth, f.depth))
     }
-    toString() {
+    toString(config = {}) {
         if (this.f.type === ExprType.Const) {
             var c = <Const>this.f
             if (typeof c.val === "string") {
                 if (/[a-zA-Z_][_a-zA-Z0-9]*/.test(c.val)) {
-                    return this.o.toString() + "." + c.val
+                    return this.o.toString(config) + "." + c.val
                 }
                 if (/[0-9]+/.test(c.val)) {
-                    return this.o.toString() + "[" + c.val + "]"
+                    return this.o.toString(config) + "[" + c.val + "]"
                 }
             }
         }
-        return this.o.toString() + "[" + this.f.toString() + "]"
+        return this.o.toString(config) + "[" + this.f.toString(config) + "]"
     }
     eval(args: any[]): any {
         return this.o.eval(args)[this.f.eval(args)]
@@ -196,8 +201,8 @@ export class Add extends Expr {
     constructor(public a: Expr, public b: Expr) {
         super(ExprType.Add, 1+Math.max(a.depth, b.depth))
     }
-    toString() {
-        return this.a.toString() + "+" + this.b.toString()
+    toString(config = {}) {
+        return this.a.toString(config) + "+" + this.b.toString(config)
     }
     eval(args: any[]): any {
         return this.a.eval(args)+this.b.eval(args)
@@ -230,7 +235,10 @@ export class Argument extends Prestate {
     constructor(public i: number) {
         super(ExprType.Arg, 0)
     }
-    toString() {
+    toString(config = {}) {
+        if (this.i < 6) {
+            return "arg" + this.i
+        }
         return "arguments[" + this.i + "]"
     }
     eval(args: any[]): any {
@@ -275,7 +283,10 @@ export class Var extends Expr {
         this.name = "n" + Var.count
         Var.count++
     }
-    toString() {
+    toString(config = {}) {
+        if ("novar" in config) {
+            return "*"
+        }
         return this.name
     }
     equals(o): boolean {
@@ -309,7 +320,7 @@ export class Const extends Expr {
         this.setValue(val)
         Util.assert(Util.isPrimitive(this.val))
     }
-    toString() {
+    toString(config = {}) {
         if (typeof this.val === "string") {
             return "\"" + this.val + "\""
         }
@@ -786,14 +797,14 @@ export class Trace {
     eventsOfKind(kind: EventKind): Event[] {
         return this.events.filter((s) => s.kind === kind)
     }
-    toString() {
+    toString(config = {}) {
         var res
         if (this.isNormalReturn) {
-            res = this.result.toString()
+            res = this.result.toString(config)
         } else {
-            res = "Exception: " + this.exception.toString()
+            res = "Exception: " + this.exception.toString(config)
         }
-        return "Trace:\n  " + this.events.join("\n  ") +
+        return "Trace:\n  " + this.events.map((e) => e.toString(config)).join("\n  ") +
             "\n  Result: " + res
     }
     getSkeleton(): string {
@@ -835,9 +846,9 @@ export class Event {
         Util.assert(false)
         return ""
     }
-    toString(): string {
+    toString(config = {}): string {
         var s = ""
-        s += this.variable.toString()
+        s += this.variable.toString(config)
         s += " := "
         return s
     }
@@ -850,13 +861,13 @@ export class EGet extends Event {
     getSkeleton(): string {
         return "get;"
     }
-    toString(): string {
+    toString(config = {}): string {
         var s = ""
-        s += super.toString()
+        s += super.toString(config)
         s += "get property "
-        s += this.name.toString()
+        s += this.name.toString(config)
         s += " of "
-        s += this.target.toString()
+        s += this.target.toString(config)
         return s
     }
 }
@@ -867,15 +878,15 @@ export class ESet extends Event {
     getSkeleton(): string {
         return "set;"
     }
-    toString(): string {
+    toString(config = {}): string {
         var s = ""
-        //s += super.toString()
+        //s += super.toString(config)
         s += "set property "
-        s += this.name.toString()
+        s += this.name.toString(config)
         s += " of "
-        s += this.target.toString()
+        s += this.target.toString(config)
         s += " to "
-        s += this.value.toString()
+        s += this.value.toString(config)
         return s
     }
 }
@@ -886,19 +897,19 @@ export class EApply extends Event {
     getSkeleton(): string {
         return "apply;"
     }
-    toString(): string {
+    toString(config = {}): string {
         var s = ""
-        s += super.toString()
+        s += super.toString(config)
         s += "apply "
-        s += this.target.toString()
+        s += this.target.toString(config)
         if (this.receiver != null) {
             s += " with receiver "
-            s += this.receiver.toString()
+            s += this.receiver.toString(config)
             s += " and arguments ( "
         } else {
             s += " with arguments ( "
         }
-        s += this.args.join(", ")
+        s += this.args.map((a) => a.toString(config)).join(", ")
         s += " )"
         return s
     }
@@ -910,13 +921,13 @@ export class EDeleteProperty extends Event {
     getSkeleton(): string {
         return "deleteProperty;"
     }
-    toString(): string {
+    toString(config = {}): string {
         var s = ""
-        //s += super.toString()
+        //s += super.toString(config)
         s += "delete property"
-        s += this.name.toString()
+        s += this.name.toString(config)
         s += " of "
-        s += this.target.toString()
+        s += this.target.toString(config)
         return s
     }
 }
@@ -949,12 +960,12 @@ export class TraceExpr {
         }
         return this.pss_cache
     }
-    toString(): string {
+    toString(config = {}): string {
         var f = (exprs: Expr[]) => {
             if (exprs.length === 1) {
-                return exprs[0].toString()
+                return exprs[0].toString(config)
             } else {
-                return "[" + exprs.join(",") + "]"
+                return "[" + exprs.map((e) => e.toString(config)).join(",") + "]"
             }
         }
         if (this.preState.join("|") === this.curState.join("|")) {
@@ -971,9 +982,9 @@ export class TraceExpr {
 }
 export class TraceConst extends TraceExpr {
     constructor(public val: any) {
-        super([new Const(val)], [new Const(val)])
+        super([<Expr>new Const(val)], [<Expr>new Const(val)])
     }
-    toString(): string {
+    toString(config = {}): string {
         var s = ""
         //s += "<"
         s += this.val

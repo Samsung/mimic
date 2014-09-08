@@ -189,9 +189,12 @@ var traces = a.map((i) => Recorder.record(f, i))
 var loops = StructureInference.infer(traces)
 var loop = loops[0]
 var trace: Data.Trace = traces[0]
-print(Compile.compileTrace(trace))
+var p0 = Compile.compileTrace(trace);
+print(p0)
 line()
 print(Compile.compileTrace(trace, loop))
+
+print(Compile.compile(p0).call(null, [1,2,3,4,5]))
 
 //print(Recorder.record(f, a0))
 
