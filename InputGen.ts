@@ -48,13 +48,13 @@ export function generate(init: any, n: number): any[] {
     return []
 }
 
-export function categorize(f, inputs) {
+export function categorize(inputs, traces: Data.Trace[]) {
     var map = new Map<string, number>()
     var res = []
     var cat = 0
     for (var i = 0; i < inputs.length; i++) {
         var input = inputs[i];
-        var skeleton = Recorder.record(f, input).getSkeleton()
+        var skeleton = traces[i].getSkeleton()
         if (!map.has(skeleton)) {
             map.set(skeleton, cat)
             res[cat] = {
@@ -71,11 +71,7 @@ export function categorize(f, inputs) {
 export function generateInputs(f: (...a: any[]) => any, args: any[][]) {
     var candidates = genCandidateExpr(f, args)
     var allInputs = generateInputsAux(f, args, candidates)
-    var categories = categorize(f, allInputs)
-    return {
-        all: allInputs,
-        categories: categories,
-    }
+    return allInputs
 }
 
 function generateInputsAux(f: (...a: any[]) => any, initials: any[][], exprs: Data.Prestate[]): any[][] {

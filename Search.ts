@@ -10,6 +10,7 @@ import Random = require('./util/Random')
 import Recorder = require('./Recorder')
 import Metric = require('./Metric')
 import Compile = require('./Compile')
+import StructureInference = require('./StructureInference')
 import InputGen = require('./InputGen')
 import ProgramGen = require('./ProgramGen')
 import Ansi = require('./util/Ansicolors')
@@ -32,8 +33,17 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
     Ansi.Gray("Input generation...")
     var inputs = InputGen.generateInputs(f, args)
-    var nCategories = inputs.categories.length;
-    Ansi.Gray("Found " + nCategories + " categories of inputs (" + inputs.all.length + " inputs total).")
+    var traces = inputs.map((i) => Recorder.record(f, i))
+    Ansi.Gray("Found " + inputs.length + " inputs.")
+
+    Ansi.Gray("Loop inference...")
+    var loops = StructureInference.infer(traces)
+    var loop = loops[0]
+    Ansi.Gray("Found " + loops.length + " possible loops.")
+
+    Ansi.Gray("Input categorization...")
+    var categories = InputGen.categorize(inputs, traces)
+    Ansi.Gray("Found " + categories.length + " categories of inputs.")
 
     function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, p?: Data.Program) {
         if (!p) {
@@ -67,46 +77,45 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     var p: Data.Program
     var mainSearch = SearchResult.Empty
     Ansi.Gray(Util.linereturn())
-    if (nCategories > 1) {
+    if (categories.length > 1) {
         var res: SearchResult[] = []
-        var iterations = Math.ceil(0.8*config.iterations/nCategories)
-        for (var i = 0; i < nCategories; i++) {
-            Ansi.Gray("Searching a program for input category " + (i+1) + "/" + nCategories + ".")
-            res[i] = straightLineSearch(f, inputs.categories[i].inputs, iterations)
+        var iterations = Math.ceil(0.8*config.iterations/categories.length)
+        for (var i = 0; i < categories.length; i++) {
+            Ansi.Gray("Searching a program for input category " + (i+1) + "/" + categories.length + ".")
+            res[i] = straightLineSearch(f, categories[i].inputs, iterations)
             mainSearch = mainSearch.combine(res[i])
             Ansi.Gray(Util.linereturn())
         }
-        Ansi.Gray("Searching a program for all " + inputs.all.length + " inputs.")
-        Util.assert(nCategories === 2, () => "cannot handle more than 2 categories at the moment")
+        Ansi.Gray("Searching a program for all " + inputs.length + " inputs.")
+        Util.assert(categories.length === 2, () => "cannot handle more than 2 categories at the moment")
         p = new Data.Program(new Data.If(new Data.Const(true), res[0].result.body, res[1].result.body))
-        mainSearch = straightLineSearch(f, inputs.all, 0.2*iterations, p).combine(mainSearch)
+        mainSearch = straightLineSearch(f, inputs, 0.2*iterations, p).combine(mainSearch)
         p = mainSearch.result
     } else {
-        Ansi.Gray("Searching a program for all " + inputs.all.length + " inputs.")
-        mainSearch = straightLineSearch(f, inputs.all, config.iterations)
+        Ansi.Gray("Searching a program for all " + inputs.length + " inputs.")
+        mainSearch = straightLineSearch(f, inputs, config.iterations)
         p = mainSearch.result
         Ansi.Gray(Util.linereturn())
     }
 
     var secondarySearch: SearchResult
-    var realTraces = inputs.all.map((i) => Recorder.record(f, i))
     if (config.cleanupIterations > 0) {
         Ansi.Gray("Starting secondary cleanup search...")
 
-        var candidates = InputGen.genCandidates(inputs.all, f)
+        var candidates = InputGen.genCandidates(inputs, f)
         var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
 
         // shorten the program
-        p = shorten(p, inputs.all, realTraces)
+        p = shorten(p, inputs, traces)
 
         // switch to the finalizing metric
         secondarySearch = core_search(p, {
-            metric: (pp) => Metric.evaluate(pp, inputs.all, realTraces, true),
+            metric: (pp) => Metric.evaluate(pp, inputs, traces, true),
             iterations: config.cleanupIterations,
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
             base: config,
-        }, inputs.all.length)
-        secondarySearch.executions = inputs.all.length * secondarySearch.iterations
+        }, inputs.length)
+        secondarySearch.executions = inputs.length * secondarySearch.iterations
         p = secondarySearch.result
         Ansi.Gray(Util.linereturn())
     } else {
@@ -120,7 +129,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
     var result = mainSearch.combine(secondarySearch)
     result.result = p
-    result.score = Metric.evaluate(p, inputs.all, realTraces)
+    result.score = Metric.evaluate(p, inputs, traces)
     return result
 }
 

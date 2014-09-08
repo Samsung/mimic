@@ -174,7 +174,6 @@ var fs:any = [
 ]
 
 
-
 var i = Util.argv(3)
 var name = fs[i][0]
 var f = fs[i][1]
@@ -184,7 +183,7 @@ var a0 = a[0]
 //howMany(f, a, 20, [1500, 0])
 //search(f, a)
 
-
+/*
 var traces = a.map((i) => Recorder.record(f, i))
 var loops = StructureInference.infer(traces)
 var loop = loops[0]
@@ -193,7 +192,7 @@ var p0 = Compile.compileTrace(trace);
 print(p0)
 line()
 print(Compile.compileTrace(trace, loop))
-
+*/
 
 /*
 var ff = f

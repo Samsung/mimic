@@ -118,7 +118,8 @@ function recorder_test(f, a, a0, name, oracle) {
 function inputgen_test(f, a, a0, name, oracle) {
     it('number of categories for ' + name, () => {
         var inputs = InputGen.generateInputs(f, a)
-        ass.equal(InputGen.categorize(f, inputs.all).length, oracle.categories)
+        var traces = inputs.map((i) => Recorder.record(f, i))
+        ass.equal(InputGen.categorize(inputs, traces).length, oracle.categories)
     })
 }
 
