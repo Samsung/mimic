@@ -18,6 +18,8 @@ var DISTANCE_NORM = 100
 var W_ERROR_EXIT = 5
 var W_EXIT = 2
 
+var W_EXHAUSTED = 10
+
 var W_ASSIGN_FIELD = 1.1
 var W_ASSIGN_VALUE = 1
 var W_ASSIGN_MISSING = 2
@@ -55,6 +57,12 @@ export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trac
  */
 export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     var badness = 0
+
+    // exhausting computational budget is bad
+    Util.assert(!a.isExhaustedBudget)
+    if (b.isExhaustedBudget) {
+        return W_EXHAUSTED
+    }
 
     // compare all set events
     var aa0 = <Data.ESet[]>a.eventsOfKind(Data.EventKind.ESet)
@@ -172,9 +180,9 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     // compare the last statement (return or throw)
     if (a.isNormalReturn === b.isNormalReturn) {
         if (a.isNormalReturn) {
-            badness += W_EXIT * exprDistance(a.result, b.result)/DISTANCE_NORM
+            badness += W_EXIT * exprDistance(a.getResult(), b.getResult())/DISTANCE_NORM
         } else {
-            badness += W_EXIT * exprDistance(a.exception, b.exception)/DISTANCE_NORM
+            badness += W_EXIT * exprDistance(a.getException(), b.getException())/DISTANCE_NORM
         }
     } else {
         // different way to return

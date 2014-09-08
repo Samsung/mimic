@@ -767,9 +767,11 @@ export class Program {
  */
 export class Trace {
     public events: Event[] = []
-    public isNormalReturn: boolean
-    public result: TraceExpr = null
-    public exception: TraceExpr = null
+    public isNormalReturn: boolean = false
+    public isExceptionReturn: boolean = false
+    public isExhaustedBudget: boolean = false
+    private result: TraceExpr = null
+    private exception: TraceExpr = null
     public prestates: Prestate[] = null
     constructor() {
     }
@@ -780,7 +782,7 @@ export class Trace {
         this.events.push(e)
     }
     setException(ex: TraceExpr) {
-        this.isNormalReturn = false
+        this.isExceptionReturn = true
         this.exception = ex
         this.result = null
     }
@@ -788,6 +790,17 @@ export class Trace {
         this.isNormalReturn = true
         this.exception = null
         this.result = val
+    }
+    setExhaustedBudget() {
+        this.isExhaustedBudget = true
+    }
+    getResult() {
+        Util.assert(this.isNormalReturn)
+        return this.result
+    }
+    getException() {
+        Util.assert(this.isExceptionReturn)
+        return this.exception
     }
     setPrestates(ps: Prestate[]) {
         this.prestates = ps

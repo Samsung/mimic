@@ -104,9 +104,9 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
 export function compileTrace(trace: Data.Trace, loop?: StructureInference.Proposal): Data.Program {
     var stmts = compileEventList(trace.events, loop)
     if (trace.isNormalReturn) {
-        stmts.push(new Data.Return(expr(trace.result)))
+        stmts.push(new Data.Return(expr(trace.getResult())))
     } else {
-        stmts.push(new Data.Throw(expr(trace.exception)))
+        stmts.push(new Data.Throw(expr(trace.getException())))
     }
     return new Data.Program(new Data.Seq(stmts))
 }

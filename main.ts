@@ -185,7 +185,6 @@ var a0 = a[0]
 
 
 
-
 var inputs = InputGen.generateInputs(f, a)
 var traces = inputs.map((i) => Recorder.record(f, i))
 var loops = StructureInference.infer(traces)

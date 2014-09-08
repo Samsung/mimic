@@ -26,8 +26,8 @@ var print = Util.print
  * store various intermediate results (e.g. those from all field reads, or the old value of field
  * writes) in local variables.  This is used to make program generation easier.
  */
-export function record(f: (..._: any[]) => any, args: any[]): Data.Trace {
-    var state = new State()
+export function record(f: (..._: any[]) => any, args: any[], budget: number = 100): Data.Trace {
+    var state = new State(budget)
     var trace = state.trace
 
     args = Util.clone(args)
@@ -46,8 +46,9 @@ export function record(f: (..._: any[]) => any, args: any[]): Data.Trace {
     } catch (e) {
         if (e instanceof Util.AssertionError) {
             throw e // don't catch our own errors
-        }
-        if (e instanceof ReferenceError) {
+        } else if (e instanceof BudgetExhausted) {
+            trace.setExhaustedBudget()
+        } else if (e instanceof ReferenceError) {
             var ee = <ReferenceError>e
             trace.setException(state.texpr(ee.message.toString()))
         } else if (e instanceof TypeError) {
@@ -56,8 +57,7 @@ export function record(f: (..._: any[]) => any, args: any[]): Data.Trace {
         } else if (e instanceof RangeError) {
             var ee = <RangeError>e
             trace.setException(state.texpr(ee.message.toString()))
-        }
-        else if (e instanceof SyntaxError) {
+        } else if (e instanceof SyntaxError) {
             var ee = <SyntaxError>e
             Util.assert(false, () => "syntax error: " + ee.toString() + "\n\nfor program: " + f.toString())
         } else {
@@ -68,6 +68,9 @@ export function record(f: (..._: any[]) => any, args: any[]): Data.Trace {
     trace.setPrestates(state.preStates)
 
     return trace
+}
+
+class BudgetExhausted {
 }
 
 class State {
@@ -82,8 +85,13 @@ class State {
     public preState = new Map<Object, Data.Prestate[]>()
     public curState = new Map<Object, Data.Expr[]>()
     public preStates: Data.Prestate[] = []
+    constructor(public budget: number) {
+    }
     /** record an event */
     record(ev: Data.Event) {
+        if (this.trace.events.length > this.budget) {
+            throw new BudgetExhausted()
+        }
         this.trace.extend(ev)
     }
     /** get the trace expression for an (unproxied) value */
