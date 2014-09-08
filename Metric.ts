@@ -42,7 +42,8 @@ export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trac
     var badness = 0
     var code = Compile.compile(p);
     for (var i = 0; i < inputs.length; i++) {
-        var candidateTrace = Recorder.record(code, inputs[i])
+        var budget = Math.min(50, Math.max(10, 1.1 * realTraces[i].events.length))
+        var candidateTrace = Recorder.record(code, inputs[i], budget)
         var td = traceDistance(realTraces[i], candidateTrace)
         Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
