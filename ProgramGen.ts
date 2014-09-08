@@ -77,6 +77,12 @@ class MaybeAstFactory {
         }
         return new Data.If(a, b, c)
     }
+    static makeFor(v: Data.Var, a: Data.Expr, b: Data.Expr, c: Data.Expr, body: Data.Stmt): Data.For {
+        if (a === null || b === null || c === null || v === null || body === null) {
+            return null
+        }
+        return new Data.For(a, b, c, body, v)
+    }
 }
 var Ast = MaybeAstFactory
 
@@ -160,6 +166,10 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                 case Data.StmtType.If:
                     s = <Data.If>ss
                     news = Ast.makeIf(randomExpr(info, {num: true}), s.thn, s.els)
+                    break
+                case Data.StmtType.For:
+                    s = <Data.For>ss
+                    news = Ast.makeFor(s.variable, s.start, randomExpr(info, {num: true}), s.inc, s.body)
                     break
                 case Data.StmtType.FuncCall:
                     s = <Data.FuncCall>ss
