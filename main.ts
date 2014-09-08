@@ -181,7 +181,7 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 20, [1500, 0])
-//search(f, a)
+search(f, a)
 
 
 
