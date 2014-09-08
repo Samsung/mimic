@@ -15,20 +15,23 @@ var line = Util.line
 
 var DISTANCE_NORM = 100
 
-var W_ERROR_EXIT = 5
-var W_EXIT = 2
+var W_ERROR_EXIT = 2
+var W_EXIT = 1
 
-var W_EXHAUSTED = 10
+var W_EXHAUSTED = 5
 
-var W_ASSIGN_FIELD = 1.1
-var W_ASSIGN_VALUE = 1
-var W_ASSIGN_MISSING = 2
+var W_ASSIGN_FIELD = 0.6
+var W_ASSIGN_VALUE = 0.5
+var W_ASSIGN_WRONG = 0.9
+var W_ASSIGN_MISSING = 1
 
-var W_DELETE_FIELD = 1
-var W_DELETE_MISSING = 2
+var W_DELETE_FIELD = 0.5
+var W_DELETE_WRONG = 0.9
+var W_DELETE_MISSING = 1
 
-var W_WRONG_PARAM = 1
-var W_CALL_MISSING = 2
+var W_WRONG_PARAM = 0.5
+var W_CALL_WRONG = 0.9
+var W_CALL_MISSING = 1
 
 /**
  * Evaluate how well program `p' behaves on the given inputs (the traces in `realTraces' are used as the
@@ -102,7 +105,8 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
             notInB++
         }
     })
-    badness += (notInA + notInB) * W_CALL_MISSING
+    badness += Math.abs(notInA-notInB) * W_ASSIGN_MISSING
+    badness += Math.min(notInA,notInB) * W_ASSIGN_WRONG
 
     // compare all delete property events
     var aa1 = <Data.EDeleteProperty[]>a.eventsOfKind(Data.EventKind.EDeleteProperty)
@@ -135,7 +139,8 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
             notInB++
         }
     })
-    badness += (notInA + notInB) * W_DELETE_MISSING
+    badness += Math.abs(notInA-notInB) * W_DELETE_MISSING
+    badness += Math.min(notInA,notInB) * W_DELETE_WRONG
 
     // compare all apply events
     var aa2 = <Data.EApply[]>a.eventsOfKind(Data.EventKind.EApply)
@@ -175,7 +180,8 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
             notInB++
         }
     })
-    badness += (notInA + notInB) * W_DELETE_MISSING
+    badness += Math.abs(notInA-notInB) * W_CALL_MISSING
+    badness += Math.min(notInA,notInB) * W_CALL_WRONG
 
     // compare the last statement (return or throw)
     if (a.isNormalReturn === b.isNormalReturn) {
