@@ -40,7 +40,8 @@ var W_CALL_MISSING = 1
  */
 export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
     var badness = 0
-    var code = Compile.compile(p);
+    var code = Compile.compile(p)
+    print(p)
     for (var i = 0; i < inputs.length; i++) {
         var budget = Math.min(50, Math.max(10, 1.1 * realTraces[i].events.length))
         var candidateTrace = Recorder.record(code, inputs[i], budget)

@@ -27,6 +27,8 @@ var line = Util.line
 
 
 export function search(f: (...a: any[]) => any, args: any[][], config: SearchConfig = new SearchConfig()): SearchResult {
+    var nInputsPerSearch = 20
+
     Ansi.Gray("Recording original execution...")
     var trace = Recorder.record(f, args[0])
     print(trace)
@@ -50,7 +52,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     Ansi.Gray("Found " + categories.length + " categories of inputs.")
 
     function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, loop: StructureInference.Proposal, p?: Data.Program) {
-        inputs = Random.pickN(inputs, 10)
+        inputs = Random.pickN(inputs, nInputsPerSearch)
         if (!p) {
             p = Compile.compileTrace(Recorder.record(f, inputs[0]), loop)
         }
@@ -108,22 +110,24 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
     var secondarySearch: SearchResult
     if (config.cleanupIterations > 0) {
+        var cleanupInputs = Random.pickN(inputs, nInputsPerSearch)
         Ansi.Gray("Starting secondary cleanup search...")
 
         var candidates = InputGen.genCandidates(inputs, f)
         var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
 
         // shorten the program
-        p = shorten(p, inputs, traces)
+        var cleanupTraces = cleanupInputs.map((i) => Recorder.record(f, i))
+        p = shorten(p, cleanupInputs, cleanupTraces)
 
         // switch to the finalizing metric
         secondarySearch = core_search(p, {
-            metric: (pp) => Metric.evaluate(pp, inputs, traces, true),
+            metric: (pp) => Metric.evaluate(pp, cleanupInputs, cleanupTraces, true),
             iterations: config.cleanupIterations,
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
             base: config,
-        }, inputs.length)
-        secondarySearch.executions = inputs.length * secondarySearch.iterations
+        }, cleanupInputs.length)
+        secondarySearch.executions = cleanupInputs.length * secondarySearch.iterations
         p = secondarySearch.result
         Ansi.Gray(Util.linereturn())
     } else {
