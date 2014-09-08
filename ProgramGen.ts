@@ -212,22 +212,22 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
 
     var zeroD = depth === 0
 
-    var options = [
+    var options: Random.WeightedPair<() => Data.Expr>[] = [
         new WeightedPair(nonPrimitive ? 0 : 1, () => {
             // random new constant
-            return new Data.Const(randInt(20)-10)
+            return <Data.Expr>new Data.Const(randInt(20)-10)
         }),
         new WeightedPair(6, () => {
             // random candidate expression
             var ps = info.candidates
             if (ps.length === 0) return null
-            return randArr(ps)
+            return <Data.Expr>randArr(ps)
         }),
         new WeightedPair(4, () => {
             // random value read during generation
             var vs = info.variables;
             if (vs.length === 0) return null
-            return randArr(vs)
+            return <Data.Expr>randArr(vs)
         }),
         new WeightedPair(zeroD ? 0 : 3, () => {
             // random new field
@@ -239,7 +239,7 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
         }),
     ]
     // filter out bad expressions
-    var filter = (e: Data.Expr) => {
+    var filter: (e: Data.Expr) => Data.Expr = (e: Data.Expr) => {
         if (e === null) return e
 
         // filter by requirement
