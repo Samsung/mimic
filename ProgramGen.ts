@@ -169,7 +169,9 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     break
                 case Data.StmtType.For:
                     s = <Data.For>ss
-                    news = Ast.makeFor(s.variable, s.start, randomExpr(info, {num: true}), s.inc, s.body)
+                    var newEnd = randomExpr(info, {num: true})
+                    //newEnd = Ast.makeField(new Data.Argument(0), new Data.Const("length"))
+                    news = Ast.makeFor(s.variable, s.start, newEnd, s.inc, s.body)
                     break
                 case Data.StmtType.FuncCall:
                     s = <Data.FuncCall>ss

@@ -181,18 +181,23 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 20, [1500, 0])
-search(f, a)
+//search(f, a)
 
-/*
-var traces = a.map((i) => Recorder.record(f, i))
+
+
+
+var inputs = InputGen.generateInputs(f, a)
+var traces = inputs.map((i) => Recorder.record(f, i))
 var loops = StructureInference.infer(traces)
 var loop = loops[0]
 var trace: Data.Trace = traces[0]
-var p0 = Compile.compileTrace(trace);
-print(p0)
+var p0 = Compile.compileTrace(trace)
+print(traces[0])
+line()
+print(loops.join("\n"))
 line()
 print(Compile.compileTrace(trace, loop))
-*/
+
 
 /*
 var ff = f
