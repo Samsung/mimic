@@ -32,7 +32,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     print(trace)
 
     Ansi.Gray("Input generation...")
-    var inputs = Random.pickN(InputGen.generateInputs(f, args), 10)
+    var inputs = InputGen.generateInputs(f, args)
     var traces = inputs.map((i) => Recorder.record(f, i))
     Ansi.Gray("Found " + inputs.length + " inputs.")
 
@@ -50,6 +50,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     Ansi.Gray("Found " + categories.length + " categories of inputs.")
 
     function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, loop: StructureInference.Proposal, p?: Data.Program) {
+        inputs = Random.pickN(inputs, 10)
         if (!p) {
             p = Compile.compileTrace(Recorder.record(f, inputs[0]), loop)
         }
