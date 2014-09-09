@@ -15,7 +15,8 @@ var line = Util.line
 
 export class Proposal {
     worksFor: number[]
-    constructor(public regex: string, public loopStart: number, public loopLength: number, public numIterations: number) {
+    private numIterations: number = -1
+    constructor(public regex: string, public loopStart: number, public loopLength: number) {
     }
     equals(o) {
         if (!(o instanceof Proposal)) {
@@ -25,6 +26,19 @@ export class Proposal {
     }
     toString(): string {
         return this.regex
+    }
+    getNumIterations(trace: Data.Trace) {
+        if (this.numIterations < 0) {
+            // this caching is ignoring the argument.. if it changes, the result will be wrong
+            var myRe = new RegExp("^([^(]*)(\(.+\)\*)([^(]*)$", "g")
+            var res = myRe.exec(this.regex)
+            var pre = res[1].split(";").length - 1
+            var post = res[1].split(";").length - 1
+            var body = res[1].split(";").length - 1
+            var total = trace.events.length
+            this.numIterations = (total - pre - post) / body
+        }
+        return this.numIterations
     }
 }
 
@@ -57,7 +71,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                 while (true) {
                     iterations++
                     var regex = trace.getSubSkeleton(0, start) + "(" + body + ")*" + trace.getSubSkeleton(start+iterations*len)
-                    candidates.push(new Proposal(regex, start, len, iterations))
+                    candidates.push(new Proposal(regex, start, len))
                     if (body !== trace.getSubSkeleton(start + iterations*len, len)) {
                         break
                     }
