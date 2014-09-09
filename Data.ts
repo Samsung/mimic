@@ -280,12 +280,12 @@ export class Argument extends Prestate {
  * A local variable.
  */
 export class Var extends Expr {
-    private static count = 0
+    static _count = 0
     name: string
     constructor(prefix: string = "n") {
         super(ExprType.Var, 0)
-        this.name = prefix + Var.count
-        Var.count++
+        this.name = prefix + Var._count
+        Var._count++
     }
     toString(config = {}) {
         if ("novar" in config) {

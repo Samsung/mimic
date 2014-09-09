@@ -30,6 +30,8 @@ export function record(f: (..._: any[]) => any, args: any[], budget: number = 10
     var state = new State(budget)
     var trace = state.trace
 
+    Data.Var._count = 0
+
     args = Util.clone(args)
 
     // instrument args
