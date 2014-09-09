@@ -185,7 +185,9 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     badness += Math.min(notInA,notInB) * W_CALL_WRONG
 
     // normalize by the length of a
-    badness /= a.events.length
+    if (a.events.length > 0) {
+        badness /= a.events.length
+    }
 
     // compare the last statement (return or throw)
     if (a.isNormalReturn === b.isNormalReturn) {
