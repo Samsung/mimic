@@ -173,11 +173,10 @@ like the following:
   read of field "f" of object o2, with resulting value 10
   write to field "f" of object o1 with value 10
 \end{verbatim}
-\todo{Sketch out any interesting details of our proxying algorithm, e.g., that we recursively
-proxy objects}
+
 Given this core trace generation
 functionality, our model synthesis proceeds as follows.
-We give the main, high-level description frist, and then talk about each
+We give the main, high-level description first, and then talk about each
 individual step in more detail.
 We are given as inputs
 to the synthesizer a function $f$ to model and an initial set of inputs.
@@ -217,11 +216,11 @@ procedure synthesize(f: Function, initialInputs: List) {
 \subsection{Trace Recording}
 
 To record the behavior of a function, we rely on the proxy functionality
-menioned earlier.  Instead of running the function for which we want to record
+mentioned earlier.  Instead of running the function for which we want to record
 a trace directly on the inputs, we proxy all inputs first, and then run
 the function on the proxied inputs instead.
 
-It is sufficient to proxy the inputs ``shallowly'', instead of recursively
+It is sufficient to proxy the inputs ``shallowly,'' instead of recursively
 proxying all objects reachable from the list of arguments.  If the method
 reads one of the fields of its inputs, the result of that field read can
 be proxied lazily.
@@ -265,10 +264,10 @@ is not possible to determine if a given proposed loop is correct;  this
 can only be verified by trying to generate a program that contains this
 loop and works for all inputs.
 Therefore, we generate a set of proposed loops, and try one of them at
-random (since the overal search strategy is repeated, all proposals
+random (since the overall search strategy is repeated, all proposals
 will be tried eventually).
 
-To limit the number of proposals, we limit ourselfs to a single loop at
+To limit the number of proposals, we limit ourselves to a single loop at
 the moment, and generate all loops that could explain a given trace.  To
 do this, the trace is inspected for repeating patterns of length 1, 2, etc.,
 which corresponds to loop bodies of length 1, 2, etc.
@@ -294,7 +293,7 @@ the inputs.
 
 \subsection{Initial Program}
 
-For a category, the initial program is derived from the one of the traces
+For each category, the initial program is derived from the one of the traces
 recorded.
 Essentially, every event in the trace corresponds to a statement.  For instace,
 a write event will give rise to a field assignment statement.
@@ -344,7 +343,7 @@ procedure randomSearch(f, inputs, program) {
 
 The hillclimbing random search needs a fitness function, or search metric, to
 evaluate proposed random mutations.
-This metric can be analysis dependent (different program anlyses might care
+This metric can be analysis dependent (different program analyses might care
 about different aspects), but is based on the recorded traces for all inputs.
 
 
@@ -379,7 +378,7 @@ the behavior of the original function $f$ on that same input, and thus
 have an idea of how long the execution of our model should be.  During
 recording a trace for our model, if the sequence of events get's significantly
 longer than the original trace, we can kill the execution and mark the
-trace as having run out of it's computational budget.
+trace as having run out of its computational budget.
 By ranking such models poorly in the search metric, the random search will
 avoid non-terminating programs.
 
