@@ -181,12 +181,12 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 20, [1500, 0])
-//search(f, a)
+search(f, a)
 
 
 
 
-
+/*
 function f2(arg0) {
     var n86 = arg0.length
     var n87 = arg0[0]
@@ -197,7 +197,7 @@ function f2(arg0) {
 
 print(Recorder.record(f, a0))
 print(Recorder.record(f2, a0))
-
+*/
 
 
 /*

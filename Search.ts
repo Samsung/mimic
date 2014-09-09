@@ -267,7 +267,6 @@ function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
 
         var j = randInt(p.body.numberOfStmts())
         var newp = new Data.Program(p.body.replace(j, Data.Seq.Empty))
-        print(":" + i)
         var newbadness = Metric.evaluate(newp, inputs, realTraces)
         if (newbadness <= badness) {
 
