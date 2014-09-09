@@ -186,17 +186,17 @@ search(f, a)
 
 /*
 function f2(arg0) {
-    var n2532 = arg0.length
-    n225929 = n2532
-    if (true) {
-        var n2533 = arg0[0]
-        for (var i2538 = 0; i2538 < n2532+-1; i2538 += 1) {
-            var n2534 = arg0[i2538+1]
-            arg0.b = n2534
+    var n2530 = arg0.length
+    var n135126 = n2530
+    if (n2530) {
+        var n2531 = arg0[0]
+        for (var i2535 = 0; i2535 < n2530+-1; i2535 += 1) {
+            var n2532 = arg0[i2535+1]
+            arg0.b = n2532
         }
-        delete arg0[n2532+-1]
-        arg0[i2538[0]] = i2538
-        return n2533
+        delete arg0[i2535]
+        arg0[3] = i2535
+        return n2531
     } else {
         arg0[0] = 0
         return undefined

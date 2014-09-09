@@ -174,7 +174,7 @@ function proxify<T>(state: State, o: T): T {
             if (state.doRecord) {
 
                 var tval = state.texpr(value)
-                var event = new Data.ESet(ttarget, state.texpr(value), tval)
+                var event = new Data.ESet(ttarget, state.texpr(name), tval)
                 state.record(event)
                 res = Reflect.set(target, name, value, receiver)
                 state.addCurState(res, event.variable)
