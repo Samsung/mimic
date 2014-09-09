@@ -184,9 +184,23 @@ var a0 = a[0]
 search(f, a)
 
 
+var v0 = new Data.Var();
+var p0 = new Data.Seq([
+    <Data.Stmt>new Data.Assign(v0, new Data.Field(new Data.Argument(0), new Data.Const("length")), true),
+    <Data.Stmt>new Data.Assign(new Data.Var(), new Data.Const(2), true)
+])
+
+var v1 = new Data.Var();
+var p1 = new Data.Seq([
+    <Data.Stmt>new Data.Assign(v1, new Data.Field(new Data.Argument(0), new Data.Const("length")), true),
+])
+
+print(Search.combinePrograms([p0, p1]))
 
 
 
+
+/*
 function f2(arg0) {
     var n2530 = arg0.length
     var n2531 = arg0[0]
@@ -204,7 +218,7 @@ print(t1)
 var t2 = Recorder.record(f2, a0);
 print(t2)
 print(Metric.traceDistance(t1, t2))
-
+*/
 
 /*
 var inputs = InputGen.generateInputs(f, a)

@@ -153,7 +153,7 @@ function proxify<T>(state: State, o: T): T {
                     var pval = proxify(state, val)
 
                     if (state.doRecord) {
-                        var event = new Data.EGet(ttarget, new Data.TraceConst(name))
+                        var event = new Data.EGet(ttarget, state.texpr(name))
                         state.record(event)
                         state.addCurState(pval, event.variable)
                         var fieldId = new Data.Const(name)
@@ -174,7 +174,7 @@ function proxify<T>(state: State, o: T): T {
             if (state.doRecord) {
 
                 var tval = state.texpr(value)
-                var event = new Data.ESet(ttarget, new Data.TraceConst(name), tval)
+                var event = new Data.ESet(ttarget, state.texpr(value), tval)
                 state.record(event)
                 res = Reflect.set(target, name, value, receiver)
                 state.addCurState(res, event.variable)
@@ -249,7 +249,7 @@ function proxify<T>(state: State, o: T): T {
         deleteProperty: function(target, name: string) {
             var ttarget = common(target)
             if (state.doRecord) {
-                state.record(new Data.EDeleteProperty(ttarget, new Data.TraceConst(name)))
+                state.record(new Data.EDeleteProperty(ttarget, state.texpr(name)))
             }
             return Reflect.deleteProperty(target, name);
         },

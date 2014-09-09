@@ -881,7 +881,7 @@ export class Event {
 }
 
 export class EGet extends Event {
-    constructor(public target: TraceExpr, public name: TraceConst) {
+    constructor(public target: TraceExpr, public name: TraceExpr) {
         super(EventKind.EGet, target, [name])
     }
     getSkeleton(): string {
@@ -898,7 +898,7 @@ export class EGet extends Event {
     }
 }
 export class ESet extends Event {
-    constructor(public target: TraceExpr, public name: TraceConst, public value: TraceExpr) {
+    constructor(public target: TraceExpr, public name: TraceExpr, public value: TraceExpr) {
         super(EventKind.ESet, target, [name, value])
     }
     getSkeleton(): string {
@@ -941,7 +941,7 @@ export class EApply extends Event {
     }
 }
 export class EDeleteProperty extends Event {
-    constructor(public target: TraceExpr, public name: TraceConst) {
+    constructor(public target: TraceExpr, public name: TraceExpr) {
         super(EventKind.EDeleteProperty, target, [name])
     }
     getSkeleton(): string {

@@ -54,12 +54,17 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, loop: StructureInference.Proposal, p?: Data.Program) {
         inputs = Random.pickN(inputs, nInputsPerSearch)
         if (!p) {
-            p = Compile.compileTrace(Recorder.record(f, inputs[0]), loop)
-            line()
-            print(p)
-            print(Recorder.record(f, inputs[0]))
-            print(loop)
-            line()
+            var i = 0
+            while (true) {
+                var t = Recorder.record(f, inputs[i])
+                // make sure we pick an input that has more than 0 iterations
+                if (loop != null && loop.getNumIterations(t) == 0) {
+                    i++
+                    continue
+                }
+                p = Compile.compileTrace(t, loop)
+                break
+            }
         }
         print(p)
 
@@ -106,8 +111,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
             Ansi.Gray(Util.linereturn())
         }
         Ansi.Gray("Searching a program for all " + inputs.length + " inputs.")
-        Util.assert(categories.length === 2, () => "cannot handle more than 2 categories at the moment")
-        p = new Data.Program(new Data.If(new Data.Const(true), res[0].result.body, res[1].result.body))
+        p = new Data.Program(combinePrograms(res.map((p) => p.result.body)))
         mainSearch = straightLineSearch(f, inputs, 0.2*iterations, null, p).combine(mainSearch)
         p = mainSearch.result
     } else {
@@ -156,6 +160,87 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     result.result = p
     result.score = Metric.evaluate(p, inputs, traces)
     return result
+}
+
+function isEqualModulaVar(a: Data.Expr, b: Data.Expr, vm: Map<Data.Var, Data.Var>) {
+    if (a.type !== b.type) {
+        return false
+    }
+    var rec = (a, b) => isEqualModulaVar(a, b, vm)
+    var aa, bb
+    switch (a.type) {
+        case Data.ExprType.Field:
+            aa = <Data.Field>a
+            bb = <Data.Field>b
+            return rec(aa.o, bb.o) && rec(aa.f, bb.f)
+        case Data.ExprType.Const:
+            aa = <Data.Const>a
+            bb = <Data.Const>b
+            return aa.val === bb.val
+        case Data.ExprType.Arg:
+            aa = <Data.Argument>a
+            bb = <Data.Argument>b
+            return aa.i === bb.i
+        case Data.ExprType.Var:
+            aa = <Data.Var>a
+            bb = <Data.Var>b
+            return vm.get(aa) === bb
+        default:
+            return false
+    }
+}
+
+export function combinePrograms(progs: Data.Stmt[]) {
+    if (progs.length === 1) {
+        return progs[0]
+    }
+    var b = progs.pop()
+    var a = progs.pop()
+
+    var isLocalVarAssign = (s: Data.Stmt) => s.type === Data.StmtType.Assign &&
+        (<Data.Assign>s).isDecl &&
+        (<Data.Assign>s).rhs.type === Data.ExprType.Field
+    var getVar = (s: Data.Stmt) => <Data.Var>(<Data.Assign>s).lhs
+    var getRhs = (s: Data.Stmt) => (<Data.Assign>s).rhs
+    var prefix: Data.Stmt[] = []
+
+    var vm = new Map<Data.Var, Data.Var>()
+
+    while (true) {
+        var as = a.allStmts()
+        var bs = b.allStmts()
+        if (as.length === 0 || bs.length === 0) {
+            break
+        }
+        var a0 = as[0]
+        var b0 = bs[0]
+        if (!isLocalVarAssign(a0) || !isLocalVarAssign(b0)) {
+            break
+        }
+        var av = getVar(a0)
+        var arhs = getRhs(a0)
+        var bv = getVar(b0)
+        var brhs = getRhs(b0)
+        if (isEqualModulaVar(arhs, brhs, vm)) {
+            vm.set(av, bv)
+            prefix.push(a0)
+            prefix.push(new Data.Assign(bv, av))
+            a = a.replace(0, Data.Seq.Empty)
+            b = b.replace(0, Data.Seq.Empty)
+        } else {
+            break
+        }
+    }
+
+    var t = new Data.Const(true)
+    prefix.push(new Data.If(t, a, b))
+    var res: Data.Stmt = new Data.Seq(prefix)
+
+    if (progs.length === 0) {
+        return res
+    }
+
+    return combinePrograms([res].concat(progs))
 }
 
 export class SearchResult {

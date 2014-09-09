@@ -15,7 +15,6 @@ var line = Util.line
 
 export class Proposal {
     worksFor: number[]
-    private numIterations: number = -1
     constructor(public regex: string, public loopStart: number, public loopLength: number) {
     }
     equals(o) {
@@ -28,17 +27,13 @@ export class Proposal {
         return this.regex
     }
     getNumIterations(trace: Data.Trace) {
-        if (this.numIterations < 0) {
-            // this caching is ignoring the argument.. if it changes, the result will be wrong
-            var myRe = new RegExp("^([^(]*)(\(.+\)\*)([^(]*)$", "g")
-            var res = myRe.exec(this.regex)
-            var pre = res[1].split(";").length - 1
-            var post = res[1].split(";").length - 1
-            var body = res[1].split(";").length - 1
-            var total = trace.events.length
-            this.numIterations = (total - pre - post) / body
-        }
-        return this.numIterations
+        var myRe = new RegExp("^([^(]*)(\(.+\)\*)([^(]*)$", "g")
+        var res = myRe.exec(this.regex)
+        var pre = res[1].split(";").length - 1
+        var post = res[1].split(";").length - 1
+        var body = res[1].split(";").length - 1
+        var total = trace.events.length
+        return (total - pre - post) / body
     }
 }
 
