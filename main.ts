@@ -181,48 +181,10 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 20, [1500, 0])
-//search(f, a)
+search(f, a)
 
 
-var v0 = new Data.Var();
-var p0 = new Data.Seq([
-    <Data.Stmt>new Data.Assign(v0, new Data.Field(new Data.Argument(0), new Data.Const("length")), true),
-    <Data.Stmt>new Data.Assign(new Data.Var(), new Data.Const(2), true)
-])
-
-var v1 = new Data.Var();
-var p1 = new Data.Seq([
-    <Data.Stmt>new Data.Assign(v1, new Data.Field(new Data.Argument(0), new Data.Const("length")), true),
-])
-
-print(Search.combinePrograms([p0, p1]))
-
-
-
-
-a = [
-    [ 'def', 'def', 'b', 'b' ],
-        [ 'b', 'b', 'c', 'def', 'b' ],
-        [ 'def', 'b', 'def', 'def' ],
-        [ 'b', 'def', 'c', 'b', 'e' ],
-        [ 'a', 'b', 'def', 'b', 'b' ],
-        [ 'a', 'def', 'c', 'def' ],
-        [ 'def', 'def', 'c', 'd', 'def' ],
-        [ 'def', 'b', 'c', 'def', 'e' ],
-        [ 'def', 'b', 'b', 'def', 'b' ],
-        [ 'b', 'def', 'c', 'def', 'def' ],
-        [ 'def', 'b', 'c', 'b', 'b' ],
-        [ 'a', 'b', 'def', 'def', 'def' ],
-        [ 'def', 'def', 'c', 'def' ],
-        [ 'a', 'def', 'c', 'def', 'def' ],
-        [ 'def', 'b', 'c', 'b' ],
-        [ 'a', 'b', 'c', 'def', 'b' ],
-        [ 'a', 'def', 'def', 'd', 'b' ],
-        [ 'a', 'b', 'c', 'def', 'e' ],
-        [ 'def', 'b', 'def', 'd', 'def' ],
-        [ 'a', 'def', 'b', 'b', 'def' ],
-]
-
+/*
 function f2(arg0) {
     var n2532 = arg0.length
     n225929 = n2532
@@ -240,32 +202,16 @@ function f2(arg0) {
         return undefined
     }
 }
-function f3(arg0) {
-    var n2532 = arg0[arg0]
-    n225929 = n2532
-    if (true) {
-        var n2533 = arg0[0]
-        for (var i2538 = 0; i2538 < n2532+-1; i2538 += 1) {
-            var n2534 = arg0[i2538+1]
-            arg0.b = n2534
-        }
-        delete arg0[n2532+-1]
-        arg0[i2538[0]] = i2538
-        return n2533
-    } else {
-        arg0[0] = 0
-        return undefined
-    }
-}
-
-Metric.evaluate()
+//
+//print(Metric.evaluate2(f2, a))
+//print(Metric.evaluate2(f3, a))
 
 var t1 = Recorder.record(f, a0);
 print(t1)
 var t2 = Recorder.record(f2, a0);
 print(t2)
 print(Metric.traceDistance(t1, t2))
-
+*/
 
 /*
 var inputs = InputGen.generateInputs(f, a)

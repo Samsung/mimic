@@ -224,7 +224,7 @@ export function combinePrograms(progs: Data.Stmt[]) {
         if (isEqualModulaVar(arhs, brhs, vm)) {
             vm.set(av, bv)
             prefix.push(a0)
-            prefix.push(new Data.Assign(bv, av))
+            prefix.push(new Data.Assign(bv, av, true))
             a = a.replace(0, Data.Seq.Empty)
             b = b.replace(0, Data.Seq.Empty)
         } else {
