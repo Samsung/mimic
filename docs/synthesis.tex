@@ -107,7 +107,7 @@
 
 
 
-\section*{Motivation}
+\section{Motivation}
 
 For any program analysis, static or dynamic, a key problem is handling of code
 that, for one reason or another, cannot be analyzed.  Some code is either
@@ -146,7 +146,7 @@ Specifically, automatic generation of library models could be useful in the foll
   these models would again be beneficial.
 \end{itemize}
 
-\section*{Our approach}
+\section{Our approach}
 
 We propose a technique for synthesizing library models via dynamic probing and
 randomized search.  To learn the behaviors of a function without needing to
@@ -174,57 +174,212 @@ like the following:
   write to field "f" of object o1 with value 10
 \end{verbatim}
 Given this core trace generation
-functionality, our model synthesis proceeds as follows.   We are given as inputs
-to the synthesizer a function $f$ to model and an initial set of inputs $i$
-to $f$.  We first generate several other inputs to $f$ by an iterative process:
+functionality, our model synthesis proceeds as follows.
+We give the main, high-level description frist, and then talk about each
+individual step in more detail.
+We are given as inputs
+to the synthesizer a function $f$ to model and an initial set of inputs.
+First, we generate more inputs that we hope sufficiently covers the
+space of behaviors of the function, using the initial inputs as a starting point.
+We can then record a set of traces for each of these inputs on $f$,
+learning the correct behavior of $f$ for those inputs.
+From these traces, we try to infer any potential looping structure
+the function might have, and then categorize the inputs so that similarly-behaving
+inputs are grouped.
+Next, we go through each of these input categories, and use a random search
+to produce a program that performs as expected for this category
+of inputs.
+Finally, we combine the different programs from the different categories
+by using conditional statements (and a random search to find the conditional
+expression) and
+clean up the resulting program with another random search.
+This yields a model of the original function.
+
+This is illustrated by the following pseudo-code:
+\begin{verbatim}
+procedure synthesize(f: Function, initialInputs: List) {
+  var inputs = inputGeneration(f, initialInputs)
+  var traces = inputs.map(i => recordTrace(f, i))
+  var loop = inferLoop(traces)
+  var categories = categorizeInputs(f, loop, traces)
+  var subprograms = categories.map(category =>
+    randomSearch(f, category.inputs, initialProgram(category))
+  )
+  var result = combinePrograms(subprograms)
+  return improveProgram(result)
+}
+\end{verbatim}
+
+
+
+\subsection{Trace Recording}
+
+To record the behavior of a function, we rely on the proxy functionality
+menioned earlier.  Instead of running the function for which we want to record
+a trace directly on the inputs, we proxy all inputs first, and then run
+the function on the proxied inputs instead.
+
+It is sufficient to proxy the inputs ``shallowly'', instead of recursively
+proxying all objects reachable from the list of arguments.  If the method
+reads one of the fields of its inputs, the result of that field read can
+be proxied lazily.
+
+For every interaction with one of the proxies, an event is logged in the trace.
+Finally, the result of the function is also logged, as well as whether it
+threw an exception.
+
+
+\subsection{Input Generation}
+
+To generate a set of interesting inputs that are meant to explore different
+behaviors of $f$, the following process is applied iteratively, starting with
+the given set of inputs:
 We use the current set of inputs to probe how the function uses these arguments,
 and in particular which parts of the arguments get accessed by the function.
-We create new inputs that differ in those parts, and use some further heuristics
-to create interesting inputs (e.g., passing the empty array where an array is
-expected, or passing both \code{true} and \code{false} for boolean arguments).
-We then run $f$ on
-all inputs from the generated set $I$ to get a corresponding set of traces $T$.
+That is, we learn what access paths from which argument are followed, and
+what the type of the various expressions are.
+Based on this, new inputs are generated that differ in those parts of the
+input.  For primitive inputs, we can generate new random inputs of the same
+type, and there are some heuristics for arguments that are arrays or objects,
+such as passing a longer or shorter array, or even an empty array.
+
+This gives us a new set of inputs, and we can repeat the process (until a
+fixpoint is reached, or we believe we have enough inputs).
 
 
-Given $T$, we generate an initial model $m$ for $f$; for now, assume a model
-is simply
-a JavaScript program with straight-line code.
-We use one of the traces to produce this initial model.
-By running $m$ on each input in $I$,
-we get a set of traces $T'$.  We can then compare the corresponding traces in $T$
-and $T'$ to compute a fitness score for $m$, corresponding to how well it models $f$.
-Critically, this comparison of traces incorporates a predicate provided by the
-desired analysis, so that trace aspects irrelevant to the analysis can be
-ignored.  \todo{example}
-Given the model-scoring functionality, we perform a
-hill-climbing search by randomly mutating $m$, keeping mutations that improve its
-fitness score.   For instance, a mutation might randomly replace an expression
-or sub-expression with a newly generated expression.
-When we have generated a
-model $m$ that obtains a ``perfect'' fitness score, i.e., the traces for that
-model perfectly match the original function (incorporating the needs of the
-analysis), we terminate.
+\subsection{Loop Inference}
 
-We can extend the above technique to also generate models with conditionals, as
-follows.  We categorize the inputs by looking at the ``shape'' of the traces
-that they generate when run with $f$.  The shape of a trace includes the events
-that occured, such as reading or writing a field, but ignores the values that
-are used in these events (e.g., which field is written, or the value written).
-Then, we can find different straight-line models for each category, using
-the procedure described about, and finally combining the different models
-into a single model with a number of different branches.
-To find the correct conditions for the branching, we employ another random
-search, starting with the conditional \code{true}, and using all inputs
-in this search.
+From the recorded set of traces, we try to infer the control flow graph
+structure that our model should have.
+Intuitively, a loop inside $f$ will result in a repeating pattern in the
+events of the recorded trace.  Frequently, the values of the events (e.g.,
+what value has been read, or which field is written to) change, but
+the type of event (read, write, etc.) stay the same.  Thus, we
+look at the \textit{skeleton} of a trace, i.e., the list of events with
+the event argument erased (so that only the event type remains).
 
-Finally, we can also handle certain classes of loops.  Our idea is to start
-with a loop detection phase, where we look for repeating patterns in the
-trace.  If we find one, we conjecture that the model might need to include a
-loop, and set the initial model $m$ to have a loop.  As it's body, we
-set the repeating pattern found in the trace, and let the random search
-discover the correct termination condition.
+From just looking at the trace skeleton (but also the trace itself), it
+is not possible to determine if a given proposed loop is correct;  this
+can only be verified by trying to generate a program that contains this
+loop and works for all inputs.
+Therefore, we generate a set of proposed loops, and try one of them at
+random (since the overal search strategy is repeated, all proposals
+will be tried eventually).
+
+To limit the number of proposals, we limit ourselfs to a single loop at
+the moment, and generate all loops that could explain a given trace.  To
+do this, the trace is inspected for repeating patterns of length 1, 2, etc.,
+which corresponds to loop bodies of length 1, 2, etc.
+
+This is repeated for all traces, giving us a large set of loop candidates.
+To speed up the search, we rank them by checking each proposed loop against
+all traces (and seeing if the loop can generate that trace), and secondly
+favor programs with larger loop bodies.  When randomly picking a
+loop, we give higher priority to higher ranking loops.
+
+A possible alternative definition of a trace skeleton could include the
+types of the event arguments (e.g., was a number written for a write event,
+or a string?).  This would lead to less loop structure proposals, but might
+miss certain loops.
 
 
+\subsection{Input Categorization}
+
+If the loop inference proposed a loop, then a first category consists of
+all inputs that yield traces which can be explained by the proposed loop.
+For the remaining inputs, the trace skeleton is used to categorize
+the inputs.
+
+\subsection{Initial Program}
+
+For a category, the initial program is derived from the one of the traces
+recorded.
+Essentially, every event in the trace corresponds to a statement.  For instace,
+a write event will give rise to a field assignment statement.
+
+If the category comes with a loop proposal, then the repeating sequence
+(the loop body) is replaced by the loop, and the loop body is derived from
+one of the repeating event subsequences (e.g., the first one).
+
+
+\subsection{Random Program Search}
+
+The random search starts with an initial program, and is randomly mutated
+and then evaluated.  If the program performs better according to the
+metric, then becomes the new program.  Otherwise, with some probability,
+we throw away the randomly changed program, or keep it even though it
+has a lower score.
+
+Pseudo-code outlining this search is given below:
+
+\begin{verbatim}
+procedure randomSearch(f, inputs, program) {
+  var score = scoreModel(f, inputs, program)
+  while (score > 0 && /* computational budget available */) {
+    var newProgram = randomChange(program)
+    var newScore = scoreModel(f, inputs, newProgram)
+    
+    // keep better programs
+    if (newScore < score) {
+      score = newScore
+      program = newProgram
+    } else {
+      // with some probability, keep worse programs, too
+      if (/* probability proportional to |newScore - score| */) {
+        score = newScore
+        program = newProgram
+      }
+    }
+  }
+  
+  return program
+}
+\end{verbatim}
+
+
+
+\subsection{Search Metric}
+
+The hillclimbing random search needs a fitness function, or search metric, to
+evaluate proposed random mutations.
+This metric can be analysis dependent (different program anlyses might care
+about different aspects), but is based on the recorded traces for all inputs.
+
+
+
+\subsection{Combining Programs}
+
+Once a program has been found for every category, these programs
+are combined using conditional statements.  If the two programs
+have a common prefix, then this prefix is moved in front of the conditional.
+Finally, a random search is used to find the correct conditional
+expression, starting with the constant \code{true}.
+
+\subsection{Improving Result}
+
+The last step in the search is to improve and clean up the program
+that has been found, by removing unnecessary parts, or by making it
+more readable.  This could involve a different search metric, that for instance
+takes program length into account, or some analysis specific metric for what
+parts are important.
+
+\subsection{Handling of Non-Terminating Programs}
+
+There are two sources of non-termination that are potentially problematic
+in our approach.  First, the function $f$ could not terminate on some inputs.
+Since we have no control over $f$, there is nothing we can do against that,
+other than having a timeout and not consider inputs that cause $f$ to not terminate.
+
+Secondly, we can generate a model that might not terminate.  For models that
+include loops this is especially problematic, since it is easy for
+a random program change to yield a non-terminating program.  However, we know
+the behavior of the original function $f$ on that same input, and thus
+have an idea of how long the execution of our model should be.  During
+recording a trace for our model, if the sequence of events get's significantly
+longer than the original trace, we can kill the execution and mark the
+trace as having run out of it's computational budget.
+By ranking such models poorly in the search metric, the random search will
+avoid non-terminating programs.
 
 \section*{Potential Concerns}
 
