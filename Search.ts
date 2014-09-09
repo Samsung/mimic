@@ -73,7 +73,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
             iterations: iterations,
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
             base: config,
-        }, inputs.length)
+        })
         result.executions = inputs.length * result.iterations
 
         Ansi.Gray("  Found a program in " + result.iterations + " iterations of score " + result.score.toFixed(2) + ".")
@@ -126,7 +126,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
             iterations: config.cleanupIterations,
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
             base: config,
-        }, cleanupInputs.length)
+        })
         secondarySearch.executions = cleanupInputs.length * secondarySearch.iterations
         p = secondarySearch.result
         Ansi.Gray(Util.linereturn())
@@ -208,7 +208,7 @@ interface CoreSearchConfig {
     base: SearchConfig
 }
 
-function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: number): SearchResult {
+function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
     var start = Util.start()
     var badness = config.metric(p)
     var n = config.iterations
@@ -226,6 +226,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: num
             if (config.base.debug > 0) {
                 Ansi.Gray("   improvement at iteration "+Util.pad(i, 5, ' ')+": " +
                     Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
+                print(p)
             }
             p = newp
             badness = newbadness
@@ -243,7 +244,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig, nexecutions: num
         }
 
         if (i % 1000 === 0) {
-            print(Util.stop(start))
+            print("Time: " + Util.stop(start))
         }
     }
 
@@ -266,7 +267,7 @@ function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
 
         var j = randInt(p.body.numberOfStmts())
         var newp = new Data.Program(p.body.replace(j, Data.Seq.Empty))
-
+        print(":" + i)
         var newbadness = Metric.evaluate(newp, inputs, realTraces)
         if (newbadness <= badness) {
 

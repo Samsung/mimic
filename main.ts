@@ -181,27 +181,23 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 20, [1500, 0])
-search(f, a)
+//search(f, a)
 
 
 
 
-/*
+
 function f2(arg0) {
-    var n2522 = arg0[arg0[3]]
-    var n2523 = arg0[0]
-    for (var i2528 = 0; i2528 < 3; i2528 += 1) {
-        var n2524 = arg0[i2528+1]
-        arg0[i2528] = n2524
-    }
-    delete arg0["4"]
-    arg0[i2528] = n2522
-    return n2523
+    var n86 = arg0.length
+    var n87 = arg0[0]
+    arg0.length = n86+-1
+    delete arg0[arg0.length]
+    return n87
 }
 
 print(Recorder.record(f, a0))
 print(Recorder.record(f2, a0))
-*/
+
 
 
 /*
