@@ -950,7 +950,7 @@ export class EDeleteProperty extends Event {
     toString(config = {}): string {
         var s = ""
         //s += super.toString(config)
-        s += "delete property"
+        s += "delete property "
         s += this.name.toString(config)
         s += " of "
         s += this.target.toString(config)
