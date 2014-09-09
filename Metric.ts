@@ -52,6 +52,7 @@ export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trac
         Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
     }
+    badness /= inputs.length
     if (finalizing) {
         var W_LENGTH = 0.0001
         badness += W_LENGTH * p.toString().length
