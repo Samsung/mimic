@@ -186,21 +186,22 @@ search(f, a)
 
 
 
-/*
+
 function f2(arg0) {
- var n2523 = arg0[0]
- for (var i2528 = 0; i2528 < 4+-1; i2528 += 1) {
- var n2524 = arg0[i2528+1]
- arg0[i2528] = n2524
+ var n2530 = arg0.length
+ var n2531 = arg0[0]
+ for (var i2536 = 0; i2536 < n2530-1; i2536 += 1) {
+ var n2532 = arg0[1]
+ arg0[i2536] = n2532
  }
- delete arg0[arg0.length+-1]
- arg0[i2528] = arg0[3]
- return n2523
+ delete arg0[n2530+-1]
+ arg0.length = n2530-1
+ return n2531
 }
 
 print(Recorder.record(f, a0))
 print(Recorder.record(f2, a0))
-*/
+
 
 
 /*

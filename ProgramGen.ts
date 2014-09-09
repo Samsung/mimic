@@ -148,10 +148,12 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     s = <Data.Return>ss
                     if (s.rhs.type === Data.ExprType.Field) {
                         var e = <Data.Field>s.rhs
-                        if (maybe()) {
+                        if (maybe(0.3334)) {
                             news = Ast.makeReturn(Ast.makeField(e.o, randomExpr(info)))
-                        } else {
+                        } else if (maybe(0.5)) {
                             news = Ast.makeReturn(Ast.makeField(randomExpr(info, {lhs: true}), e.f))
+                        } else {
+                            news = Ast.makeReturn(randomExpr(info))
                         }
                     } else {
                         news = new Data.Return(randomExpr(info))

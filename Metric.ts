@@ -29,6 +29,10 @@ var W_DELETE_FIELD = 0.5
 var W_DELETE_WRONG = 0.9
 var W_DELETE_MISSING = 1
 
+var W_GET_FIELD = 0.2
+var W_GET_WRONG = 0.3
+var W_GET_MISSING = 0.4
+
 var W_WRONG_PARAM = 0.5
 var W_CALL_WRONG = 0.9
 var W_CALL_MISSING = 1
@@ -142,6 +146,40 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     })
     badness += Math.abs(notInA-notInB) * W_DELETE_MISSING
     badness += Math.min(notInA,notInB) * W_DELETE_WRONG
+
+    // compare all get property events
+    var aa1 = <Data.EGet[]>a.eventsOfKind(Data.EventKind.EGet)
+    var bb1 = <Data.EGet[]>b.eventsOfKind(Data.EventKind.EGet)
+    notInB = 0
+    used = new Map<number, boolean>()
+    notInA = bb1.length
+    aa1.forEach((aevent) => {
+        var ao = aevent.target
+        var af = aevent.name
+        var found = false
+        for (var i = 0; i < bb1.length; i++) {
+            if (!used.has(i)) {
+                var bevent = bb1[i]
+                var bo = bevent.target
+                var bf = bevent.name
+                if (exprEquiv(ao, bo)) {
+                    if (!exprEquiv(af, bf)) {
+                        // receiver matches, but not field
+                        badness += W_GET_FIELD * exprDistance(af, bf) / DISTANCE_NORM
+                    }
+                    used.set(i, true)
+                    found = true
+                    notInA--
+                    break
+                }
+            }
+        }
+        if (!found) {
+            notInB++
+        }
+    })
+    badness += Math.abs(notInA-notInB) * W_GET_MISSING
+    badness += Math.min(notInA,notInB) * W_GET_WRONG
 
     // compare all apply events
     var aa2 = <Data.EApply[]>a.eventsOfKind(Data.EventKind.EApply)
