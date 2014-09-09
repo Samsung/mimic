@@ -773,6 +773,7 @@ export class Trace {
     private result: TraceExpr = null
     private exception: TraceExpr = null
     public prestates: Prestate[] = null
+    public constants: Const[] = null
     constructor() {
     }
     getLength(): number {
@@ -807,6 +808,12 @@ export class Trace {
     }
     getPrestates() {
         return this.prestates
+    }
+    setConstants(ps: Const[]) {
+        this.constants = ps
+    }
+    getConstants() {
+        return this.constants
     }
     eventsOfKind(kind: EventKind): Event[] {
         return this.events.filter((s) => s.kind === kind)

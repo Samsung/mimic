@@ -51,7 +51,7 @@ function expr(e: Data.TraceExpr) {
 /**
  * Compile a list of events
  */
-function compileEventList(events: Data.Event[], loop: StructureInference.Proposal = null) {
+function compileEventList(events: Data.Event[], loop: StructureInference.Proposal = null, trace: Data.Trace = null) {
     var stmts:Data.Stmt[] = []
     for (var i = 0; i < events.length; i++) {
         var e = events[i]
@@ -63,7 +63,7 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
                 print(events.slice(i+k*loop.loopLength, i+k*loop.loopLength+loop.loopLength).join("\n"))
                 line()
             }*/
-            i += (loop.loopLength * loop.numIterations)-1
+            i += (loop.loopLength * loop.getNumIterations(trace))-1
             continue
         }
         var ev
@@ -102,7 +102,7 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
  * Compile a trace to a program.
  */
 export function compileTrace(trace: Data.Trace, loop?: StructureInference.Proposal): Data.Program {
-    var stmts = compileEventList(trace.events, loop)
+    var stmts = compileEventList(trace.events, loop, trace)
     if (trace.isNormalReturn) {
         stmts.push(new Data.Return(expr(trace.getResult())))
     } else {

@@ -66,6 +66,7 @@ export function record(f: (..._: any[]) => any, args: any[], budget: number = 10
     }
 
     trace.setPrestates(state.preStates)
+    trace.setConstants(state.constants)
 
     return trace
 }
@@ -85,6 +86,7 @@ class State {
     public preState = new Map<Object, Data.Prestate[]>()
     public curState = new Map<Object, Data.Expr[]>()
     public preStates: Data.Prestate[] = []
+    public constants: Data.Const[] = []
     constructor(public budget: number) {
     }
     /** record an event */
@@ -97,6 +99,7 @@ class State {
     /** get the trace expression for an (unproxied) value */
     texpr(v: any): Data.TraceExpr {
         if (Util.isPrimitive(v)) {
+            this.constants.push(new Data.Const(v))
             return new Data.TraceConst(v)
         }
         Util.assert(this.proxy2object.has(v), () => "texpr only accepts proxied inputs")

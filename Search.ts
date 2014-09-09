@@ -55,10 +55,19 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         inputs = Random.pickN(inputs, nInputsPerSearch)
         if (!p) {
             p = Compile.compileTrace(Recorder.record(f, inputs[0]), loop)
+            line()
+            print(p)
+            print(Recorder.record(f, inputs[0]))
+            print(loop)
+            line()
         }
         print(p)
 
-        var candidates = InputGen.genCandidates(inputs, f)
+        var candidates: Data.Expr[] = InputGen.genConstants(inputs, f)
+        var maxArgs = Util.max(inputs.map((i) => i.length))
+        for (var i = 0; i < maxArgs; i++) {
+            candidates.push(new Data.Argument(i))
+        }
         var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
 
         Ansi.Gray("  Using the following inputs:")
@@ -113,7 +122,11 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         var cleanupInputs = Random.pickN(inputs, nInputsPerSearch)
         Ansi.Gray("Starting secondary cleanup search...")
 
-        var candidates = InputGen.genCandidates(inputs, f)
+        var candidates: Data.Expr[] = InputGen.genConstants(inputs, f)
+        var maxArgs = Util.max(inputs.map((i) => i.length))
+        for (var i = 0; i < maxArgs; i++) {
+            candidates.push(new Data.Argument(i))
+        }
         var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
 
         // shorten the program

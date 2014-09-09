@@ -188,20 +188,22 @@ search(f, a)
 
 
 function f2(arg0) {
- var n2530 = arg0.length
- var n2531 = arg0[0]
- for (var i2536 = 0; i2536 < n2530-1; i2536 += 1) {
- var n2532 = arg0[1]
- arg0[i2536] = n2532
- }
- delete arg0[n2530+-1]
- arg0.length = n2530-1
- return n2531
+    var n2530 = arg0.length
+    var n2531 = arg0[0]
+    for (var i2536 = 0; i2536 < 3; i2536 += 1) {
+        var n2532 = arg0[1]
+        arg0[i2536] = n2532
+    }
+    delete arg0[n2530+-1]
+    arg0[i2536] = arg0[0]
+    return n2531
 }
 
-print(Recorder.record(f, a0))
-print(Recorder.record(f2, a0))
-
+var t1 = Recorder.record(f, a0);
+print(t1)
+var t2 = Recorder.record(f2, a0);
+print(t2)
+print(Metric.traceDistance(t1, t2))
 
 
 /*

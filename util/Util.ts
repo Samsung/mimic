@@ -149,6 +149,10 @@ export function sum(a: number[]) {
     return a.reduce((a,b) => a+b, 0)
 }
 
+export function max(a: number[]) {
+    return a.reduce((a,b) => a > b ? a : b, 0)
+}
+
 export function start(): number {
     return new Date().getTime()
 }

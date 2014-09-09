@@ -152,10 +152,23 @@ function generateInputsAux(f: (...a: any[]) => any, initials: any[][], exprs: Da
 /**
  * Return a list of interesting expressions that should be used during program generation.
  */
-export function genCandidates(inputs: any[][], f: (...a: any[]) => any) {
-    var res = []
+export function genCandidates(inputs: any[][], f: (...a: any[]) => any): Data.Prestate[] {
+    var res: Data.Prestate[] = []
     for (var i = 0; i < inputs.length; i++) {
         var ps = Recorder.record(f, inputs[i]).getPrestates()
+        res = res.concat(ps)
+    }
+    res = Util.dedup2(res)
+    return res;
+}
+
+/**
+ * Return a list of constants that were used in traces.
+ */
+export function genConstants(inputs: any[][], f: (...a: any[]) => any): Data.Const[] {
+    var res: Data.Const[] = []
+    for (var i = 0; i < inputs.length; i++) {
+        var ps = Recorder.record(f, inputs[i]).getConstants()
         res = res.concat(ps)
     }
     res = Util.dedup2(res)
