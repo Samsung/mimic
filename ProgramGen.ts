@@ -135,7 +135,6 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                             news = Ast.makeAssign(field, s.rhs)
                         }
                     } else {
-                        return null
                         Util.assert(s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field)
                         var f = <Data.Field>s.rhs
                         if (maybe()) {
