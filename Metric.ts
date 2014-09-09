@@ -43,8 +43,14 @@ var W_CALL_MISSING = 1
  * metric) and the higher the number, the less similar `p's behavior.
  */
 export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
+    return evaluate2(Compile.compile(p), inputs, realTraces, p.toString().length, finalizing)
+}
+export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: Data.Trace[] = null, programLength: number = 10, finalizing: boolean = false): number {
+    if (realTraces === null) {
+        realTraces = inputs.map((i) => Recorder.record(f, i))
+    }
     var badness = 0
-    var code = Compile.compile(p)
+    var code = f
     for (var i = 0; i < inputs.length; i++) {
         var budget = Math.min(50, Math.max(10, 1.1 * realTraces[i].events.length))
         var candidateTrace = Recorder.record(code, inputs[i], budget)
@@ -55,7 +61,7 @@ export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trac
     badness /= inputs.length
     if (finalizing) {
         var W_LENGTH = 0.0001
-        badness += W_LENGTH * p.toString().length
+        badness += W_LENGTH * programLength
     }
     return badness
 }
