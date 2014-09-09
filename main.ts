@@ -169,7 +169,7 @@ var fs:any = [
     [ // 8
         "Array.prototype.shift",
         (a) => a.shift(),
-        [[1,2,3,4,5]]
+        [['a','b','c','d','e']]
     ],
 ]
 
@@ -188,11 +188,14 @@ search(f, a)
 
 /*
 function f2(arg0) {
-    var n86 = arg0.length
-    var n87 = arg0[0]
-    arg0.length = n86+-1
-    delete arg0[arg0.length]
-    return n87
+ var n2523 = arg0[0]
+ for (var i2528 = 0; i2528 < 4+-1; i2528 += 1) {
+ var n2524 = arg0[i2528+1]
+ arg0[i2528] = n2524
+ }
+ delete arg0[arg0.length+-1]
+ arg0[i2528] = arg0[3]
+ return n2523
 }
 
 print(Recorder.record(f, a0))
