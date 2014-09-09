@@ -206,6 +206,12 @@ export class Add extends Expr {
         super(ExprType.Add, 1+Math.max(a.depth, b.depth))
     }
     toString(config = {}) {
+        if (this.b.type === ExprType.Const) {
+            var c = <Const>this.b
+            if (c.val < 0) {
+                return this.a.toString(config) + "-" + (new Const(-c.val)).toString(config)
+            }
+        }
         return this.a.toString(config) + "+" + this.b.toString(config)
     }
     eval(args: any[]): any {
