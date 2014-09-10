@@ -1,3 +1,3 @@
 #!/bin/bash
 
-mocha --harmony #--reporter progress
+mocha --harmony  --timeout 100000 #--reporter progress

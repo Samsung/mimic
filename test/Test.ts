@@ -19,6 +19,7 @@ import InputGen = require('../InputGen')
 import Compile = require('../Compile')
 import Recorder = require('../Recorder')
 import ProgramGen = require('../ProgramGen')
+import StructureInference = require('../StructureInference')
 import Search = require('../Search')
 
 var print = Util.print
@@ -127,7 +128,9 @@ function inputgen_test(f, a, a0, name, oracle) {
     it('number of categories for ' + name, () => {
         var inputs = InputGen.generateInputs(f, a)
         var traces = inputs.map((i) => Recorder.record(f, i))
-        ass.equal(InputGen.categorize(inputs, traces).length, oracle.categories)
+        var loops = StructureInference.infer(traces)
+        var categories = InputGen.categorize(inputs, traces, loops.length > 0 ? loops[0] : null)
+        ass.equal(categories.length, oracle.categories)
     })
 }
 
@@ -145,10 +148,10 @@ function compile_test(f, a, a0, name, oracle) {
 }
 
 function search_test(f, a, a0, name, oracle, k) {
-    if ([8].indexOf(k) !== -1) return
+    if (k >= 8) return // skip loops for now
     it("search should succeed for " + name, () => {
         var config = new Search.SearchConfig({
-            iterations: 2000,
+            iterations: 5000,
             cleanupIterations: 10,
             debug: 0,
         })
@@ -165,7 +168,6 @@ var tests = [
     ["Search", search_test],
 ]
 
-
 for (var k = 0; k < tests.length; k++) {
     describe(tests[k][0], () => {
         for (var i = 0; i < fs.length; i++) {
@@ -175,7 +177,7 @@ for (var k = 0; k < tests.length; k++) {
             var a0 = a[0]
             var oracle = fs[i][fs[i].length - 1]
             var test: any = tests[k][1];
-            test(f, a, a0, name, oracle, k)
+            test(f, a, a0, name, oracle, i)
         }
     })
 }
