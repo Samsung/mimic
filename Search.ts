@@ -29,27 +29,27 @@ var line = Util.line
 export function search(f: (...a: any[]) => any, args: any[][], config: SearchConfig = new SearchConfig()): SearchResult {
     var nInputsPerSearch = 20
 
-    Ansi.Gray("Recording original execution...")
+    if (config.debug) Ansi.Gray("Recording original execution...")
     var trace = Recorder.record(f, args[0])
-    print(trace)
+    if (config.debug) print(trace)
 
-    Ansi.Gray("Input generation...")
+    if (config.debug) Ansi.Gray("Input generation...")
     var inputs = InputGen.generateInputs(f, args)
     var traces = inputs.map((i) => Recorder.record(f, i))
-    Ansi.Gray("Found " + inputs.length + " inputs.")
+    if (config.debug) Ansi.Gray("Found " + inputs.length + " inputs.")
 
-    Ansi.Gray("Loop inference...")
+    if (config.debug) Ansi.Gray("Loop inference...")
     var loops = StructureInference.infer(traces)
     var loop = null
     if (loops.length > 0) {
         // for now, only use first loop
         loop = loops[0]
     }
-    Ansi.Gray("Found " + loops.length + " possible loops.")
+    if (config.debug) Ansi.Gray("Found " + loops.length + " possible loops.")
 
-    Ansi.Gray("Input categorization...")
+    if (config.debug) Ansi.Gray("Input categorization...")
     var categories = InputGen.categorize(inputs, traces, loop)
-    Ansi.Gray("Found " + categories.length + " categories of inputs.")
+    if (config.debug) Ansi.Gray("Found " + categories.length + " categories of inputs.")
 
     function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, loop: StructureInference.Proposal, p?: Data.Program) {
         inputs = Random.pickN(inputs, nInputsPerSearch)
@@ -66,7 +66,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
                 break
             }
         }
-        print(p)
+        if (config.debug) print(p)
 
         var candidates: Data.Expr[] = InputGen.genConstants(inputs, f)
         var maxArgs = Util.max(inputs.map((i) => i.length))
@@ -75,12 +75,12 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         }
         var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
 
-        Ansi.Gray("  Using the following inputs:")
-        Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
-        Ansi.Gray("  Record correct behavior on " + inputs.length + " inputs...")
+        if (config.debug) Ansi.Gray("  Using the following inputs:")
+        if (config.debug) Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
+        if (config.debug) Ansi.Gray("  Record correct behavior on " + inputs.length + " inputs...")
         var realTraces = inputs.map((i) => Recorder.record(f, i))
 
-        Ansi.Gray("  Starting search...")
+        if (config.debug) Ansi.Gray("  Starting search...")
 
         var result = core_search(p, {
             metric: (pp) => Metric.evaluate(pp, inputs, realTraces),
@@ -90,41 +90,41 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         })
         result.executions = inputs.length * result.iterations
 
-        Ansi.Gray("  Found a program in " + result.iterations + " iterations of score " + result.score.toFixed(2) + ".")
-        print(result.result)
+        if (config.debug) Ansi.Gray("  Found a program in " + result.iterations + " iterations of score " + result.score.toFixed(2) + ".")
+        if (config.debug) print(result.result)
         return result
     }
 
     var p: Data.Program
     var mainSearch = SearchResult.Empty
-    Ansi.Gray(Util.linereturn())
+    if (config.debug) Ansi.Gray(Util.linereturn())
     if (categories.length > 1) {
         var res: SearchResult[] = []
         var iterations = Math.ceil(0.8*config.iterations/categories.length)
         for (var i = 0; i < categories.length; i++) {
-            Ansi.Gray("Searching a program for input category " + (i+1) + "/" + categories.length + ".")
+            if (config.debug) Ansi.Gray("Searching a program for input category " + (i+1) + "/" + categories.length + ".")
             if (i > 0) {
                 loop = null
             }
             res[i] = straightLineSearch(f, categories[i].inputs, iterations, loop)
             mainSearch = mainSearch.combine(res[i])
-            Ansi.Gray(Util.linereturn())
+            if (config.debug) Ansi.Gray(Util.linereturn())
         }
-        Ansi.Gray("Searching a program for all " + inputs.length + " inputs.")
+        if (config.debug) Ansi.Gray("Searching a program for all " + inputs.length + " inputs.")
         p = new Data.Program(combinePrograms(res.map((p) => p.result.body)))
         mainSearch = straightLineSearch(f, inputs, 0.2*iterations, null, p).combine(mainSearch)
         p = mainSearch.result
     } else {
-        Ansi.Gray("Searching a program for all " + inputs.length + " inputs.")
+        if (config.debug) Ansi.Gray("Searching a program for all " + inputs.length + " inputs.")
         mainSearch = straightLineSearch(f, inputs, config.iterations, loop)
         p = mainSearch.result
-        Ansi.Gray(Util.linereturn())
+        if (config.debug) Ansi.Gray(Util.linereturn())
     }
 
     var secondarySearch: SearchResult
     if (config.cleanupIterations > 0) {
         var cleanupInputs = Random.pickN(inputs, nInputsPerSearch)
-        Ansi.Gray("Starting secondary cleanup search...")
+        if (config.debug) Ansi.Gray("Starting secondary cleanup search...")
 
         var candidates: Data.Expr[] = InputGen.genConstants(inputs, f)
         var maxArgs = Util.max(inputs.map((i) => i.length))
@@ -146,7 +146,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         })
         secondarySearch.executions = cleanupInputs.length * secondarySearch.iterations
         p = secondarySearch.result
-        Ansi.Gray(Util.linereturn())
+        if (config.debug) Ansi.Gray(Util.linereturn())
     } else {
         secondarySearch = SearchResult.Empty
     }
@@ -342,7 +342,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
         }
 
         if (i % 1000 === 0) {
-            print("Time: " + Util.stop(start))
+            if (config.base.debug) print("Time: " + Util.stop(start) + ", iteration: " + i)
         }
     }
 
@@ -367,7 +367,6 @@ function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
         var newp = new Data.Program(p.body.replace(j, Data.Seq.Empty))
         var newbadness = Metric.evaluate(newp, inputs, realTraces)
         if (newbadness <= badness) {
-
             p = newp
             badness = newbadness
         }
