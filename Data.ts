@@ -603,7 +603,7 @@ export class FuncCall extends Stmt {
         }
         var rcvArg = this.recv === null ? "global" : this.recv.toString();
         var args = this.args.map((a) => a.toString())
-        s += this.f.toString() + ".apply(" + rcvArg + ", [ " + args.join(", ") + " ])"
+        s += this.f.toString() + ".apply(" + rcvArg + ", [ " + Util.join(args, ", ") + " ])"
         return s
     }
     equals(o) {
@@ -641,7 +641,7 @@ export class FuncCall extends Stmt {
         }
         var rcvArg = this.recv === null ? "null" : this.recv.toSkeleton();
         var args = this.args.map((a) => a.toSkeleton())
-        s += this.f.toSkeleton() + ".apply(" + rcvArg + ", [ " + args.join(", ") + " ])"
+        s += this.f.toSkeleton() + ".apply(" + rcvArg + ", [ " + Util.join(args, ", ") + " ])"
         return s
     }
 }
@@ -952,7 +952,7 @@ export class EApply extends Event {
         } else {
             s += " with arguments ( "
         }
-        s += this.args.map((a) => a.toString(config)).join(", ")
+        s += Util.join(this.args.map((a) => a.toString(config)), ", ")
         s += " )"
         return s
     }
@@ -1008,7 +1008,7 @@ export class TraceExpr {
             if (exprs.length === 1) {
                 return exprs[0].toString(config)
             } else {
-                return "[" + exprs.map((e) => e.toString(config)).join(",") + "]"
+                return "[" + Util.join(exprs.map((e) => e.toString(config)), ",") + "]"
             }
         }
         if (this.preState.join("|") === this.curState.join("|")) {

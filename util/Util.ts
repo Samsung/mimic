@@ -202,3 +202,16 @@ export function arrayEquals<T>(a: T[], b: T[]): boolean {
     }
     return true
 }
+
+export function join(arr: string[], sep: string) {
+    var res = ""
+    var first = true
+    for (var i = 0; i < arr.length; i++) {
+        if (!first) {
+            res += sep
+        }
+        first = false
+        res += arr[i]
+    }
+    return res
+}
