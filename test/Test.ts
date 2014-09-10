@@ -136,11 +136,24 @@ function compile_test(f, a, a0, name, oracle) {
     })
 }
 
+function search_test(f, a, a0, name, oracle, k) {
+    it("search should succeed for " + name, () => {
+        var config = new Search.SearchConfig({
+            iterations: 2000,
+            cleanupIterations: 10,
+            debug: 0,
+        })
+        var res = Search.search(f, a, config)
+        ass.equal(res.score, 0)
+    })
+}
+
 
 var tests = [
     ["Recorder", recorder_test],
     ["InputGen.categorize", inputgen_test],
     ["Compile", compile_test],
+    ["Search", search_test],
 ]
 
 
@@ -153,7 +166,7 @@ for (var k = 0; k < tests.length; k++) {
             var a0 = a[0]
             var oracle = fs[i][fs[i].length - 1]
             var test: any = tests[k][1];
-            test(f, a, a0, name, oracle)
+            test(f, a, a0, name, oracle, k)
         }
     })
 }
