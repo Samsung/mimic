@@ -107,6 +107,14 @@ var fs:any = [
             categories: 1,
         }
     ],
+    [ // 8
+        "Array.prototype.shift",
+        (a) => a.shift(),
+        [['a','b','c','d','e']],
+        {
+            categories: 2,
+        }
+    ],
 ]
 
 function recorder_test(f, a, a0, name, oracle) {
@@ -137,6 +145,7 @@ function compile_test(f, a, a0, name, oracle) {
 }
 
 function search_test(f, a, a0, name, oracle, k) {
+    if ([8].indexOf(k) !== -1) return
     it("search should succeed for " + name, () => {
         var config = new Search.SearchConfig({
             iterations: 2000,
