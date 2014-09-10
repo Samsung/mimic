@@ -48,10 +48,10 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
         var tlen = trace.getLength()
         for (var start = 0; start < tlen-1; start++) {
             // not enough space for minIterations
-            if (start + minIterations >= tlen) break;
+            if (start + minIterations > tlen) break;
             length: for (var len = minBodyLength; len < maxBodyLength; len++) {
                 // not enough space for minIterations
-                if (start + len*minIterations >= tlen) break;
+                if (start + len*minIterations > tlen) break;
                 // get a candidate body
                 var body = trace.getSubSkeleton(start, len)
                 var iterations = 0
@@ -63,11 +63,11 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                     }
                 }
                 // output all possible iteration counts
-                while (true) {
+                while (start+(iterations+1)*len <= tlen) {
                     iterations++
                     var regex = trace.getSubSkeleton(0, start) + "(" + body + ")*" + trace.getSubSkeleton(start+iterations*len)
                     candidates.push(new Proposal(regex, start, len))
-                    if (body !== trace.getSubSkeleton(start + iterations*len, len)) {
+                    if (start+(iterations+2)*len > tlen || body !== trace.getSubSkeleton(start + iterations*len, len)) {
                         break
                     }
                 }

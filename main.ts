@@ -171,6 +171,11 @@ var fs:any = [
         (a) => a.shift(),
         [['a','b','c','d','e']]
     ],
+    [ // 9
+        "Array.prototype.every",
+        (a, f) => a.every(f),
+        [[30,10,4,16,3,10], (e) => e%2===0]
+    ],
 ]
 
 
