@@ -74,7 +74,7 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     var badness = 0
 
     // exhausting computational budget is bad
-    Util.assert(!a.isExhaustedBudget)
+    Util.assert(!a.isExhaustedBudget, () => "a should not have exhausted it's budget")
     if (b.isExhaustedBudget) {
         return W_EXHAUSTED
     }
@@ -207,7 +207,7 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
                 var bargs = bevent.args
                 if (arecv === brecv || exprEquiv(arecv, brecv)) {
                     if (exprEquiv(af, bf)) {
-                        Util.assert(aargs.length === bargs.length)
+                        Util.assert(aargs.length === bargs.length, () => "different length of argument list")
                         for (var i = 0; i < aargs.length; i++) {
                             if (!exprEquiv(aargs[i], bargs[i])) {
                                 // receiver and function matches, but not this argument
