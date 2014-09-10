@@ -598,9 +598,6 @@ export class FuncCall extends Stmt {
     }
     toString() {
         var s = "var " + this.v.toString() + " = "
-        if (this.recv !== null) {
-            s += this.recv.toString() + "."
-        }
         var rcvArg = this.recv === null ? "global" : this.recv.toString();
         var args = this.args.map((a) => a.toString())
         s += this.f.toString() + ".apply(" + rcvArg + ", [ " + Util.join(args, ", ") + " ])"
