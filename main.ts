@@ -184,6 +184,11 @@ var a0 = a[0]
 search(f, a)
 
 
+
+
+
+
+
 /*
 function f2(arg0) {
     var n2530 = arg0.length
@@ -410,3 +415,123 @@ line()
 
 
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+ var patch = (function (global) {
+
+ "use strict";
+ var has = Object.prototype.hasOwnProperty;
+ return function (original, originalRef, patches) {
+ global[originalRef] = original; // Maintain a reference to the original constructor as a new property on the global object
+ var args = [],
+ newRef, // This will be the new patched constructor
+ i;
+
+ patches.called = patches.called || originalRef; // If we are not patching static calls just pass them through to the original function
+
+ for (i = 0; i < original.length; i++) { // Match the arity of the original constructor
+ args[i] = "a" + i; // Give the arguments a name (native constructors don't care, but user-defined ones will break otherwise)
+ }
+
+ if (patches.constructed) { // This string is evaluated to create the patched constructor body in the case that we are patching newed calls
+ args.push("'use strict'; return (!!this ? " + patches.constructed + " : " + patches.called + ").apply(null, arguments);");
+ } else { // This string is evaluated to create the patched constructor body in the case that we are only patching static calls
+ args.push("'use strict'; return (!!this ? new (Function.prototype.bind.apply(" + originalRef + ", [{}].concat([].slice.call(arguments))))() : " + patches.called + ".apply(null, arguments));");
+ }
+
+ //newRef = new (Function.prototype.bind.apply(Function, [{}].concat(args)))(); // Create a new function to wrap the patched constructor
+ newRef = Function.apply(null, args);
+ newRef.prototype = original.prototype; // Keep a reference to the original prototype to ensure instances of the patch appear as instances of the original
+ newRef.prototype.constructor = newRef; // Ensure the constructor of patched instances is the patched constructor
+
+ Object.getOwnPropertyNames(original).forEach(function (property) { // Add any "static" properties of the original constructor to the patched one
+ if (!has.call(Function, property)) { // Don't include static properties of Function since the patched constructor will already have them
+ newRef[property] = original[property];
+ }
+ });
+
+ return newRef; // Return the patched constructor
+ };
+
+ })(global);
+
+ print(typeof String("abc"))
+ print(typeof String(20))
+
+ String = patch(String, "StringOriginal", {
+ called: function (arg) {
+ return  typeof arg === "number" ? arg : StringOriginal(arg);
+ }
+ });
+
+ Array = patch(String, "ArrayOriginal", {
+ called: function (arg) {
+ console.log(2)
+ return ArrayOriginal(arg);
+ }
+ });
+
+ print(typeof String("abc"))
+ print(typeof String(20))*/
+/*
+ var oldArray = Array
+ Array = <any>function () {
+ print("1")
+ return oldArray.apply(this, arguments)
+ }
+ for (var k in oldArray) {
+ print(k)
+ }
+ for (var k in oldArray.prototype) {
+ print(k)
+ }*/
+
+//print(Array(1, 2, 3))
+//print(new Array(1, 2, 3))
+//print([1,2,3]);
+/*
+ var oldObject = Object
+ Object = <any>function () {
+ console.log(":")
+ return oldObject.apply(this, arguments)
+ }
+ Object.create = oldObject.create
+ Object.keys = oldObject.keys
+ Object.getOwnPropertyDescriptor = oldObject.getOwnPropertyDescriptor
+ Object.defineProperty = function () {
+ //global.console.log("f")
+ return oldObject.defineProperty.apply(this, arguments)
+ }
+ var oldArray = Array
+ Array = <any>function () {
+ console.log(".")
+ return oldArray.apply(this, arguments)
+ }
+ Array.isArray = oldArray.isArray
+
+ Array = proxify(Array)
+ console.log(Array(1,2))
+ console.log(new Array(1,2,3))
+ console.log([1,2].concat([2,3]))
+
+ console.log(Object())
+ console.log(new Object())
+ console.log({ a: 1 })
+ console.log(Object.create({ b: 2}))
+ */
