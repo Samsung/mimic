@@ -11,6 +11,10 @@ import Util = require('./Util')
 // our source of randomness
 var randomness = Util.rrr()
 
+export function resetRandomness(val?: number) {
+    randomness = Util.rrr(val)
+}
+
 /**
  * Returns a random number in [min,max), or [0,min) if max is not specified.
  */

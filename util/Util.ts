@@ -47,8 +47,11 @@ export function argv(i: number) {
 }
 
 // for now we keep this here, as it creates various spurious errors
-export function rrr() {
-    return new random(random.engines.mt19937().seed(process.argv[2]))
+export function rrr(v?: number) {
+    if (v === undefined) {
+        v = process.argv[2]
+    }
+    return new random(random.engines.mt19937().seed(v))
 }
 
 export function isPrimitive(arg: any) {

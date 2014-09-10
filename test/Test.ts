@@ -155,6 +155,8 @@ function search_test(f, a, a0, name, oracle, k) {
             cleanupIterations: 10,
             debug: 0,
         })
+        // make tests more deterministic
+        Random.resetRandomness(0)
         var res = Search.search(f, a, config)
         ass.equal(res.score, 0)
     })
