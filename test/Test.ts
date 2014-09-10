@@ -152,7 +152,7 @@ function search_test(f, a, a0, name, oracle, k) {
     it("search should succeed for " + name, () => {
         var config = new Search.SearchConfig({
             iterations: 5000,
-            cleanupIterations: 10,
+            cleanupIterations: 0,
             debug: 0,
         })
         // make tests more deterministic
