@@ -289,7 +289,8 @@ miss certain loops.
 If the loop inference proposed a loop, then a first category consists of
 all inputs that yield traces which can be explained by the proposed loop.
 For the remaining inputs, the trace skeleton is used to categorize
-the inputs.
+the inputs (inputs with exactly the same trace belong to the same
+category).
 
 \subsection{Initial Program}
 
@@ -381,6 +382,121 @@ longer than the original trace, we can kill the execution and mark the
 trace as having run out of its computational budget.
 By ranking such models poorly in the search metric, the random search will
 avoid non-terminating programs.
+
+
+
+\section{Example}
+
+To illustrate some of these techniques a bit better, we give an example from
+our prototype implementation.  Consider the JavaScript function
+\code{Array.prototype.shift}, which is provided by web browsers as part of
+their native libraries, and therefore has no JavaScript implementation.
+The method takes an array as input, removes it's first element and returns
+that removed element.  We only provide one sample input, namely
+\code{['a', 'b', 'c', 'd', 'e']}
+
+First, the prototype generates a number of inputs:
+\begin{verbatim}
+  [ 'a', 'b', 'c', 'd', 'e' ]
+  [ 'def', 'b', 'def', 'd' ]
+  [ 'def', 'b', 'def', 'def', 'b' ]
+  [ 'def', 'def', 'c', 'b', 'def' ]
+  [ 'def', 'def', 'b', 'd', 'b' ]
+  [ 'def', 'def', 'def', 'd' ]
+  [ 'def', 'b', 'def', 'd', 'e' ]
+  [ 'a', 'b', 'c', 'def', 'b' ]
+  [ 'b', 'def', 'b', 'd', 'def' ]
+  [ 'a', 'def', 'c', 'd', 'def' ]
+  [ 'a', 'def', 'def', 'def', 'b' ]
+  [ 'a', 'b', 'def', 'd', 'def' ]
+  [ 'a', 'def', 'b', 'def', 'b' ]
+  [ 'a', 'b', 'b', 'b', 'b' ]
+  [ 'a', 'b', 'b', 'd' ]
+  [ 'b', 'def', 'b', 'd' ]
+  [ 'def', 'b', 'def', 'b', 'b' ]
+  [ 'b', 'b', 'b', 'b' ]
+  [ 'b', 'b', 'c', 'd', 'e' ]
+  [ 'def', 'b', 'b', 'def', 'def' ]
+  [ 'a', 'b', 'b', 'def', 'b' ]
+  []
+\end{verbatim}
+Then, for each of these inputs, a trace describing the desired behavior
+is recorded.  One such trace (for the first input) looks as follows:
+\begin{verbatim}
+  n0 := get property length of arg0
+  n1 := get property 0 of arg0
+  n2 := get property 1 of arg0
+  set property 0 of arg0 to b
+  n3 := get property 2 of arg0
+  set property 1 of arg0 to c
+  n4 := get property 3 of arg0
+  set property 2 of arg0 to d
+  n5 := get property 4 of arg0
+  set property 3 of arg0 to e
+  delete property 4 of arg0
+  set property length of arg0 to 4
+  Result: a
+\end{verbatim}
+Given all these traces, our prototype attempts to find loop structures,
+and indeed proposes six loops, ranked according to how well they seem to
+match the traces.  The loop ranked highest is the following (showing
+only the skeleton, for the first input again):
+\begin{verbatim}
+  get property
+  get property
+  loop body (4 iterations):
+    get property
+    set property
+  delete property
+  set property
+\end{verbatim}
+This proposed loop works for all inputs except the empty array, so two
+input categories are created.
+For the one with a loop, an initial program is generated:
+\begin{verbatim}
+  var n0 = arg0.length
+  var n1 = "a"
+  for (var i5 = 0; i5 < 0; i5 += 1) {
+    var n2 = arg0[1]
+    arg0[0] = "b"
+  }
+  delete arg0[4]
+  arg0.length = 4
+  return "a"
+\end{verbatim}
+This program is clearly too specific to the first input, and does
+not yet work for any other input.
+The random search takes care of finding the right program that
+works for all inputs of the first category.
+
+In the second category, the initial program is
+\begin{verbatim}
+  var n0 = arg0.length
+  arg0.length = 0
+  return undefined
+\end{verbatim}
+and directly is accepted as a working program for this category.
+
+Now, the two programs need to be combined using a conditional statement.
+At first, the branching condition is just the constant \code{true},
+but a random search quickly discovers the right condition.
+After some minor improvements, the final result is the following model:
+\begin{verbatim}
+  var n0 = arg0.length
+  if (n0) {
+    var n1 = arg0[0]
+    for (var i5 = 0; i5 < n0-1; i5 += 1) {
+      var n2 = arg0[i5+1]
+      arg0[i5] = n2
+    }
+    delete arg0[i5]
+    arg0.length = i5
+    return n1
+  } else {
+    arg0.length = 0
+  }
+\end{verbatim}
+
 
 \section*{Potential Concerns}
 
