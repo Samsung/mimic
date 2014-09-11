@@ -15,7 +15,7 @@ var line = Util.line
 
 var DISTANCE_NORM = 100
 
-var W_ERROR_EXIT = 2
+var W_ERROR_EXIT = 1
 var W_EXIT = 1
 
 var W_EXHAUSTED = 5
@@ -45,10 +45,7 @@ var W_CALL_MISSING = 1
 export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
     return evaluate2(Compile.compile(p), inputs, realTraces, p.toString().length, finalizing)
 }
-export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: Data.Trace[] = null, programLength: number = 10, finalizing: boolean = false): number {
-    if (realTraces === null) {
-        realTraces = inputs.map((i) => Recorder.record(f, i))
-    }
+export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: Data.Trace[], programLength: number = 10, finalizing: boolean = false): number {
     var badness = 0
     var code = f
     for (var i = 0; i < inputs.length; i++) {
@@ -208,11 +205,15 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
                 if (arecv === brecv || exprEquiv(arecv, brecv)) {
                     if (exprEquiv(af, bf)) {
                         Util.assert(aargs.length === bargs.length, () => "different length of argument list")
+                        var argbadness = 0
                         for (var i = 0; i < aargs.length; i++) {
                             if (!exprEquiv(aargs[i], bargs[i])) {
                                 // receiver and function matches, but not this argument
-                                badness += W_WRONG_PARAM * exprDistance(aargs[i], bargs[i]) / DISTANCE_NORM
+                                argbadness += W_WRONG_PARAM * exprDistance(aargs[i], bargs[i]) / DISTANCE_NORM
                             }
+                        }
+                        if (aargs.length > 0) {
+                            badness += argbadness / aargs.length
                         }
                         used.set(i, true)
                         found = true
