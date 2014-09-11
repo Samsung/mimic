@@ -14,7 +14,7 @@ var log = Util.log
 var line = Util.line
 
 export class Proposal {
-    worksFor: number[] = []
+    worksFor: number[]
     constructor(public regex: string, public loopStart: number, public loopLength: number) {
     }
     equals(o) {
@@ -91,6 +91,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
         return res
     }
     // sort by number of traces it matches, and then by the length of the regular expression
+    candidates.map((c) => howMany(c)) // initialize c.worksFor
     Util.sortBy(candidates, [(a) => -howMany(a), (a) => a.regex.length])
     return candidates
 }
