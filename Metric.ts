@@ -15,7 +15,7 @@ var line = Util.line
 
 var DISTANCE_NORM = 100
 
-var W_ERROR_EXIT = 1
+var W_ERROR_EXIT = 2
 var W_EXIT = 1
 
 var W_EXHAUSTED = 5
@@ -68,6 +68,8 @@ export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: 
  * and the higher, the less similar the traces are.  This is a metric.
  */
 export function traceDistance(a: Data.Trace, b: Data.Trace): number {
+    var debug = false
+
     var badness = 0
 
     // exhausting computational budget is bad
@@ -117,6 +119,8 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     badness += Math.abs(notInA-notInB) * W_ASSIGN_MISSING
     badness += Math.min(notInA,notInB) * W_ASSIGN_WRONG
 
+    if (debug) print("after set: " + badness)
+
     // compare all delete property events
     var aa1 = <Data.EDeleteProperty[]>a.eventsOfKind(Data.EventKind.EDeleteProperty)
     var bb1 = <Data.EDeleteProperty[]>b.eventsOfKind(Data.EventKind.EDeleteProperty)
@@ -151,6 +155,8 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     badness += Math.abs(notInA-notInB) * W_DELETE_MISSING
     badness += Math.min(notInA,notInB) * W_DELETE_WRONG
 
+    if (debug) print("after delete: " + badness)
+
     // compare all get property events
     var aa1 = <Data.EGet[]>a.eventsOfKind(Data.EventKind.EGet)
     var bb1 = <Data.EGet[]>b.eventsOfKind(Data.EventKind.EGet)
@@ -171,9 +177,9 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
                         // receiver matches, but not field
                         badness += W_GET_FIELD * exprDistance(af, bf) / DISTANCE_NORM
                     }
-                    used.set(i, true)
-                    found = true
                     notInA--
+                    found = true
+                    used.set(i, true)
                     break
                 }
             }
@@ -184,6 +190,8 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     })
     badness += Math.abs(notInA-notInB) * W_GET_MISSING
     badness += Math.min(notInA,notInB) * W_GET_WRONG
+
+    if (debug) print("after get: " + badness)
 
     // compare all apply events
     var aa2 = <Data.EApply[]>a.eventsOfKind(Data.EventKind.EApply)
@@ -230,6 +238,8 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
     badness += Math.abs(notInA-notInB) * W_CALL_MISSING
     badness += Math.min(notInA,notInB) * W_CALL_WRONG
 
+    if (debug) print("after call: " + badness)
+
     // normalize by the length of a
     if (a.events.length > 0) {
         badness /= a.events.length
@@ -246,6 +256,8 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
         // different way to return
         badness += W_ERROR_EXIT
     }
+
+    if (debug) print("result: " + badness)
 
     return badness
 }
