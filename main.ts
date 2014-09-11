@@ -182,6 +182,21 @@ var fs:any = [
         [[1,2,3], (e) => e < 10],
         [[1,2,3], (e) => e > 10],
     ],
+    [ // 11
+        "Array.prototype.indexOf",
+        (a, e) => a.indexOf(e),
+        [[1,2,3], 2],
+    ],
+    [ // 12
+        "Array.prototype.forEach",
+        (a, f) => a.forEach(f),
+        [[1,2,3], (e) => 0],
+    ],
+    [ // 13
+        "Array.prototype.reduce",
+        (a, f, z) => a.reduce(f, z),
+        [[1,2,3], (previousValue, currentValue, index, array) => previousValue + currentValue, 0],
+    ],
 ]
 
 
@@ -193,6 +208,7 @@ var a0 = a[0]
 
 //howMany(f, a, 20, [1500, 0])
 search(f, a)
+
 
 
 
