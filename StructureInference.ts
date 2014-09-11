@@ -14,7 +14,7 @@ var log = Util.log
 var line = Util.line
 
 export class Proposal {
-    worksFor: number[]
+    worksFor: number[] = []
     constructor(public regex: string, public loopStart: number, public loopLength: number) {
     }
     equals(o) {
