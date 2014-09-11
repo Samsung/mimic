@@ -152,10 +152,10 @@ function generateInputsAux(f: (...a: any[]) => any, initials: any[][], exprs: Da
 /**
  * Return a list of interesting expressions that should be used during program generation.
  */
-export function genCandidates(inputs: any[][], f: (...a: any[]) => any): Data.Prestate[] {
+export function genCandidates(realTraces: Data.Trace[]): Data.Prestate[] {
     var res: Data.Prestate[] = []
-    for (var i = 0; i < inputs.length; i++) {
-        var ps = Recorder.record(f, inputs[i]).getPrestates()
+    for (var i = 0; i < realTraces.length; i++) {
+        var ps = realTraces[i].getPrestates()
         res = res.concat(ps)
     }
     res = Util.dedup2(res)
@@ -165,10 +165,10 @@ export function genCandidates(inputs: any[][], f: (...a: any[]) => any): Data.Pr
 /**
  * Return a list of constants that were used in traces.
  */
-export function genConstants(inputs: any[][], f: (...a: any[]) => any): Data.Const[] {
+export function genConstants(realTraces: Data.Trace[]): Data.Const[] {
     var res: Data.Const[] = []
-    for (var i = 0; i < inputs.length; i++) {
-        var ps = Recorder.record(f, inputs[i]).getConstants()
+    for (var i = 0; i < realTraces.length; i++) {
+        var ps = realTraces[i].getConstants()
         res = res.concat(ps)
     }
     res = Util.dedup2(res)
@@ -206,6 +206,6 @@ function genCandidateExpr(f: (...a: any[]) => any, initials: any[][]): Data.Pres
 
     var first = Util.dedup2(Util.flatten(initials.map((i) => Recorder.record(f, i).getPrestates())))
     var newArgs = generateInputsAux(f, initials, filter(first))
-    var res = genCandidates(newArgs, f)
+    var res = genCandidates(Recorder.all(f, newArgs))
     return filter(res)
 }

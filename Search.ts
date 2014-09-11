@@ -52,7 +52,6 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     if (config.debug) Ansi.Gray("Found " + categories.length + " categories of inputs.")
 
     function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, loop: StructureInference.Proposal, p?: Data.Program) {
-        inputs = Random.pickN(inputs, nInputsPerSearch)
         if (!p) {
             var i = 0
             while (true) {
@@ -68,7 +67,10 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         }
         if (config.debug) print(p)
 
-        var candidates: Data.Expr[] = InputGen.genConstants(inputs, f)
+        if (config.debug) Ansi.Gray("  Record correct behavior on " + inputs.length + " inputs...")
+        var realTraces = inputs.map((i) => Recorder.record(f, i))
+
+        var candidates: Data.Expr[] = InputGen.genConstants(realTraces)
         var maxArgs = Util.max(inputs.map((i) => i.length))
         for (var i = 0; i < maxArgs; i++) {
             candidates.push(new Data.Argument(i))
@@ -77,8 +79,6 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
         if (config.debug) Ansi.Gray("  Using the following inputs:")
         if (config.debug) Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
-        if (config.debug) Ansi.Gray("  Record correct behavior on " + inputs.length + " inputs...")
-        var realTraces = inputs.map((i) => Recorder.record(f, i))
 
         if (config.debug) Ansi.Gray("  Starting search...")
 
@@ -126,7 +126,9 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         var cleanupInputs = Random.pickN(inputs, nInputsPerSearch)
         if (config.debug) Ansi.Gray("Starting secondary cleanup search...")
 
-        var candidates: Data.Expr[] = InputGen.genConstants(inputs, f)
+        var cleanupTraces = cleanupInputs.map((i) => Recorder.record(f, i))
+
+        var candidates: Data.Expr[] = InputGen.genConstants(cleanupTraces)
         var maxArgs = Util.max(inputs.map((i) => i.length))
         for (var i = 0; i < maxArgs; i++) {
             candidates.push(new Data.Argument(i))
@@ -134,7 +136,6 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
 
         // shorten the program
-        var cleanupTraces = cleanupInputs.map((i) => Recorder.record(f, i))
         p = shorten(p, cleanupInputs, cleanupTraces)
 
         // switch to the finalizing metric
