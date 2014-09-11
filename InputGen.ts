@@ -7,6 +7,7 @@ import Recorder = require('./Recorder')
 import StructureInference = require('./StructureInference')
 
 import Util = require('./util/Util')
+import Random = require('./util/Random')
 var log = Util.log
 var print = Util.print
 var line = Util.line
@@ -208,4 +209,43 @@ function genCandidateExpr(f: (...a: any[]) => any, initials: any[][]): Data.Pres
     var newArgs = generateInputsAux(f, initials, filter(first))
     var res = genCandidates(Recorder.all(f, newArgs))
     return filter(res)
+}
+
+/**
+ * Select a number of inputs that (hopefully) cover the behavior of the function well.
+ */
+export function selectInputs(inputs: any[][],
+                             traces: Data.Trace[],
+                             metric: (i: any[], t: Data.Trace) => number,
+                             maxCategories: number = 10,
+                             maxInputsPerCat: number = 2,
+                             idealNumberOfInputs: number = 20): any[][] {
+    if (inputs.length < idealNumberOfInputs) {
+        return inputs
+    }
+    var lookup = new Map<number, Object[]>()
+    var categories = []
+    for (var i = 0; i < inputs.length; i++) {
+        var category = traces[i].events.length*1000 + metric(inputs[i], traces[i])
+        if (!lookup.has(category)) {
+            lookup.set(category, [])
+            categories.push(category)
+        }
+        lookup.get(category).push(inputs[i])
+    }
+    if (categories.length > maxCategories) {
+        categories = Random.pickN(categories, maxCategories)
+    }
+
+    var res = []
+    for (var i = 0; i < categories.length; i++) {
+        var cat = categories[i]
+        var ci = lookup.get(cat)
+        if (ci.length > maxInputsPerCat) {
+            ci = Random.pickN(ci, maxInputsPerCat)
+        }
+        res = res.concat(ci)
+    }
+
+    return res
 }

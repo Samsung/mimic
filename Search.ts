@@ -27,8 +27,6 @@ var line = Util.line
 
 
 export function search(f: (...a: any[]) => any, args: any[][], config: SearchConfig = new SearchConfig()): SearchResult {
-    var nInputsPerSearch = 20
-
     if (config.debug) Ansi.Gray("Recording original execution...")
     var trace = Recorder.record(f, args[0])
     if (config.debug) print(trace)
@@ -69,6 +67,10 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
         if (config.debug) Ansi.Gray("  Record correct behavior on " + inputs.length + " inputs...")
         var realTraces = inputs.map((i) => Recorder.record(f, i))
+
+        inputs = InputGen.selectInputs(inputs, realTraces, (i, t) => Metric.evaluate(p, [i], [t]))
+        realTraces = inputs.map((i) => Recorder.record(f, i)) // TODO: could be optimized
+        if (config.debug) Ansi.Gray("  Selected a subset of " + inputs.length + " inputs.")
 
         var candidates: Data.Expr[] = InputGen.genConstants(realTraces)
         var maxArgs = Util.max(inputs.map((i) => i.length))
@@ -123,10 +125,11 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
     var secondarySearch: SearchResult
     if (config.cleanupIterations > 0) {
-        var cleanupInputs = Random.pickN(inputs, nInputsPerSearch)
         if (config.debug) Ansi.Gray("Starting secondary cleanup search...")
 
-        var cleanupTraces = cleanupInputs.map((i) => Recorder.record(f, i))
+        var cleanupTraces = inputs.map((i) => Recorder.record(f, i))
+        var cleanupInputs = InputGen.selectInputs(inputs, cleanupTraces, (i, t) => Metric.evaluate(p, [i], [t]))
+        cleanupTraces = cleanupInputs.map((i) => Recorder.record(f, i))
 
         var candidates: Data.Expr[] = InputGen.genConstants(cleanupTraces)
         var maxArgs = Util.max(inputs.map((i) => i.length))
@@ -151,11 +154,6 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     } else {
         secondarySearch = SearchResult.Empty
     }
-
-    //print(inputs.all.map((i) => Recorder.record(f, i)).join("\n"))
-    //line()
-    //var f2 = Compile.compile(p)
-    //print(inputs.all.map((i) => Recorder.record(f2, i)).join("\n"))
 
     var result = mainSearch.combine(secondarySearch)
     result.result = p
