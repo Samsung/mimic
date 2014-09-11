@@ -28,6 +28,17 @@ export class Node {
         }
         return res
     }
+    transitiveAnychildren(): Node[] {
+        var res = this.anychildren()
+        var l = res.length;
+        for (var i = 0; i < l; i++) {
+            var cur = res[i];
+            if (typeof cur === "object" && cur != null && "transitiveAnychildren" in  cur) {
+                res = res.concat(cur.transitiveAnychildren())
+            }
+        }
+        return res
+    }
     /* Returns all direct children (that are somehow relevant for equality) */
     anychildren(): any[] {
         Util.assert(false)

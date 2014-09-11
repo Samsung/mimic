@@ -43,7 +43,7 @@ var W_CALL_MISSING = 1
  * metric) and the higher the number, the less similar `p's behavior.
  */
 export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
-    return evaluate2(Compile.compile(p), inputs, realTraces, p.toString().length, finalizing, p)
+    return evaluate2(Compile.compile(p), inputs, realTraces, p.body.transitiveAnychildren().length, finalizing, p)
 }
 export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: Data.Trace[], programLength: number = 10, finalizing: boolean = false, p = null): number {
     var badness = 0
