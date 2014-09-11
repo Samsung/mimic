@@ -135,16 +135,20 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                             news = Ast.makeAssign(field, s.rhs)
                         }
                     } else {
-                        if (s.rhs.type === Data.ExprType.Var && s.lhs.type === Data.ExprType.Var) {
+                        if (s.rhs === null) {
+                            // only a variable declaration -> add an initializer
+                            news = Ast.makeAssign(s.lhs, randomExpr(info), s.isDecl)
+                        } else if (s.rhs.type === Data.ExprType.Var && s.lhs.type === Data.ExprType.Var) {
                             // from code merging
                             return null
-                        }
-                        Util.assert(s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field, () => "unexpected assignment")
-                        var f = <Data.Field>s.rhs
-                        if (maybe()) {
-                            news = Ast.makeAssign(s.lhs, Ast.makeField(f.o, randomExpr(info)), s.isDecl)
                         } else {
-                            news = Ast.makeAssign(s.lhs, Ast.makeField(randomExpr(info, {lhs: true}), f.f), s.isDecl)
+                            Util.assert(s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field, () => "unexpected assignment")
+                            var f = <Data.Field>s.rhs
+                            if (maybe()) {
+                                news = Ast.makeAssign(s.lhs, Ast.makeField(f.o, randomExpr(info)), s.isDecl)
+                            } else {
+                                news = Ast.makeAssign(s.lhs, Ast.makeField(randomExpr(info, {lhs: true}), f.f), s.isDecl)
+                            }
                         }
                     }
                     break

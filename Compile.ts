@@ -53,13 +53,42 @@ function expr(e: Data.TraceExpr) {
  */
 function compileEventList(events: Data.Event[], loop: StructureInference.Proposal = null, trace: Data.Trace = null) {
     var stmts:Data.Stmt[] = []
+
+    /**
+     * Given a body, this method assembles a for loop.
+     */
+    function buildForLoop(bodystmt: Data.Stmt[]): Data.Stmt[] {
+        // extract all variables, so that they can be declared outside of the loop
+        var vars: Data.Var[] = []
+        bodystmt.forEach((n) => {
+            if (n.type === Data.StmtType.Assign) {
+                var ass = <Data.Assign>n
+                if (ass.isDecl) {
+                    // note that we can only modify the assignments because they have not been shared yet
+                    ass.isDecl = false
+                    vars.push(<Data.Var>ass.lhs)
+                }
+            } else if (n.type === Data.StmtType.FuncCall) {
+                var fcall = <Data.FuncCall>n
+                if (fcall.isDecl) {
+                    // note that we can only modify the assignments because they have not been shared yet
+                    fcall.isDecl = false
+                    vars.push(fcall.v)
+                }
+            }
+        })
+        bodystmt.push(new Data.If(new Data.Const(false), new Data.Break(), Data.Seq.Empty))
+        var body = new Data.Seq(bodystmt)
+
+        var res: Data.Stmt[] = vars.map((v) => new Data.Assign(v, null, true))
+        res.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), body))
+        return res
+    }
+
     for (var i = 0; i < events.length; i++) {
         var e = events[i]
         if (loop !== null && loop.loopStart === i) {
-            var bodystmt = compileEventList(events.slice(i, i + loop.loopLength))
-            bodystmt.push(new Data.If(new Data.Const(false), new Data.Break(), Data.Seq.Empty))
-            var body = new Data.Seq(bodystmt)
-            stmts.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), body))
+            stmts = stmts.concat(buildForLoop(compileEventList(events.slice(i, i + loop.loopLength))))
             /*for (var k = 0; k < loop.numIterations; k++) {
                 line()
                 print(events.slice(i+k*loop.loopLength, i+k*loop.loopLength+loop.loopLength).join("\n"))

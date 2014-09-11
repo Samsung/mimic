@@ -583,12 +583,18 @@ export class Assign extends Stmt {
         if (this.isDecl) {
             prefix = "var "
         }
+        if (this.rhs === null) {
+            return prefix + this.lhs.toString()
+        }
         return prefix + this.lhs.toString() + " = " + this.rhs.toString()
     }
     equals(o) {
         return o instanceof Assign && o.lhs.equals(this.lhs) && o.rhs.equals(this.rhs)
     }
     children(): Node[] {
+        if (this.rhs === null) {
+            return [this.lhs]
+        }
         return [this.lhs, this.rhs]
     }
     anychildren(): any[] {
@@ -596,6 +602,9 @@ export class Assign extends Stmt {
         return res
     }
     toSkeleton(): string {
+        if (this.rhs === null) {
+            return this.lhs.toSkeleton()
+        }
         return this.lhs.toSkeleton() + "=" + this.rhs.toSkeleton()
     }
 }
@@ -604,11 +613,15 @@ export class Assign extends Stmt {
  * A function call.
  */
 export class FuncCall extends Stmt {
-    constructor(public v: Var, public f: Expr, public args: Expr[], public recv: Expr = null) {
+    constructor(public v: Var, public f: Expr, public args: Expr[], public recv: Expr = null, public isDecl = true) {
         super(StmtType.FuncCall)
     }
     toString() {
-        var s = "var " + this.v.toString() + " = "
+        var s = ""
+        if (this.isDecl) {
+             s +=  "var "
+        }
+        s += this.v.toString() + " = "
         var rcvArg = this.recv === null ? "global" : this.recv.toString();
         var args = this.args.map((a) => a.toString())
         s += this.f.toString() + ".apply(" + rcvArg + ", [ " + Util.join(args, ", ") + " ])"
