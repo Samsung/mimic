@@ -44,6 +44,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         loop = loops[0]
     }
     if (config.debug) Ansi.Gray("Found " + loops.length + " possible loops.")
+    if (config.debug) Ansi.Gray("Using this loop: " + loop)
 
     if (config.debug) Ansi.Gray("Input categorization...")
     var categories = InputGen.categorize(inputs, traces, loop)
@@ -128,8 +129,11 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         if (config.debug) Ansi.Gray("Starting secondary cleanup search...")
 
         var cleanupTraces = inputs.map((i) => Recorder.record(f, i))
-        var cleanupInputs = InputGen.selectInputs(inputs, cleanupTraces, (i, t) => Metric.evaluate(p, [i], [t]))
+        var cleanupInputs = Random.pickN(inputs, 20) // TODO better strategy
         cleanupTraces = cleanupInputs.map((i) => Recorder.record(f, i))
+
+        if (config.debug) Ansi.Gray("  Using the following inputs:")
+        if (config.debug) Ansi.Gray("  " + cleanupInputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
 
         var candidates: Data.Expr[] = InputGen.genConstants(cleanupTraces)
         var maxArgs = Util.max(inputs.map((i) => i.length))
