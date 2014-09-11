@@ -66,7 +66,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                     iterations++
                     var regex = trace.getSubSkeleton(0, start) + "(" + body + ")*" + trace.getSubSkeleton(start+iterations*len)
                     candidates.push(new Proposal(regex, start, len))
-                    if (start+(iterations+2)*len > tlen || body !== trace.getSubSkeleton(start + iterations*len, len)) {
+                    if (start+(iterations+1)*len > tlen || body !== trace.getSubSkeleton(start + iterations*len, len)) {
                         break
                     }
                 }
