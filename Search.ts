@@ -318,13 +318,12 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
         }
         if (p.body.numberOfStmts() === 0) break;
         var newp = config.randomChange(p)
-
         var newbadness = config.metric(newp)
         if (newbadness < badness) {
             if (config.base.debug > 0) {
                 Ansi.Gray("   improvement at iteration "+Util.pad(i, 5, ' ')+": " +
                     Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
-                print(p)
+                print(newp)
             }
             p = newp
             badness = newbadness
@@ -338,6 +337,11 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
                 }
                 p = newp
                 badness = newbadness
+            }
+            if (newbadness < 1) {
+                //print(badness)
+                //print(newbadness)
+                //print(newp)
             }
         }
 

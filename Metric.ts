@@ -43,15 +43,15 @@ var W_CALL_MISSING = 1
  * metric) and the higher the number, the less similar `p's behavior.
  */
 export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
-    return evaluate2(Compile.compile(p), inputs, realTraces, p.toString().length, finalizing)
+    return evaluate2(Compile.compile(p), inputs, realTraces, p.toString().length, finalizing, p)
 }
-export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: Data.Trace[], programLength: number = 10, finalizing: boolean = false): number {
+export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: Data.Trace[], programLength: number = 10, finalizing: boolean = false, p = null): number {
     var badness = 0
     var code = f
     for (var i = 0; i < inputs.length; i++) {
         var budget = Math.min(50, Math.max(10, 1.1 * realTraces[i].events.length))
         var candidateTrace = Recorder.record(code, inputs[i], budget)
-        var td = traceDistance(realTraces[i], candidateTrace)
+        var td = traceDistance(realTraces[i], candidateTrace, p)
         Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
     }
@@ -67,8 +67,12 @@ export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: 
  * Determine how 'close' two traces are, and return a number describing the closeness.  0 is identical,
  * and the higher, the less similar the traces are.  This is a metric.
  */
-export function traceDistance(a: Data.Trace, b: Data.Trace): number {
+export function traceDistance(a: Data.Trace, b: Data.Trace, p = null): number {
     var debug = false
+
+    if (debug) {
+        print(p)
+    }
 
     var badness = 0
 
@@ -214,10 +218,11 @@ export function traceDistance(a: Data.Trace, b: Data.Trace): number {
                     if (exprEquiv(af, bf)) {
                         Util.assert(aargs.length === bargs.length, () => "different length of argument list")
                         var argbadness = 0
-                        for (var i = 0; i < aargs.length; i++) {
-                            if (!exprEquiv(aargs[i], bargs[i])) {
+                        for (var k = 0; k < aargs.length; k++) {
+                            if (!exprEquiv(aargs[k], bargs[k])) {
                                 // receiver and function matches, but not this argument
-                                argbadness += W_WRONG_PARAM * exprDistance(aargs[i], bargs[i]) / DISTANCE_NORM
+                                argbadness += W_WRONG_PARAM * exprDistance(aargs[k], bargs[k]) / DISTANCE_NORM
+                            } else {
                             }
                         }
                         if (aargs.length > 0) {

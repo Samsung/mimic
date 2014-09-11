@@ -174,7 +174,7 @@ var fs:any = [
     [ // 9
         "Array.prototype.every",
         (a, f) => a.every(f),
-        [[30,10,4,16,3,10], (e) => e%2===0]
+        [[0,5,2,20,3,23], (e) => e < 10]
     ],
 ]
 
@@ -192,34 +192,62 @@ search(f, a)
 
 
 
-/*
-function f2(arg0) {
-    var n2530 = arg0.length
-    var n135126 = n2530
-    if (n2530) {
-        var n2531 = arg0[0]
-        for (var i2535 = 0; i2535 < n2530+-1; i2535 += 1) {
-            var n2532 = arg0[i2535+1]
-            arg0.b = n2532
-        }
-        delete arg0[i2535]
-        arg0[3] = i2535
-        return n2531
-    } else {
-        arg0[0] = 0
-        return undefined
-    }
-}
-//
-//print(Metric.evaluate2(f2, a))
-//print(Metric.evaluate2(f3, a))
 
-var t1 = Recorder.record(f, a0);
+function f2(arg0, arg1) {
+    var n0 = arg0.length
+    for (var i11 = 0; i11 < 3+1; i11 += 1) {
+        var n1 = arg0[i11]
+        var n2 = arg1.apply(undefined, [ n1, i11, arg0 ])
+    }
+    return true
+}
+function f3(arg0, arg1) {
+    var n0 = arg0.length
+    for (var i11 = 0; i11 < 3+1; i11 += 1) {
+        var n1 = arg0[i11]
+        var n2 = arg1.apply(undefined, [ n1, 0, arg0 ])
+    }
+    return true
+}
+
+var k = 0
+var inputs = InputGen.generateInputs(f, a).filter((i) => i[0].length > 4).filter((i) => k++ < 1)
+var ff = (x) => x < 10
+//inputs = [
+//    [[ 1, 1, 0, 0, 1 ], ff,],
+//    [[ 0, 0, 0, 20, 1, 0 ], ff,],
+//    [[ 1, 5, 1, 1, 1, 23 ], ff,],
+//    [[ 1, 1, 0, 20, 3, 23 ], ff,],
+//    [[ 1, 1, 2, 1, 3, 1 ], ff,],
+//    [[ 0, 5, 1, 0, 1, 0 ], ff,],
+//    [[ 0, 5, 1, 0, 1, 1 ], ff,],
+//    [[ 1, 5, 2, 0, 0, 23 ], ff,],
+//    [[ 1, 5, 1, 20, 1, 23 ], ff,],
+//    [[ 0, 1, 0, 1, 1, 1 ], ff,],
+//    [[ 0, 1, 1, 0, 3 ], ff,],
+//    [[ 0, 0, 2, 1, 0, 23 ], ff,],
+//    [[ 1, 0, 2, 0, 0 ], ff,],
+//    [[ 1, 1, 1, 20, 3 ], ff,],
+//    [[ 1, 5, 0, 1, 0, 1 ], ff,],
+//    [[ 1, 5, 0, 20, 0, 1 ], ff,],
+//    [[ 1, 0, 2, 1, 0 ], ff,],
+//    [[ 0, 0, 1, 1, 3, 0 ], ff,],
+//    [[ 0, 1, 2, 1, 3, 1 ], ff,],
+//    [[ 1, 1, 1, 20, 1, 0 ], ff,],
+//]
+var traces = inputs.map((i) => Recorder.record(f, i))
+var t1 = Recorder.record(f, a0)
 print(t1)
-var t2 = Recorder.record(f2, a0);
+var t2 = Recorder.record(f2, a0)
 print(t2)
-print(Metric.traceDistance(t1, t2))
-*/
+var t3 = Recorder.record(f3, a0)
+print(t3)
+log(inputs)
+line()
+print(Metric.evaluate2(f2, inputs, traces))
+line()
+print(Metric.evaluate2(f3, inputs, traces))
+
 
 /*
 var inputs = InputGen.generateInputs(f, a)
