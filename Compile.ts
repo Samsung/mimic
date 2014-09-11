@@ -56,11 +56,9 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
     for (var i = 0; i < events.length; i++) {
         var e = events[i]
         if (loop !== null && loop.loopStart === i) {
-            var stmts = compileEventList(events.slice(i, i + loop.loopLength))
-            print(".")
-            stmts.push(new Data.If(new Data.Const(false), new Data.Break(), Data.Seq.Empty))
-            var body = new Data.Seq(stmts)
-            print(body.toString())
+            var bodystmt = compileEventList(events.slice(i, i + loop.loopLength))
+            bodystmt.push(new Data.If(new Data.Const(false), new Data.Break(), Data.Seq.Empty))
+            var body = new Data.Seq(bodystmt)
             stmts.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), body))
             /*for (var k = 0; k < loop.numIterations; k++) {
                 line()
