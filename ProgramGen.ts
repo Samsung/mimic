@@ -188,7 +188,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     var newExpr = randomExpr(info);
                     var newargs = s.args.slice(0)
                     newargs.splice(idx, 1, newExpr)
-                    news = Ast.makeFuncCall(s.v, s.f, s.r, newargs)
+                    news = Ast.makeFuncCall(s.v, s.f, s.recv, newargs)
                     break
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
