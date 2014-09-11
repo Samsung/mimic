@@ -398,3 +398,7 @@ export function proxifyWithLogger<T>(o: T, tag: string = " ", level: number = 0,
     cache.set(o, p)
     return <T>p
 }
+
+export function all(f, inputs): Data.Trace[] {
+    return inputs.map((i) => record(f, i))
+}

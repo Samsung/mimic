@@ -191,7 +191,16 @@ search(f, a)
 
 
 
+/*
+var inputs = a
+var traces = Recorder.all(f, inputs)
+var loops = StructureInference.infer(traces)
+var categories = InputGen.categorize(inputs, traces, loops[0])
 
+log(categories)*/
+
+
+/*
 function f2(arg0, arg1) {
     var n0 = arg0.length
     for (var i11 = 0; i11 < 3+1; i11 += 1) {
@@ -246,7 +255,7 @@ line()
 print(Metric.evaluate2(f2, inputs, traces))
 line()
 print(Metric.evaluate2(f3, inputs, traces))
-
+*/
 
 /*
 var inputs = InputGen.generateInputs(f, a)
