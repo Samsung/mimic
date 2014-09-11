@@ -420,6 +420,16 @@ export class If extends Stmt {
         super(StmtType.If)
     }
     toString() {
+        if (this.thn.numberOfStmts() === 0) {
+            return "if (" + this.c.toString() + ") {} else {\n" +
+            Util.indent(this.els.toString()) +
+            "\n}"
+        }
+        if (this.els.numberOfStmts() === 0) {
+            return "if (" + this.c.toString() + ") {\n" +
+            Util.indent(this.thn.toString()) +
+            "\n}"
+        }
         return "if (" + this.c.toString() + ") {\n" +
             Util.indent(this.thn.toString()) +
             "\n} else {\n" +

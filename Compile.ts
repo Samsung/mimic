@@ -60,7 +60,7 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
             print(".")
             stmts.push(new Data.If(new Data.Const(false), new Data.Break(), Data.Seq.Empty))
             var body = new Data.Seq(stmts)
-            
+            print(body.toString())
             stmts.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), body))
             /*for (var k = 0; k < loop.numIterations; k++) {
                 line()
