@@ -48,6 +48,7 @@ export enum ExprType {
     Var,
     Const,
     Add,
+    Unary,
 }
 
 /**
@@ -235,6 +236,42 @@ export class Add extends Expr {
     }
     isSafe(args: any[]): boolean {
         return this.a.isSafe(args) && this.b.isSafe(args)
+    }
+}
+
+/**
+ * Unary operation.
+ */
+export class Unary extends Expr {
+    constructor(public op: string, public e: Expr) {
+        super(ExprType.Unary, 1+e.depth)
+        Util.assert(op === "!")
+    }
+    toString(config = {}) {
+        return this.op + this.e.toString(config)
+    }
+    eval(args: any[]): any {
+        return !this.e.eval(args)
+    }
+    equals(o) {
+        return o instanceof Unary && o.e.equals(this.e) && o.op === this.op
+    }
+    children(): Node[] {
+        return [this.e]
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        res.push(this.op)
+        return res
+    }
+    toSkeleton(): string {
+        return this.op + this.e.toSkeleton()
+    }
+    canBeUpdated(args: any[]): boolean {
+        return false
+    }
+    isSafe(args: any[]): boolean {
+        return this.e.isSafe(args)
     }
 }
 

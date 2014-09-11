@@ -244,9 +244,10 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
     var obj = "obj" in args && args.obj === true
     var arr = "arr" in args && args.arr === true
     var num = "num" in args && args.num === true
+    var bool = "bool" in args && args.bool === true
 
     var nonPrimitive = lhs || obj || arr
-    var hasRequirement = lhs || obj || arr || num
+    var hasRequirement = lhs || obj || arr || num || bool
 
     var zeroD = depth === 0
 
@@ -274,6 +275,10 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
         new WeightedPair(nonPrimitive || zeroD ? 0 : 2, () => {
             // random new addition
             return <Data.Expr>Ast.makeAdd(randomExpr(info, {num: true}, depth-1), new Data.Const(maybe() ? 1 : -1))
+        }),
+        new WeightedPair(nonPrimitive || zeroD ? 0 : 1, () => {
+            // random boolean not
+            return <Data.Expr>new Data.Unary("!", randomExpr(info, {bool: true}))
         }),
     ]
     // filter out bad expressions
