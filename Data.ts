@@ -378,6 +378,7 @@ export enum StmtType {
     For,
     Seq,
     FuncCall,
+    Break,
 }
 
 /**
@@ -686,6 +687,31 @@ export class Throw extends Stmt {
     }
     toSkeleton(): string {
         return "throw " + this.rhs.toSkeleton()
+    }
+}
+
+/**
+ * A break statement
+ */
+export class Break extends Stmt {
+    constructor() {
+        super(StmtType.Break)
+    }
+    toString() {
+        return "break"
+    }
+    equals(o) {
+        return o instanceof Break
+    }
+    children(): Node[] {
+        return []
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
+    }
+    toSkeleton(): string {
+        return "break"
     }
 }
 
