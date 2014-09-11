@@ -27,11 +27,10 @@ export class Proposal {
         return this.regex
     }
     getNumIterations(trace: Data.Trace) {
-        var myRe = new RegExp("^([^(]*)(\(.+\)\*)([^(]*)$", "g")
-        var res = myRe.exec(this.regex)
+        var res = /^([^(]*)(\([^)]+\)\*)(.*)$/g.exec(this.regex)
         var pre = res[1].split(";").length - 1
-        var post = res[1].split(";").length - 1
-        var body = res[1].split(";").length - 1
+        var body = res[2].split(";").length - 1
+        var post = res[3].split(";").length - 1
         var total = trace.events.length
         return (total - pre - post) / body
     }
