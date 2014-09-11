@@ -218,3 +218,7 @@ export function join(arr: string[], sep: string) {
     }
     return res
 }
+
+export function exit() {
+    throw "programmer exit"
+}
