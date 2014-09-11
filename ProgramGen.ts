@@ -190,6 +190,8 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     newargs.splice(idx, 1, newExpr)
                     news = Ast.makeFuncCall(s.v, s.f, s.recv, newargs)
                     break
+                case Data.StmtType.Break:
+                    return null // cannot modify breaks
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
                     break
