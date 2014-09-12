@@ -714,10 +714,11 @@ export class FuncCall extends Stmt {
         return res
     }
     toSkeleton(): string {
-        var s = "var " + this.v.toSkeleton() + " = "
-        if (this.recv !== null) {
-            s += this.recv.toSkeleton() + "."
+        var s = ""
+        if (this.isDecl) {
+            s +=  "var "
         }
+        s += this.v.toSkeleton() + " = "
         var rcvArg = this.recv === null ? "null" : this.recv.toSkeleton();
         var args = this.args.map((a) => a.toSkeleton())
         s += this.f.toSkeleton() + ".apply(" + rcvArg + ", [ " + Util.join(args, ", ") + " ])"
