@@ -116,6 +116,31 @@ var fs:any = [
             categories: 2,
         }
     ],
+    [ // 9
+        "Array.prototype.every",
+        (a, f) => a.every(f),
+        [[0,5,2,20,3,23], (e) => e < 10],
+        {
+            categories: 1,
+        }
+    ],
+    [ // 10
+        "Array.prototype.some",
+        (a, f) => a.some(f),
+        [[1,2,3], (e) => e < 10],
+        [[1,2,3], (e) => e > 10],
+        {
+            categories: 1,
+        }
+    ],
+    [ // 11
+        "Array.prototype.forEach",
+        (a, f) => a.forEach(f),
+        [[1,2,3], (e) => 0],
+        {
+            categories: 1,
+        }
+    ],
 ]
 
 function recorder_test(f, a, a0, name, oracle) {
@@ -141,14 +166,12 @@ function compile_test(f, a, a0, name, oracle) {
         var f1 = Compile.compile(p)
         var t1 = Recorder.record(f1, a0)
         var actual = t0.toString({novar: true});
-        if (actual.indexOf("inspect") === -1) {
-            ass.equal(actual, t1.toString({novar:true}))
-        }
+        ass.equal(actual, t1.toString({novar:true}))
     })
 }
 
 function search_test(f, a, a0, name, oracle, k) {
-    if (k >= 8) return // skip loops for now
+    if (k >= 8) return // skip loop tests for now
     it("search should succeed for " + name, () => {
         var config = new Search.SearchConfig({
             iterations: 5000,
