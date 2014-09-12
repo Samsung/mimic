@@ -521,7 +521,7 @@ line()
  newRef.prototype = original.prototype; // Keep a reference to the original prototype to ensure instances of the patch appear as instances of the original
  newRef.prototype.constructor = newRef; // Ensure the constructor of patched instances is the patched constructor
 
- Object.getOwnPropertyNames(original).forEach(function (property) { // Add any "static" properties of the original constructor to the patched one
+ Object.getOwnPropertyNames(original).forEach(function (property) { // Binary any "static" properties of the original constructor to the patched one
  if (!has.call(Function, property)) { // Don't include static properties of Function since the patched constructor will already have them
  newRef[property] = original[property];
  }

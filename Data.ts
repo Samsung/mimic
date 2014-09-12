@@ -58,7 +58,7 @@ export enum ExprType {
     Arg,
     Var,
     Const,
-    Add,
+    Binary,
     Unary,
 }
 
@@ -211,36 +211,46 @@ export class Field extends Prestate {
 }
 
 /**
- * An addition.
+ * A binary expression.
  */
-export class Add extends Expr {
-    constructor(public a: Expr, public b: Expr) {
-        super(ExprType.Add, 1+Math.max(a.depth, b.depth))
+export class Binary extends Expr {
+    constructor(public a: Expr, public op: string, public b: Expr) {
+        super(ExprType.Binary, 1+Math.max(a.depth, b.depth))
+        Util.assert(op === "+" || op === "==")
     }
     toString(config = {}) {
-        if (this.b.type === ExprType.Const) {
+        if (this.b.type === ExprType.Const && this.op === "+") {
             var c = <Const>this.b
             if (c.val < 0) {
                 return this.a.toString(config) + "-" + (new Const(-c.val)).toString(config)
             }
         }
-        return this.a.toString(config) + "+" + this.b.toString(config)
+        return this.a.toString(config) + this.op + this.b.toString(config)
     }
     eval(args: any[]): any {
-        return this.a.eval(args)+this.b.eval(args)
+        switch (this.op) {
+            case "+":
+                return this.a.eval(args)+this.b.eval(args)
+            case "==":
+                return this.a.eval(args) == this.b.eval(args)
+            default:
+                Util.assert(false)
+                return false
+        }
     }
     equals(o) {
-        return o instanceof Add && o.a.equals(this.a) && o.b.equals(this.b)
+        return o instanceof Binary && o.a.equals(this.a) && o.b.equals(this.b) && o.op === this.op
     }
     children(): Node[] {
         return [this.a, this.b]
     }
     anychildren(): any[] {
         var res: any[] = this.children()
+        res.push(this.op)
         return res
     }
     toSkeleton(): string {
-        return this.a.toSkeleton() + "+" + this.b.toSkeleton()
+        return this.a.toSkeleton() + this.op + this.b.toSkeleton()
     }
     canBeUpdated(args: any[]): boolean {
         return false

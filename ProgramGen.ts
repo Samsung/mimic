@@ -35,11 +35,11 @@ class MaybeAstFactory {
         }
         return new Data.Field(a, b)
     }
-    static makeAdd(a: Data.Expr, b: Data.Expr): Data.Add {
+    static makeBinary(a: Data.Expr, op: string, b: Data.Expr): Data.Binary {
         if (a === null || b === null) {
             return null
         }
-        return new Data.Add(a, b)
+        return new Data.Binary(a, op, b)
     }
     static makeDeleteProp(a: Data.Expr, b: Data.Expr): Data.DeleteProp {
         if (a === null || b === null) {
@@ -274,7 +274,11 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 2, () => {
             // random new addition
-            return <Data.Expr>Ast.makeAdd(randomExpr(info, {num: true}, depth-1), new Data.Const(maybe() ? 1 : -1))
+            return <Data.Expr>Ast.makeBinary(randomExpr(info, {num: true}, depth-1), "+", new Data.Const(maybe() ? 1 : -1))
+        }),
+        new WeightedPair(bool ? 1 : 0, () => {
+            // random new comparison
+            return <Data.Expr>Ast.makeBinary(randomExpr(info, {}, depth-1), "==", randomExpr(info, {}, depth-1))
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 1, () => {
             // random boolean not
