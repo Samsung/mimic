@@ -115,7 +115,7 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
                 if (ev.receiver !== null) {
                     recv = expr(ev.receiver)
                 }
-                stmts.push(new Data.FuncCall(ev.variable, expr(ev.target), ev.args.map(expr), recv))
+                stmts.push(new Data.FuncCall(ev.variable, expr(ev.target), ev.args.map(expr), recv, true))
                 break
             case Data.EventKind.EDeleteProperty:
                 ev = <Data.EDeleteProperty>e

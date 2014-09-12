@@ -671,7 +671,7 @@ export class Assign extends Stmt {
  * A function call.
  */
 export class FuncCall extends Stmt {
-    constructor(public v: Var, public f: Expr, public args: Expr[], public recv: Expr = null, public isDecl = true) {
+    constructor(public v: Var, public f: Expr, public args: Expr[], public recv: Expr, public isDecl: boolean) {
         super(StmtType.FuncCall)
     }
     toString() {

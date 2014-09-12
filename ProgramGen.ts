@@ -53,11 +53,11 @@ class MaybeAstFactory {
         }
         return new Data.Assign(a, b, isDecl)
     }
-    static makeFuncCall(v: Data.Var, f: Data.Expr, r: Data.Expr, args: Data.Expr[]): Data.FuncCall {
+    static makeFuncCall(v: Data.Var, f: Data.Expr, r: Data.Expr, args: Data.Expr[], isDecl: boolean): Data.FuncCall {
         if (v === null || f === null || args.some((a) => a === null)) {
             return null
         }
-        return new Data.FuncCall(v, f, args, r)
+        return new Data.FuncCall(v, f, args, r, isDecl)
     }
     static makeReturn(a: Data.Expr): Data.Return {
         if (a === null) {
@@ -203,7 +203,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     var newExpr = randomExpr(info);
                     var newargs = s.args.slice(0)
                     newargs.splice(idx, 1, newExpr)
-                    news = Ast.makeFuncCall(s.v, s.f, s.recv, newargs)
+                    news = Ast.makeFuncCall(s.v, s.f, s.recv, newargs, s.isDecl)
                     break
                 case Data.StmtType.Break:
                     return null // cannot modify breaks
