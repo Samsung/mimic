@@ -188,7 +188,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     break
                 case Data.StmtType.If:
                     s = <Data.If>ss
-                    news = Ast.makeIf(randomExpr(info, {num: true}), s.thn, s.els)
+                    news = Ast.makeIf(randomExpr(info, {num: true, bool: true}), s.thn, s.els)
                     break
                 case Data.StmtType.For:
                     s = <Data.For>ss
