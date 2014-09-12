@@ -148,6 +148,10 @@ function proxify<T>(state: State, o: T): T {
 
     var Handler = {
         get: function(target, name: string, receiver) {
+            if (name === "inspect") {
+                // TODO: why is this happening? improve/fix
+                return undefined
+            }
             var ttarget = common(target)
             if (state.doRecord) {
                 if (!(name in target) || target.hasOwnProperty(name)) {
