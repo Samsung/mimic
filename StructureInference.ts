@@ -90,8 +90,8 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
         }).length
         return res
     }
-    // sort by number of traces it matches, and then by the length of the regular expression
     candidates.map((c) => howMany(c)) // initialize c.worksFor
-    Util.sortBy(candidates, [(a) => -howMany(a), (a) => a.regex.length])
+    // sort by number of traces it matches, and then by the length of the regular expression, and then by having the loop as late as possible
+    Util.sortBy(candidates, [(a) => -howMany(a), (a) => a.regex.length, (a) => -a.regex.indexOf("(")])
     return candidates
 }
