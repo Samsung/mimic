@@ -130,7 +130,7 @@ export function clone<T>(obj: T): T {
 
     // Handle Object
     if (obj instanceof Object) {
-        var copy3 = {};
+        var copy3 = Object.create(obj.__proto__);
         for (var attr in obj) {
             if (obj.hasOwnProperty(attr)) copy3[attr] = clone(obj[attr]);
         }
