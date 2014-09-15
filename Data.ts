@@ -154,10 +154,10 @@ export class Field extends Prestate {
         if (this.f.type === ExprType.Const) {
             var c = <Const>this.f
             if (typeof c.val === "string") {
-                if (/[a-zA-Z_][_a-zA-Z0-9]*/.test(c.val)) {
+                if (/^[a-zA-Z_][_a-zA-Z0-9]*$/.test(c.val)) {
                     return this.o.toString(config) + "." + c.val
                 }
-                if (/[0-9]+/.test(c.val)) {
+                if (/^[0-9]+$/.test(c.val)) {
                     return this.o.toString(config) + "[" + c.val + "]"
                 }
             }
@@ -202,7 +202,7 @@ export class Field extends Prestate {
     }
     private canHaveFields(oVal: any) {
         var type = typeof oVal;
-        return type === 'object' || type === 'function'
+        return oVal !== null && (type === 'object' || type === 'function')
     }
     getBase() {
         Util.assert(this.o instanceof Prestate)
