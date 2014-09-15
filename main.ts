@@ -197,6 +197,14 @@ var fs:any = [
         (a, f, z) => a.reduce(f, z),
         [[1,2,3], (previousValue, currentValue, index, array) => previousValue + currentValue, 0],
     ],
+    [ // 14
+        "LinkedList.itemAt",
+        (l: List.LinkedList, i) => l.itemAt(i),
+        [List.LinkedList.make([1,2,3,4,5]), 3],
+        [List.LinkedList.make([1,2,3]), 3],
+        [List.LinkedList.make([1,2]), 3],
+        [List.LinkedList.make([]), 3],
+    ],
 ]
 
 
@@ -211,6 +219,15 @@ search(f, a)
 
 
 
+
+
+/*
+var aa = []
+aa[2] = 10
+aa[3] = 2
+aa[10] = 10
+Recorder.proxifyWithLogger(aa).every((a) => true)
+*/
 
 
 /*

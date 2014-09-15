@@ -40,6 +40,8 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     var loops = StructureInference.infer(traces)
     var loop = null
     if (loops.length > 0) {
+        var i = 0
+        print(loops.filter((x) => i++ < 4).join("\n"))
         // for now, only use first loop
         loop = loops[0]
     }
