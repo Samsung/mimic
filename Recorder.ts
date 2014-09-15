@@ -27,7 +27,7 @@ var print = Util.print
  * writes) in local variables.  This is used to make program generation easier.
  */
 export function record(f: (..._: any[]) => any, args: any[], budget: number = 100): Data.Trace {
-    var state = new State(budget)
+    state = new State(budget)
     var trace = state.trace
 
     Data.Var._count = 0
@@ -37,7 +37,7 @@ export function record(f: (..._: any[]) => any, args: any[], budget: number = 10
     // instrument args
     var iargs = []
     for (var i = 0; i < args.length; i++) {
-        iargs[i] = proxify(state, args[i])
+        iargs[i] = proxify(args[i])
         var ai = new Data.Argument(i)
         state.addCurState(iargs[i], ai)
         state.addPreState(iargs[i], [ai])
@@ -69,6 +69,8 @@ export function record(f: (..._: any[]) => any, args: any[], budget: number = 10
 
     trace.setPrestates(state.preStates)
     trace.setConstants(state.constants)
+
+    state = null
 
     return trace
 }
@@ -126,160 +128,161 @@ class State {
     }
 }
 
-function proxify<T>(state: State, o: T): T {
+var state: State = null
+var common = function (target: Object): Data.TraceExpr {
+    Util.assert(state.object2proxy.has(target), () => "target not proxied")
+    var res = state.texpr(state.object2proxy.get(target))
+    Util.assert(res !== undefined, () => "target TraceExpr undefined")
+    return res
+}
+var ignorec = (a: any) => print(Ansi.lightgrey(a))
+ignorec = (a: any) => a
+function makeFieldName(target: any, name: string) {
+    if (Array.isArray(target) && Util.isInt(name)) {
+        return new Data.Const(parseInt(name, 10))
+    }
+    return new Data.Const(name)
+}
+var Handler = {
+    get: function(target, name: string, receiver) {
+        if (name === "inspect") {
+            // TODO: why is this happening? improve/fix
+            return undefined
+        }
+        var ttarget = common(target)
+        if (state.doRecord) {
+            if (!(name in target) || target.hasOwnProperty(name)) {
+                var val = target[name];
+                var pval = proxify(val)
+
+                if (state.doRecord) {
+                    var event = new Data.EGet(ttarget, state.texpr(name))
+                    state.record(event)
+                    state.addCurState(pval, event.variable)
+                    var fieldId = new Data.Const(name)
+                    state.addPreState(pval, ttarget.preState.map((t) => new Data.Field(t, fieldId)))
+                }
+
+                return pval
+            } else {
+                // TODO handle properties that are somewhere else
+                ignorec("ignoring access to '" + name + "'.")
+            }
+        }
+        return Reflect.get(target, name, receiver);
+    },
+    set: function(target, name: string, value, receiver) {
+        var ttarget = common(target)
+        var res
+        if (state.doRecord) {
+
+            var tval = state.texpr(value)
+            var event = new Data.ESet(ttarget, state.texpr(name), tval)
+            state.record(event)
+            res = Reflect.set(target, name, value, receiver)
+            state.addCurState(res, event.variable)
+        } else {
+            res = Reflect.set(target, name, value, receiver)
+        }
+        return res
+    },
+    has: function(target, name: string) {
+        var ttarget = common(target)
+        ignorec(".. unhandled call to has")
+        return Reflect.has(target, name);
+    },
+    apply: function(target, receiver, args) {
+        var ttarget = common(target)
+        var result
+        if (state.doRecord) {
+            var targs = args.map((a) => state.texpr(a))
+            var recv = null
+            if (receiver !== global) {
+                recv = state.texpr(receiver)
+            }
+            var event = new Data.EApply(ttarget, recv, targs)
+            state.record(event)
+            var prevDoRecord = state.doRecord
+            state.doRecord = false
+            result = Reflect.apply(target, receiver, args)
+            state.doRecord = prevDoRecord
+            state.addCurState(result, event.variable)
+        } else {
+            result = Reflect.apply(target, receiver, args)
+        }
+        return result
+    },
+    construct: function(target, args) {
+        ignorec(".. unhandled call to construct")
+        var ttarget = common(target)
+        return Reflect.construct(target, args);
+    },
+    getOwnPropertyDescriptor: function(target, name: string) {
+        ignorec(".. unhandled call to getOwnPropertyDescriptor for " + name + " on " + Util.inspect(target))
+        var ttarget = common(target)
+        return Reflect.getOwnPropertyDescriptor(target, name);
+    },
+    defineProperty: function(target, name: string, desc) {
+        var ttarget = common(target)
+        if (state.doRecord) {
+            if ("value" in desc) {
+                // TODO
+                ignorec(".. unhandled call to defineProperty (ignore for now)")
+            } else {
+                ignorec(".. unhandled call to defineProperty (unhandled type of descriptor)")
+            }
+        }
+        return Reflect.defineProperty(target, name, desc);
+    },
+    getOwnPropertyNames: function(target) {
+        ignorec(".. unhandled call to getOwnPropertyNames")
+        var ttarget = common(target)
+        return Reflect.getOwnPropertyNames(target);
+    },
+    getPrototypeOf: function(target) {
+        ignorec(".. unhandled call to getPrototypeOf")
+        var ttarget = common(target)
+        return Reflect.getPrototypeOf(target);
+    },
+    setPrototypeOf: function(target, newProto) {
+        ignorec(".. unhandled call to setPrototypeOf")
+        var ttarget = common(target)
+        return Reflect.setPrototypeOf(target, newProto);
+    },
+    deleteProperty: function(target, name: string) {
+        var ttarget = common(target)
+        if (state.doRecord) {
+            state.record(new Data.EDeleteProperty(ttarget, state.texpr(name)))
+        }
+        return Reflect.deleteProperty(target, name);
+    },
+    enumerate: function(target) {
+        ignorec(".. unhandled call to enumerate")
+        var ttarget = common(target)
+        return Reflect.enumerate(target);
+    },
+    preventExtensions: function(target) {
+        ignorec(".. unhandled call to preventExtensions")
+        var ttarget = common(target)
+        return Reflect.preventExtensions(target);
+    },
+    isExtensible: function(target) {
+        ignorec(".. unhandled call to isExtensible on "+Util.inspect(target))
+        var ttarget = common(target)
+        return Reflect.isExtensible(target);
+    },
+    ownKeys: function(target) {
+        ignorec(".. unhandled call to ownKeys")
+        var ttarget = common(target)
+        return Reflect.ownKeys(target);
+    }
+}
+
+function proxify<T>(o: T): T {
     if (Util.isPrimitive(o)) return o
     if (state.object2proxy.has(o)) return <T>state.object2proxy.get(o)
     if (state.proxy2object.has(o)) return o
-    var common = function (target: Object): Data.TraceExpr {
-        Util.assert(state.object2proxy.has(target), () => "target not proxied")
-        var res = state.texpr(state.object2proxy.get(target))
-        Util.assert(res !== undefined, () => "target TraceExpr undefined")
-        return res
-    }
-    var ignorec = (a: any) => print(Ansi.lightgrey(a))
-    ignorec = (a: any) => a
 
-    function makeFieldName(target: any, name: string) {
-        if (Array.isArray(target) && Util.isInt(name)) {
-            return new Data.Const(parseInt(name, 10))
-        }
-        return new Data.Const(name)
-    }
-
-    var Handler = {
-        get: function(target, name: string, receiver) {
-            if (name === "inspect") {
-                // TODO: why is this happening? improve/fix
-                return undefined
-            }
-            var ttarget = common(target)
-            if (state.doRecord) {
-                if (!(name in target) || target.hasOwnProperty(name)) {
-                    var val = target[name];
-                    var pval = proxify(state, val)
-
-                    if (state.doRecord) {
-                        var event = new Data.EGet(ttarget, state.texpr(name))
-                        state.record(event)
-                        state.addCurState(pval, event.variable)
-                        var fieldId = new Data.Const(name)
-                        state.addPreState(pval, ttarget.preState.map((t) => new Data.Field(t, fieldId)))
-                    }
-
-                    return pval
-                } else {
-                    // TODO handle properties that are somewhere else
-                    ignorec("ignoring access to '" + name + "'.")
-                }
-            }
-            return Reflect.get(target, name, receiver);
-        },
-        set: function(target, name: string, value, receiver) {
-            var ttarget = common(target)
-            var res
-            if (state.doRecord) {
-
-                var tval = state.texpr(value)
-                var event = new Data.ESet(ttarget, state.texpr(name), tval)
-                state.record(event)
-                res = Reflect.set(target, name, value, receiver)
-                state.addCurState(res, event.variable)
-            } else {
-                res = Reflect.set(target, name, value, receiver)
-            }
-            return res
-        },
-        has: function(target, name: string) {
-            var ttarget = common(target)
-            ignorec(".. unhandled call to has")
-            return Reflect.has(target, name);
-        },
-        apply: function(target, receiver, args) {
-            var ttarget = common(target)
-            var result
-            if (state.doRecord) {
-                var targs = args.map((a) => state.texpr(a))
-                var recv = null
-                if (receiver !== global) {
-                    recv = state.texpr(receiver)
-                }
-                var event = new Data.EApply(ttarget, recv, targs)
-                state.record(event)
-                var prevDoRecord = state.doRecord
-                state.doRecord = false
-                result = Reflect.apply(target, receiver, args)
-                state.doRecord = prevDoRecord
-                state.addCurState(result, event.variable)
-            } else {
-                result = Reflect.apply(target, receiver, args)
-            }
-            return result
-        },
-        construct: function(target, args) {
-            ignorec(".. unhandled call to construct")
-            var ttarget = common(target)
-            return Reflect.construct(target, args);
-        },
-        getOwnPropertyDescriptor: function(target, name: string) {
-            ignorec(".. unhandled call to getOwnPropertyDescriptor for " + name + " on " + Util.inspect(target))
-            var ttarget = common(target)
-            return Reflect.getOwnPropertyDescriptor(target, name);
-        },
-        defineProperty: function(target, name: string, desc) {
-            var ttarget = common(target)
-            if (state.doRecord) {
-                if ("value" in desc) {
-                    // TODO
-                    ignorec(".. unhandled call to defineProperty (ignore for now)")
-                } else {
-                    ignorec(".. unhandled call to defineProperty (unhandled type of descriptor)")
-                }
-            }
-            return Reflect.defineProperty(target, name, desc);
-        },
-        getOwnPropertyNames: function(target) {
-            ignorec(".. unhandled call to getOwnPropertyNames")
-            var ttarget = common(target)
-            return Reflect.getOwnPropertyNames(target);
-        },
-        getPrototypeOf: function(target) {
-            ignorec(".. unhandled call to getPrototypeOf")
-            var ttarget = common(target)
-            return Reflect.getPrototypeOf(target);
-        },
-        setPrototypeOf: function(target, newProto) {
-            ignorec(".. unhandled call to setPrototypeOf")
-            var ttarget = common(target)
-            return Reflect.setPrototypeOf(target, newProto);
-        },
-        deleteProperty: function(target, name: string) {
-            var ttarget = common(target)
-            if (state.doRecord) {
-                state.record(new Data.EDeleteProperty(ttarget, state.texpr(name)))
-            }
-            return Reflect.deleteProperty(target, name);
-        },
-        enumerate: function(target) {
-            ignorec(".. unhandled call to enumerate")
-            var ttarget = common(target)
-            return Reflect.enumerate(target);
-        },
-        preventExtensions: function(target) {
-            ignorec(".. unhandled call to preventExtensions")
-            var ttarget = common(target)
-            return Reflect.preventExtensions(target);
-        },
-        isExtensible: function(target) {
-            ignorec(".. unhandled call to isExtensible on "+Util.inspect(target))
-            var ttarget = common(target)
-            return Reflect.isExtensible(target);
-        },
-        ownKeys: function(target) {
-            ignorec(".. unhandled call to ownKeys")
-            var ttarget = common(target)
-            return Reflect.ownKeys(target);
-        }
-    }
     var p = Proxy(o, Handler)
     state.proxy2object.set(p, o)
     state.object2proxy.set(o, p)
@@ -290,6 +293,8 @@ function proxify<T>(state: State, o: T): T {
  * Proxify the object `o', and log all behavior (in addition to actually performing the actions).
  */
 export function proxifyWithLogger<T>(o: T, tag: string = " ", level: number = 0, cache: WeakMap<any, any> = new WeakMap<any, any>()): T {
+    var debug = false
+    if (Util.isPrimitive(o)) return o
     if (cache.has(o)) {
         return cache.get(o)
     }
@@ -302,7 +307,9 @@ export function proxifyWithLogger<T>(o: T, tag: string = " ", level: number = 0,
         return s
     }
     var recurse = (o) => proxifyWithLogger(o, tag, level+1, cache)
-    var logaccess = (a: any) => print(Ansi.lightgrey(a))
+    var logaccess = (a: any) => {
+        if (debug) print(Ansi.lightgrey(a))
+    }
     var Handler = {
         get: function(target, name: string, receiver) {
             var value = Reflect.get(target, name, receiver);
@@ -402,6 +409,43 @@ export function proxifyWithLogger<T>(o: T, tag: string = " ", level: number = 0,
     cache.set(o, p)
     return <T>p
 }
+/*
+var Handler = {
+    get: function(target, name: string, receiver) {
+    },
+    set: function(target, name: string, value, receiver) {
+    },
+    has: function(target, name: string) {
+    },
+    apply: function(target, receiver, args) {
+    },
+    construct: function(target, args) {
+    },
+    getOwnPropertyDescriptor: function(target, name: string) {
+    },
+    defineProperty: function(target, name: string, desc) {
+    },
+    getOwnPropertyNames: function(target) {
+    },
+    getPrototypeOf: function(target) {
+    },
+    setPrototypeOf: function(target, newProto) {
+    },
+    deleteProperty: function(target, name: string) {
+    },
+    enumerate: function(target) {
+    },
+    preventExtensions: function(target) {
+    },
+    isExtensible: function(target) {
+    },
+    ownKeys: function(target) {
+    }
+}
+export function proxifyWithLogger2<T>(o: T): T {
+    var p = Proxy(o, Handler)
+    return <T>p
+}*/
 
 export function all(f, inputs): Data.Trace[] {
     return inputs.map((i) => record(f, i))
