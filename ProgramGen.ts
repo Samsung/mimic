@@ -268,7 +268,7 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
             if (vs.length === 0) return null
             return <Data.Expr>randArr(vs)
         }),
-        new WeightedPair(zeroD ? 0 : 3, () => {
+        new WeightedPair(zeroD ? 0 : 0/*3*/, () => {
             // random new field
             return <Data.Expr>Ast.makeField(randomExpr(info, {obj: true}, depth-1), randomExpr(info, {}, depth-1))
         }),
