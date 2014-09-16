@@ -15,9 +15,13 @@
     "typescript": "^1.0.1",
     "util": "^0.10.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "grunt-cli": "~0.1.13",
+    "grunt-typescript": "~0.3.6",
+    "grunt-simple-mocha": "~0.4.0"
+  },
   "scripts": {
-    "test": "./runtests.sh"
+    "test": "./runtest.sh"
   },
   "author": "Stefan Heule"
 }
