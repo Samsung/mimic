@@ -145,7 +145,8 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                             if (s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field) {
                                 var f = <Data.Field>s.rhs
                                 if (maybe()) {
-                                    news = Ast.makeAssign(s.lhs, Ast.makeField(f.o, randomExpr(info)), s.isDecl)
+                                    var exp = randomExpr(info)
+                                    news = Ast.makeAssign(s.lhs, Ast.makeField(f.o, exp), s.isDecl)
                                 } else {
                                     news = Ast.makeAssign(s.lhs, Ast.makeField(randomExpr(info, {lhs: true}), f.f), s.isDecl)
                                 }
@@ -193,7 +194,6 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                 case Data.StmtType.For:
                     s = <Data.For>ss
                     var newEnd = randomExpr(info, {num: true})
-                    //newEnd = Ast.makeField(new Data.Argument(0), new Data.Const("length"))
                     news = Ast.makeFor(s.variable, s.start, newEnd, s.inc, s.body)
                     break
                 case Data.StmtType.FuncCall:

@@ -214,75 +214,61 @@ var f = fs[i][1]
 var a = fs[i].slice(2)
 var a0 = a[0]
 
-//howMany(f, a, 20, [1500, 0])
-search(f, a)
+howMany(f, a, 20, [5000, 0])
+//search(f, a)
 
 
 
 
 
-/*
-var aa = []
-aa[2] = 10
-aa[3] = 2
-aa[10] = 10
-Recorder.proxifyWithLogger(aa).every((a) => true)
-*/
 
-
-/*
-var inputs = a
-var traces = Recorder.all(f, inputs)
-var loops = StructureInference.infer(traces)
-var categories = InputGen.categorize(inputs, traces, loops[0])
-
-log(categories)*/
-
-
-/*
 function f2(arg0, arg1) {
     var n0 = arg0.length
-    for (var i11 = 0; i11 < 3+1; i11 += 1) {
-        var n1 = arg0[i11]
-        var n2 = arg1.apply(undefined, [ n1, i11, arg0 ])
+    var n1
+    var n2
+    for (var i9 = 0; i9 < n0; i9 += 1) {
+        n1 = arg0[i9]
+        n2 = arg1.apply(undefined, [ 0-1+1, i9, arg0 ])
+        if (false) {
+            break
+        }
     }
-    return true
+    return !n1
 }
 function f3(arg0, arg1) {
     var n0 = arg0.length
-    for (var i11 = 0; i11 < 3+1; i11 += 1) {
-        var n1 = arg0[i11]
-        var n2 = arg1.apply(undefined, [ n1, 0, arg0 ])
+    var n1
+    var n2
+    for (var i9 = 0; i9 < n0; i9 += 1) {
+        n1 = arg0[i9-1]
+        n2 = arg1.apply(undefined, [ 0-1+1, i9, arg0 ])
+        if (false) {
+            break
+        }
     }
-    return true
+    return !n1
 }
 
 var k = 0
 var inputs = InputGen.generateInputs(f, a).filter((i) => i[0].length > 4).filter((i) => k++ < 1)
 var ff = (x) => x < 10
-//inputs = [
-//    [[ 1, 1, 0, 0, 1 ], ff,],
-//    [[ 0, 0, 0, 20, 1, 0 ], ff,],
-//    [[ 1, 5, 1, 1, 1, 23 ], ff,],
-//    [[ 1, 1, 0, 20, 3, 23 ], ff,],
-//    [[ 1, 1, 2, 1, 3, 1 ], ff,],
-//    [[ 0, 5, 1, 0, 1, 0 ], ff,],
-//    [[ 0, 5, 1, 0, 1, 1 ], ff,],
-//    [[ 1, 5, 2, 0, 0, 23 ], ff,],
-//    [[ 1, 5, 1, 20, 1, 23 ], ff,],
-//    [[ 0, 1, 0, 1, 1, 1 ], ff,],
-//    [[ 0, 1, 1, 0, 3 ], ff,],
-//    [[ 0, 0, 2, 1, 0, 23 ], ff,],
-//    [[ 1, 0, 2, 0, 0 ], ff,],
-//    [[ 1, 1, 1, 20, 3 ], ff,],
-//    [[ 1, 5, 0, 1, 0, 1 ], ff,],
-//    [[ 1, 5, 0, 20, 0, 1 ], ff,],
-//    [[ 1, 0, 2, 1, 0 ], ff,],
-//    [[ 0, 0, 1, 1, 3, 0 ], ff,],
-//    [[ 0, 1, 2, 1, 3, 1 ], ff,],
-//    [[ 1, 1, 1, 20, 1, 0 ], ff,],
-//]
+inputs = [
+    [[ 1, 1, 0, 0, 1 ], ff,],
+    [[ 0, 0, 0, 20, 1, 0 ], ff,],
+    [[ 1, 5, 1, 1, 1, 23 ], ff,],
+    [[ 1, 1, 0, 20, 3, 23 ], ff,],
+    [[ 1, 1, 2, 1, 3, 1 ], ff,],
+    [[ 0, 5, 1, 0, 1, 0 ], ff,],
+    [[], ff,],
+    [[], ff,],
+    [[ 1], ff,],
+    [[ 0 ], ff,],
+    [[ 0, 1, 1, 0, 3 ], ff,],
+]
 var traces = inputs.map((i) => Recorder.record(f, i))
+var traces2 = inputs.map((i) => Recorder.record(f2, i))
+var traces3 = inputs.map((i) => Recorder.record(f3, i))
+a0 = inputs[0]
 var t1 = Recorder.record(f, a0)
 print(t1)
 var t2 = Recorder.record(f2, a0)
@@ -294,7 +280,36 @@ line()
 print(Metric.evaluate2(f2, inputs, traces))
 line()
 print(Metric.evaluate2(f3, inputs, traces))
-*/
+
+line()
+for (var k = 0; k < inputs.length; k++) {
+    print(Metric.traceDistance(traces[k], traces2[k]))
+}
+print(".")
+for (var k = 0; k < inputs.length; k++) {
+    print(Metric.traceDistance(traces[k], traces3[k]))
+}
+
+
+
+/*
+ var aa = []
+ aa[2] = 10
+ aa[3] = 2
+ aa[10] = 10
+ Recorder.proxifyWithLogger(aa).every((a) => true)
+ */
+
+
+/*
+ var inputs = a
+ var traces = Recorder.all(f, inputs)
+ var loops = StructureInference.infer(traces)
+ var categories = InputGen.categorize(inputs, traces, loops[0])
+
+ log(categories)*/
+
+
 
 /*
 var inputs = InputGen.generateInputs(f, a)
