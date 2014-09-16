@@ -78,16 +78,14 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
             cleanupIterations: max[1],
             debug: 0,
         })
-        if (verbose) {
-            if (res.score === 0) {
-                success += 1
-                nit.push(res.iterations)
-                print(Ansi.green("✓ ") + Ansi.lightgrey("successful in " + res.iterations + " iterations"))
-            } else {
-                Gray(Ansi.red("x ") + Ansi.lightgrey("no success in " + res.iterations + " iterations"))
-            }
-            Gray(Util.indent(res.getStats()))
+        if (res.score === 0) {
+            success += 1
+            nit.push(res.iterations)
+            if (verbose) print(Ansi.green("✓ ") + Ansi.lightgrey("successful in " + res.iterations + " iterations"))
+        } else {
+            if (verbose) Gray(Ansi.red("x ") + Ansi.lightgrey("no success in " + res.iterations + " iterations"))
         }
+        if (verbose) Gray(Util.indent(res.getStats()))
     }
 
     print("Tried " + n + " searches, with " + success + " successful ones.")
@@ -217,7 +215,7 @@ var f = fs[i][1]
 var a = fs[i].slice(2)
 var a0 = a[0]
 
-howMany(f, a, 10, [1300, 0])
+howMany(f, a, 10, [2000, 0])
 //search(f, a)
 
 
