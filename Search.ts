@@ -41,7 +41,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     var loop = null
     if (loops.length > 0) {
         var i = 0
-        print(loops.filter((x) => i++ < 4).join("\n"))
+        if (config.debug) print(loops.filter((x) => i++ < 4).join("\n"))
         // for now, only use first loop
         loop = loops[0]
     }
@@ -332,10 +332,11 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
                     Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
                 print(newp)
             }
+            Util.assert(p.toString() != newp.toString())
             p = newp
             badness = newbadness
         } else {
-            var W_BETA = 5
+            var W_BETA = 20
             var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
             if (maybe(alpha)) {
                 if (config.base.debug > 0) {
@@ -343,6 +344,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
                         Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
                     Ansi.Green(newp.toString())
                 }
+                //Util.assert(p.toString() != newp.toString(), () => ".")
                 p = newp
                 badness = newbadness
             }
