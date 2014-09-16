@@ -496,6 +496,36 @@ line()
 
 
 
+/*
+var aaa = [1,2,3,1,1,1,1,1,1,1,11,1,1,1,1,1,1,1,1,11,1,1,1,1,1,1,1]
+var start = Util.start()
+for (var j = 0; j < 1000000; j++) {
+    Recorder.proxifyWithLogger2(aaa)
+    if (j % 10000 === 0) {
+        print("Time: " + Util.stop(start) + ", iteration: " + j)
+    }
+}
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
