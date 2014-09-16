@@ -68,23 +68,26 @@ run(f2, [{g: {}}])
 
 
 function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
+    var verbose = false
     var nit = []
     var success = 0
     for (var i = 0; i < n; i++) {
-        Gray("Iteration " + (i+1) + " of " + n + "...")
+        if (verbose) Gray("Iteration " + (i+1) + " of " + n + "...")
         var res = Search.search(f, a, {
             iterations: max[0],
             cleanupIterations: max[1],
             debug: 0,
         })
-        if (res.score === 0) {
-            success += 1
-            nit.push(res.iterations)
-            Gray("  successful in " + res.iterations + " iterations")
-        } else {
-            Gray("  no success in " + res.iterations + " iterations")
+        if (verbose) {
+            if (res.score === 0) {
+                success += 1
+                nit.push(res.iterations)
+                print(Ansi.green("✓ ") + Ansi.lightgrey("successful in " + res.iterations + " iterations"))
+            } else {
+                Gray(Ansi.red("x ") + Ansi.lightgrey("no success in " + res.iterations + " iterations"))
+            }
+            Gray(Util.indent(res.getStats()))
         }
-        Gray(Util.indent(res.getStats()))
     }
 
     print("Tried " + n + " searches, with " + success + " successful ones.")
@@ -214,39 +217,39 @@ var f = fs[i][1]
 var a = fs[i].slice(2)
 var a0 = a[0]
 
-howMany(f, a, 20, [5000, 0])
+howMany(f, a, 10, [1300, 0])
 //search(f, a)
 
 
 
 
 
-
+/*
 function f2(arg0, arg1) {
     var n0 = arg0.length
     var n1
     var n2
     for (var i9 = 0; i9 < n0; i9 += 1) {
         n1 = arg0[i9]
-        n2 = arg1.apply(undefined, [ 0-1+1, i9, arg0 ])
-        if (false) {
+        n2 = arg1.apply(undefined, [ n1, i9, arg0 ])
+        if (n2-1) {
             break
         }
     }
-    return !n1
+    return true
 }
 function f3(arg0, arg1) {
     var n0 = arg0.length
     var n1
     var n2
     for (var i9 = 0; i9 < n0; i9 += 1) {
-        n1 = arg0[i9-1]
-        n2 = arg1.apply(undefined, [ 0-1+1, i9, arg0 ])
-        if (false) {
+        n1 = arg0[i9]
+        n2 = arg1.apply(undefined, [ n1, i9, arg0 ])
+        if (n2-1) {
             break
         }
     }
-    return !n1
+    return n2
 }
 
 var k = 0
@@ -289,7 +292,7 @@ print(".")
 for (var k = 0; k < inputs.length; k++) {
     print(Metric.traceDistance(traces[k], traces3[k]))
 }
-
+*/
 
 
 /*
