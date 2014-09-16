@@ -181,6 +181,9 @@ function search_test(f, a, a0, name, oracle, k) {
         // make tests more deterministic
         Random.resetRandomness(0)
         var res = Search.search(f, a, config)
+        if (res.score > 0) {
+            print(res.result)
+        }
         ass.equal(res.score, 0)
     })
 }
