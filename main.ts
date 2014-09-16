@@ -67,8 +67,7 @@ run(f2, [{g: {}}])
 
 
 
-function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
-    var verbose = false
+function howMany(f, a, n: number = 5, max: number[] = [4000, 0], verbose = false) {
     var nit = []
     var success = 0
     for (var i = 0; i < n; i++) {
@@ -88,8 +87,7 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0]) {
         if (verbose) Gray(Util.indent(res.getStats()))
     }
 
-    print("Tried " + n + " searches, with " + success + " successful ones.")
-    print("Average number of iterations (for sucessful ones): " + (Util.sum(nit)/success).toFixed(1) +
+    print("Tried " + n + " searches, with " + success + " successful ones. Average number of iterations (for sucessful ones): " + (Util.sum(nit)/success).toFixed(1) +
         " (max: " + max[0] + "/" + max[1] + ")")
 }
 
@@ -215,8 +213,8 @@ var f = fs[i][1]
 var a = fs[i].slice(2)
 var a0 = a[0]
 
-howMany(f, a, 10, [2000, 0])
-//search(f, a)
+//howMany(f, a, 10, [2000, 0], true)
+search(f, a)
 
 
 

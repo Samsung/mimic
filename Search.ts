@@ -336,9 +336,9 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             p = newp
             badness = newbadness
         } else {
-            var W_BETA = 20
+            var W_BETA = 6
             var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
-            if (maybe(alpha)) {
+            if (maybe(alpha) && newbadness === badness) {
                 if (config.base.debug > 0) {
                     Ansi.Gray(" ! improvement at iteration "+Util.pad(i, 5, ' ')+": " +
                         Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
