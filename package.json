@@ -1,0 +1,23 @@
+{
+  "name": "model-synthesis",
+  "version": "1.0.0",
+  "description": "Model Synthesis for JavaScript Functions",
+  "main": "run.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "dependencies": {
+    "harmony-reflect": "^1.0.1",
+    "random-js": "^1.0.4",
+    "cli-color": "^0.3.2",
+    "assert": "^1.1.1",
+    "typescript": "^1.0.1",
+    "util": "^0.10.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "./runtests.sh"
+  },
+  "author": "Stefan Heule"
+}
