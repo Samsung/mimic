@@ -1,6 +1,6 @@
 
 /**
- * Main entry point.
+ * Main entry point for experimentation.
  *
  * @author Stefan Heule <stefanheule@gmail.com>
  */
@@ -89,24 +89,6 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0], verbose = false
 
     print("Tried " + n + " searches, with " + success + " successful ones. Average number of iterations (for sucessful ones): " + (Util.sum(nit)/success).toFixed(1) +
         " (max: " + max[0] + "/" + max[1] + ")")
-}
-
-function search(f, a) {
-    var config = new Search.SearchConfig({
-        iterations: 20000,
-        cleanupIterations: 700,
-        debug: 1,
-    })
-    Gray("Configuration: " + config.toString())
-    var res = Search.search(f, a, config)
-    Gray("Found in " + res.iterations + " iterations:")
-    Gray(Util.indent(res.getStats()))
-    if (res.score > 0) {
-        Ansi.Red("  Score: " + res.score)
-    } else {
-        Gray("  Score: " + res.score)
-    }
-    print(res.result.toString())
 }
 
 
@@ -214,7 +196,7 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 10, [2000, 0], true)
-search(f, a)
+Search.runSearch(f, a)
 
 
 

@@ -45,6 +45,9 @@ export function inspect(o: any, colors: boolean = true): string {
 export function argv(i: number) {
     return process.argv[i]
 }
+export function argvlength() {
+    return process.argv.length
+}
 
 // for now we keep this here, as it creates various spurious errors
 export function rrr(v?: number) {
@@ -219,6 +222,6 @@ export function join(arr: string[], sep: string) {
     return res
 }
 
-export function exit() {
-    throw "programmer exit"
+export function exit(code: number = 0) {
+    process.exit(code)
 }

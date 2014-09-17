@@ -24,8 +24,33 @@ var randArr = Random.randArr
 var print = Util.print
 var log = Util.log
 var line = Util.line
+var Gray = Ansi.Gray
 
 
+/**
+ * Run a search, an output various debug information along the way.
+ */
+export function runSearch(f, a) {
+    var config = new SearchConfig({
+        iterations: 20000,
+        cleanupIterations: 700,
+        debug: 1,
+    })
+    Gray("Configuration: " + config.toString())
+    var res = search(f, a, config)
+    Gray("Found in " + res.iterations + " iterations:")
+    Gray(Util.indent(res.getStats()))
+    if (res.score > 0) {
+        Ansi.Red("  Score: " + res.score)
+    } else {
+        Gray("  Score: " + res.score)
+    }
+    print(res.result.toString())
+}
+
+/**
+ * Search for a model of a given function.
+ */
 export function search(f: (...a: any[]) => any, args: any[][], config: SearchConfig = new SearchConfig()): SearchResult {
     if (config.debug) Ansi.Gray("Recording original execution...")
     var trace = Recorder.record(f, args[0])
