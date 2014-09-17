@@ -195,7 +195,7 @@ var f = fs[i][1]
 var a = fs[i].slice(2)
 var a0 = a[0]
 
-//howMany(f, a, 10, [2000, 0], true)
+//howMany(f, a, 10, [8000, 0], true)
 Search.runSearch(f, a)
 
 

@@ -212,6 +212,11 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     break
             }
             if (news === null) {
+                // not successful at finding a new statement
+                return null
+            }
+            if (softEquals(news, s)) {
+                // new statement happens to be the same as the old one
                 return null
             }
             return new Data.Program(p.body.replace(si, news))
@@ -225,6 +230,31 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
     return res
 }
 
+/**
+ * Equals function for statements that only considers the part of a statement which
+ * can actually be modified by program generation.
+ */
+function softEquals(a: Data.Stmt, b: Data.Stmt): boolean {
+    if (a.type !== b.type) return false
+    switch (a.type) {
+        case Data.StmtType.Assign:
+        case Data.StmtType.Return:
+        case Data.StmtType.DeleteProp:
+        case Data.StmtType.FuncCall:
+            return a.equals(b)
+        case Data.StmtType.If:
+            var aif = <Data.If>a
+            var bif = <Data.If>b
+            return aif.c.equals(bif.c)
+        case Data.StmtType.For:
+            var afor = <Data.For>a
+            var bfor = <Data.For>b
+            return afor.end.equals(bfor.end)
+        default:
+            Util.assert(false, () => "unhandled statement soft equals: " + a)
+            break
+    }
+}
 
 function randomStmt(info: RandomMutationInfo): Data.Stmt {
     var options = [
