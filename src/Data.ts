@@ -378,6 +378,11 @@ export class Var extends Expr {
         return false
     }
 }
+/** A small helper class that holds a variable, as well as an index where it was defined (which statement). */
+export class VarDef {
+    constructor(public v: Var, definedAt: number) {
+    }
+}
 
 /**
  * A constant (of a primitive type).
@@ -468,6 +473,10 @@ export class Stmt extends Node {
         Util.assert(i === 0, () => "out of bounds repl")
         return news
     }
+    /** Returns a list of all variables declared, as well as the statement index where they are declared */
+    getVariables(startIdx: number = 0): VarDef[] {
+        return []
+    }
 }
 
 /**
@@ -521,6 +530,9 @@ export class If extends Stmt {
     allStmts(): Stmt[] {
         return [<Stmt>this].concat(this.thn.allStmts()).concat(this.els.allStmts())
     }
+    getVariables(startIdx: number = 0): VarDef[] {
+        return this.thn.getVariables(startIdx + 1).concat(this.els.getVariables(startIdx + 1 + this.thn.numberOfStmts()))
+    }
 }
 /**
  * Conditional statement.
@@ -567,6 +579,9 @@ export class For extends Stmt {
     }
     allStmts(): Stmt[] {
         return [<Stmt>this].concat(this.body.allStmts())
+    }
+    getVariables(startIdx: number = 0): VarDef[] {
+        return [new VarDef(this.variable, startIdx)].concat(this.body.getVariables(startIdx + 1))
     }
 }
 
@@ -627,6 +642,14 @@ export class Seq extends Stmt {
         this.stmts.forEach((s) => res = res.concat(s.allStmts()))
         return res
     }
+    getVariables(startIdx: number = 0): VarDef[] {
+        var res = []
+        for (var i = 0; i < this.stmts.length; i++) {
+            res = res.concat(this.stmts[i].getVariables(startIdx))
+            startIdx += this.stmts[i].numberOfStmts()
+        }
+        return res
+    }
 }
 
 /**
@@ -666,6 +689,13 @@ export class Assign extends Stmt {
             return this.lhs.toSkeleton()
         }
         return this.lhs.toSkeleton() + "=" + this.rhs.toSkeleton()
+    }
+    getVariables(startIdx: number = 0): VarDef[] {
+        var res = []
+        if (this.isDecl) {
+            res.push(new VarDef(<Var>this.lhs, startIdx))
+        }
+        return res
     }
 }
 
@@ -726,6 +756,13 @@ export class FuncCall extends Stmt {
         s += this.f.toSkeleton() + ".apply(" + rcvArg + ", [ " + Util.join(args, ", ") + " ])"
         return s
     }
+    getVariables(startIdx: number = 0): VarDef[] {
+        var res = []
+        if (this.isDecl) {
+            res.push(new VarDef(this.v, startIdx))
+        }
+        return res
+    }
 }
 
 /**
@@ -751,6 +788,9 @@ export class Return extends Stmt {
     toSkeleton(): string {
         return "ret " + this.rhs.toSkeleton()
     }
+    getVariables(startIdx: number = 0): VarDef[] {
+        return []
+    }
 }
 export class Throw extends Stmt {
     constructor(public rhs: Expr) {
@@ -771,6 +811,9 @@ export class Throw extends Stmt {
     }
     toSkeleton(): string {
         return "throw " + this.rhs.toSkeleton()
+    }
+    getVariables(startIdx: number = 0): VarDef[] {
+        return []
     }
 }
 
@@ -796,6 +839,9 @@ export class Break extends Stmt {
     }
     toSkeleton(): string {
         return "break"
+    }
+    getVariables(startIdx: number = 0): VarDef[] {
+        return []
     }
 }
 
@@ -833,6 +879,9 @@ export class DeleteProp extends Stmt {
     toSkeleton(): string {
         return "del " + this.f.toSkeleton() + " of " + this.o.toSkeleton()
     }
+    getVariables(startIdx: number = 0): VarDef[] {
+        return []
+    }
 }
 
 /**
@@ -859,6 +908,9 @@ export class DefineProp extends Stmt {
     toSkeleton(): string {
         return "def " + this.f.toSkeleton() + " of " + this.o.toSkeleton() + " as " + this.v.toSkeleton()
     }
+    getVariables(startIdx: number = 0): VarDef[] {
+        return []
+    }
 }
 
 /**
@@ -875,14 +927,8 @@ export class Program {
         }
         return Util.indent(this.body.toString())
     }
-    getVariables(): Var[] {
-        var res = []
-        this.body.transitiveChildren().forEach((n) => {
-            if (n.type === ExprType.Var) {
-                res.push(<Var>n)
-            }
-        })
-        return res
+    getVariables(): VarDef[] {
+        return this.body.getVariables()
     }
 }
 

@@ -20,7 +20,7 @@ var log = Util.log
 var line = Util.line
 
 export class RandomMutationInfo {
-    constructor(public constants: Data.Expr[], public variables: Data.Var[], public nArgs: number) {
+    constructor(public constants: Data.Expr[], public variables: Data.VarDef[], public nArgs: number) {
     }
 }
 
@@ -292,7 +292,7 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
         }),
         new WeightedPair(info.variables.length > 0 ? 4 : 0, () => {
             // random variable from the program
-            return <Data.Expr>randArr(info.variables)
+            return <Data.Expr>randArr(info.variables).v
         }),
         new WeightedPair(zeroD ? 0 : 0/*3*/, () => {
             // random new field
