@@ -2,11 +2,7 @@
 
 ## Installation
 
-This project requires `node` (and its package manager `npm`) to run.  Install it (Ubuntu and alike):
-
-    curl -sL https://deb.nodesource.com/setup | sudo bash -
-    sudo apt-get install nodejs
-
+This project requires `node` (and its package manager `npm`) to run.
 Install all dependencies via `npm`:
 
     npm install
