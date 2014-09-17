@@ -46,3 +46,4 @@ if (argc < 5) {
     }
     Search.runSearch(f, args)
 }
+
