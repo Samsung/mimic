@@ -380,7 +380,7 @@ export class Var extends Expr {
 }
 /** A small helper class that holds a variable, as well as an index where it was defined (which statement). */
 export class VarDef {
-    constructor(public v: Var, definedAt: number) {
+    constructor(public v: Var, public definedAt: number) {
     }
 }
 

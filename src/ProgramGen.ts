@@ -297,7 +297,11 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
         }),
         new WeightedPair(info.variables.length > 0 ? 4 : 0, () => {
             // random variable from the program
-            return <Data.Expr>randArr(info.variables).v
+            var varDef: Data.VarDef = randArr(info.variables)
+            if (varDef.definedAt >= stmtIdx) {
+                return null
+            }
+            return <Data.Expr>varDef.v
         }),
         new WeightedPair(zeroD ? 0 : 0/*3*/, () => {
             // random new field
