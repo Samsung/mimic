@@ -118,6 +118,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
         new WeightedPair(7, () => { // modify an existing statement
             if (stmts.length < 1) return null
             var si = randInt(stmts.length)
+            var randExp = (args = {}) => randomExpr(info, si, args)
             var ss = stmts[si]
             var s
             var news
@@ -126,18 +127,18 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     s = <Data.Assign>ss
                     if (s.lhs.type === Data.ExprType.Field) {
                         if (maybe(0.3334)) {
-                            news = Ast.makeAssign(s.lhs, randomExpr(info))
+                            news = Ast.makeAssign(s.lhs, randExp())
                         } else if (maybe(0.5)) {
-                            var field = Ast.makeField((<Data.Field>s.lhs).o, randomExpr(info))
+                            var field = Ast.makeField((<Data.Field>s.lhs).o, randExp())
                             news = Ast.makeAssign(field, s.rhs)
                         } else {
-                            var field = Ast.makeField(randomExpr(info, {obj: true}), (<Data.Field>s.lhs).f)
+                            var field = Ast.makeField(randExp({obj: true}), (<Data.Field>s.lhs).f)
                             news = Ast.makeAssign(field, s.rhs)
                         }
                     } else {
                         if (s.rhs === null) {
                             // only a variable declaration -> add an initializer
-                            news = Ast.makeAssign(s.lhs, randomExpr(info), s.isDecl)
+                            news = Ast.makeAssign(s.lhs, randExp(), s.isDecl)
                         } else if (s.rhs.type === Data.ExprType.Var && s.lhs.type === Data.ExprType.Var) {
                             // from code merging
                             return null
@@ -145,20 +146,20 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                             if (s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field) {
                                 var f = <Data.Field>s.rhs
                                 if (maybe()) {
-                                    var exp = randomExpr(info)
+                                    var exp = randExp()
                                     news = Ast.makeAssign(s.lhs, Ast.makeField(f.o, exp), s.isDecl)
                                 } else {
-                                    news = Ast.makeAssign(s.lhs, Ast.makeField(randomExpr(info, {lhs: true}), f.f), s.isDecl)
+                                    news = Ast.makeAssign(s.lhs, Ast.makeField(randExp({lhs: true}), f.f), s.isDecl)
                                 }
                             } else {
                                 if (s.isDecl) {
                                     if (maybe(0.9)) {
-                                        news = Ast.makeAssign(s.lhs, randomExpr(info), s.isDecl)
+                                        news = Ast.makeAssign(s.lhs, randExp(), s.isDecl)
                                     } else {
                                         news = new Data.Assign(s.lhs, null, s.isDecl)
                                     }
                                 } else {
-                                    news = Ast.makeAssign(s.lhs, randomExpr(info), s.isDecl)
+                                    news = Ast.makeAssign(s.lhs, randExp(), s.isDecl)
                                 }
                             }
                         }
@@ -169,38 +170,38 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     if (s.rhs.type === Data.ExprType.Field) {
                         var e = <Data.Field>s.rhs
                         if (maybe(0.3334)) {
-                            news = Ast.makeReturn(Ast.makeField(e.o, randomExpr(info)))
+                            news = Ast.makeReturn(Ast.makeField(e.o, randExp()))
                         } else if (maybe(0.5)) {
-                            news = Ast.makeReturn(Ast.makeField(randomExpr(info, {lhs: true}), e.f))
+                            news = Ast.makeReturn(Ast.makeField(randExp({lhs: true}), e.f))
                         } else {
-                            news = Ast.makeReturn(randomExpr(info))
+                            news = Ast.makeReturn(randExp())
                         }
                     } else {
-                        news = new Data.Return(randomExpr(info))
+                        news = new Data.Return(randExp())
                     }
                     break
                 case Data.StmtType.DeleteProp:
                     s = <Data.DeleteProp>ss
                     if (maybe()) {
-                        news = Ast.makeDeleteProp(randomExpr(info, {arr: true, obj: true}), s.f)
+                        news = Ast.makeDeleteProp(randExp({arr: true, obj: true}), s.f)
                     } else {
-                        news = Ast.makeDeleteProp(s.o, randomExpr(info))
+                        news = Ast.makeDeleteProp(s.o, randExp())
                     }
                     break
                 case Data.StmtType.If:
                     s = <Data.If>ss
-                    news = Ast.makeIf(randomExpr(info, {num: true, bool: true}), s.thn, s.els)
+                    news = Ast.makeIf(randExp( {num: true, bool: true}), s.thn, s.els)
                     break
                 case Data.StmtType.For:
                     s = <Data.For>ss
-                    var newEnd = randomExpr(info, {num: true})
+                    var newEnd = randExp({num: true})
                     news = Ast.makeFor(s.variable, s.start, newEnd, s.inc, s.body)
                     break
                 case Data.StmtType.FuncCall:
                     s = <Data.FuncCall>ss
                     if (s.args.length === 0) return null
                     var idx = randInt(s.args.length)
-                    var newExpr = randomExpr(info);
+                    var newExpr = randExp();
                     var newargs = s.args.slice(0)
                     newargs.splice(idx, 1, newExpr)
                     news = Ast.makeFuncCall(s.v, s.f, s.recv, newargs, s.isDecl)
@@ -256,20 +257,20 @@ function softEquals(a: Data.Stmt, b: Data.Stmt): boolean {
     }
 }
 
-function randomStmt(info: RandomMutationInfo): Data.Stmt {
-    var options = [
-        () => {
-            return Ast.makeReturn(randomExpr(info))
-        },
-        () => {
-            return Ast.makeAssign(randomExpr(info, {lhs: true}), randomExpr(info))
-        },
-    ]
-    return randArr(options)()
-}
+//function randomStmt(info: RandomMutationInfo): Data.Stmt {
+//    var options = [
+//        () => {
+//            return Ast.makeReturn(randomExpr(info))
+//        },
+//        () => {
+//            return Ast.makeAssign(randomExpr(info, {lhs: true}), randomExpr(info))
+//        },
+//    ]
+//    return randArr(options)()
+//}
 
 
-function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2): Data.Expr {
+function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, depth: number = 2): Data.Expr {
     var lhs = "lhs" in args && args.lhs === true
     var obj = "obj" in args && args.obj === true
     var arr = "arr" in args && args.arr === true
@@ -282,7 +283,7 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
     var zeroD = depth === 0
 
     var recurse = (a: any = {}) => {
-        return randomExpr(info, a, depth - 1)
+        return randomExpr(info, stmtIdx, a, depth - 1)
     }
 
     var options: Random.WeightedPair<() => Data.Expr>[] = [
