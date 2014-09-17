@@ -100,12 +100,9 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         realTraces = inputs.map((i) => Recorder.record(f, i)) // TODO: could be optimized
         if (config.debug) Ansi.Gray("  Selected a subset of " + inputs.length + " inputs.")
 
-        var candidates: Data.Expr[] = InputGen.genConstants(realTraces)
+        var constants = InputGen.genConstants(realTraces)
         var maxArgs = Util.max(inputs.map((i) => i.length))
-        for (var i = 0; i < maxArgs; i++) {
-            candidates.push(new Data.Argument(i))
-        }
-        var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
+        var mutationInfo = new ProgramGen.RandomMutationInfo(constants, p.getVariables(), maxArgs)
 
         if (config.debug) Ansi.Gray("  Using the following inputs:")
         if (config.debug) Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
@@ -162,12 +159,9 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         if (config.debug) Ansi.Gray("  Using the following inputs:")
         if (config.debug) Ansi.Gray("  " + cleanupInputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
 
-        var candidates: Data.Expr[] = InputGen.genConstants(cleanupTraces)
+        var constants = InputGen.genConstants(cleanupTraces)
         var maxArgs = Util.max(inputs.map((i) => i.length))
-        for (var i = 0; i < maxArgs; i++) {
-            candidates.push(new Data.Argument(i))
-        }
-        var mutationInfo = new ProgramGen.RandomMutationInfo(candidates, p.getVariables())
+        var mutationInfo = new ProgramGen.RandomMutationInfo(constants, p.getVariables(), maxArgs)
 
         // shorten the program
         p = shorten(p, cleanupInputs, cleanupTraces)
@@ -361,7 +355,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             p = newp
             badness = newbadness
         } else {
-            var W_BETA = 6
+            var W_BETA = 5.2
             var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
             if (maybe(alpha) && newbadness === badness) {
                 if (config.base.debug > 0) {

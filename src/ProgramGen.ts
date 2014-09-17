@@ -20,7 +20,7 @@ var log = Util.log
 var line = Util.line
 
 export class RandomMutationInfo {
-    constructor(public candidates: Data.Expr[], public variables: Data.Var[]) {
+    constructor(public constants: Data.Expr[], public variables: Data.Var[], public nArgs: number) {
     }
 }
 
@@ -282,21 +282,17 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
     var zeroD = depth === 0
 
     var options: Random.WeightedPair<() => Data.Expr>[] = [
-        new WeightedPair(nonPrimitive ? 0 : 1, () => {
-            // random new constant
-            return <Data.Expr>new Data.Const(randInt(20)-10)
+        new WeightedPair(info.nArgs > 0 ? 6 : 0, () => {
+            // random argument
+            return <Data.Expr>new Data.Argument(Random.randInt(info.nArgs))
         }),
-        new WeightedPair(6, () => {
-            // random candidate expression
-            var ps = info.candidates
-            if (ps.length === 0) return null
-            return <Data.Expr>randArr(ps)
+        new WeightedPair(info.constants.length > 0 ? 1 : 0, () => {
+            // random new constant from the program
+            return <Data.Expr>randArr(info.constants)
         }),
-        new WeightedPair(4, () => {
-            // random value read during generation
-            var vs = info.variables;
-            if (vs.length === 0) return null
-            return <Data.Expr>randArr(vs)
+        new WeightedPair(info.variables.length > 0 ? 4 : 0, () => {
+            // random variable from the program
+            return <Data.Expr>randArr(info.variables)
         }),
         new WeightedPair(zeroD ? 0 : 0/*3*/, () => {
             // random new field
@@ -313,6 +309,10 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
         new WeightedPair(nonPrimitive || zeroD ? 0 : 1, () => {
             // random boolean not
             return <Data.Expr>new Data.Unary("!", randomExpr(info, {bool: true}))
+        }),
+        new WeightedPair(nonPrimitive ? 0 : 1, () => {
+            // random new integer
+            return <Data.Expr>new Data.Const(randInt(20)-10)
         }),
     ]
     // filter out bad expressions
