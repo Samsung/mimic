@@ -647,7 +647,9 @@ export class Assign extends Stmt {
         return prefix + this.lhs.toString() + " = " + this.rhs.toString()
     }
     equals(o) {
-        return o instanceof Assign && o.lhs.equals(this.lhs) && o.rhs.equals(this.rhs)
+        return o instanceof Assign && o.lhs.equals(this.lhs) &&
+                ((o.rhs === null) === (this.rhs === null)) &&
+                (o.rhs === null || o.rhs.equals(this.rhs))
     }
     children(): Node[] {
         if (this.rhs === null) {
