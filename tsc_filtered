@@ -1,3 +1,0 @@
-#!/bin/bash
-
-/usr/local/bin/tsc --outDir ../bin $@ 2>&1 | ./filter.py
