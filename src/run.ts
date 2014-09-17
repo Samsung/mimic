@@ -28,7 +28,7 @@ if (argc < 5) {
     try {
         var f = Function.apply(null, fstr)
     } catch (e) {
-        print(Ansi.red("Error: Could not parse function:"))
+        print(Ansi.red("Error: Could not parse function '"+fstr+"'"))
         print("  " + e)
         Util.exit(1)
     }
@@ -36,9 +36,10 @@ if (argc < 5) {
     for (var i = 0; i < argc - 4; i++) {
 
         try {
-            args.push(eval(Util.argv(i+4)))
+            var arg = Util.argv(i+4)
+            args.push(eval(arg))
         } catch (e) {
-            print(Ansi.red("Error: Could not parse argument " + (i+1) + ":"))
+            print(Ansi.red("Error: Could not parse argument " + (i+1) + " '"+arg+"':"))
             print("  " + e)
             Util.exit(1)
         }
