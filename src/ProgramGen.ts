@@ -152,7 +152,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                                 }
                             } else {
                                 if (s.isDecl) {
-                                    if (maybe()) {
+                                    if (maybe(0.9)) {
                                         news = Ast.makeAssign(s.lhs, randomExpr(info), s.isDecl)
                                     } else {
                                         news = new Data.Assign(s.lhs, null, s.isDecl)
