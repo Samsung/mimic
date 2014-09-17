@@ -1,0 +1,2 @@
+Tried 10 searches, with 3 successful ones.
+Average number of iterations (for sucessful ones): 1515.0 (max: 2000/0)
