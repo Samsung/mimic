@@ -281,6 +281,10 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
 
     var zeroD = depth === 0
 
+    var recurse = (a: any = {}) => {
+        return randomExpr(info, a, depth - 1)
+    }
+
     var options: Random.WeightedPair<() => Data.Expr>[] = [
         new WeightedPair(info.nArgs > 0 ? 6 : 0, () => {
             // random argument
@@ -296,19 +300,19 @@ function randomExpr(info: RandomMutationInfo, args: any = {}, depth: number = 2)
         }),
         new WeightedPair(zeroD ? 0 : 0/*3*/, () => {
             // random new field
-            return <Data.Expr>Ast.makeField(randomExpr(info, {obj: true}, depth-1), randomExpr(info, {}, depth-1))
+            return <Data.Expr>Ast.makeField(recurse({obj: true}), recurse())
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 2, () => {
             // random new addition
-            return <Data.Expr>Ast.makeBinary(randomExpr(info, {num: true}, depth-1), "+", new Data.Const(maybe() ? 1 : -1))
+            return <Data.Expr>Ast.makeBinary(recurse({num: true}), "+", new Data.Const(maybe() ? 1 : -1))
         }),
-        new WeightedPair(bool ? 1 : 0, () => {
+        new WeightedPair(bool && !zeroD ? 1 : 0, () => {
             // random new comparison
-            return <Data.Expr>Ast.makeBinary(randomExpr(info, {}, depth-1), "==", randomExpr(info, {}, depth-1))
+            return <Data.Expr>Ast.makeBinary(recurse(), "==", recurse())
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 1, () => {
             // random boolean not
-            return <Data.Expr>new Data.Unary("!", randomExpr(info, {bool: true}))
+            return <Data.Expr>new Data.Unary("!", recurse({bool: true}))
         }),
         new WeightedPair(nonPrimitive ? 0 : 1, () => {
             // random new integer
