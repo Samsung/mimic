@@ -50,6 +50,33 @@ export class Node {
     }
 }
 
+function clone(config) {
+    var res = {}
+    for (var k in config) {
+        res[k] = config[k]
+    }
+    return res
+}
+var __noparen_config = { noparen: true }
+function noparen(config = undefined) {
+    if (config === undefined) {
+        return __noparen_config
+    }
+    if ("noparen" in config) {
+        return config
+    }
+    config = clone(config)
+    config.noparen = true
+    return config
+}
+function reset(config) {
+    if ("noparen" in config) {
+        config = clone(config)
+        delete config.noparen
+    }
+    return config
+}
+
 /**
  * An enum for expressions.
  */
@@ -151,18 +178,19 @@ export class Field extends Prestate {
         super(ExprType.Field, 1+Math.max(o.depth, f.depth))
     }
     toString(config = {}) {
+        config = reset(config)
         if (this.f.type === ExprType.Const) {
             var c = <Const>this.f
             if (typeof c.val === "string") {
                 if (/^[a-zA-Z_][_a-zA-Z0-9]*$/.test(c.val)) {
-                    return this.o.toString(config) + "." + c.val
+                    return this.o.toString(noparen(config)) + "." + c.val
                 }
                 if (/^[0-9]+$/.test(c.val)) {
-                    return this.o.toString(config) + "[" + c.val + "]"
+                    return this.o.toString(noparen(config)) + "[" + c.val + "]"
                 }
             }
         }
-        return this.o.toString(config) + "[" + this.f.toString(config) + "]"
+        return this.o.toString(noparen(config)) + "[" + this.f.toString(noparen(config)) + "]"
     }
     eval(args: any[]): any {
         return this.o.eval(args)[this.f.eval(args)]
@@ -219,13 +247,20 @@ export class Binary extends Expr {
         Util.assert(op === "+" || op === "==")
     }
     toString(config = {}) {
+        var pre = "("
+        var post = ")"
+        if ("noparen" in config) {
+            pre = ""
+            post = ""
+        }
+        config = reset(config)
         if (this.b.type === ExprType.Const && this.op === "+") {
             var c = <Const>this.b
             if (c.val < 0) {
-                return this.a.toString(config) + "-" + (new Const(-c.val)).toString(config)
+                return pre + this.a.toString(config) + "-" + (new Const(-c.val)).toString(config) + post
             }
         }
-        return this.a.toString(config) + this.op + this.b.toString(config)
+        return pre + this.a.toString(config) + this.op + this.b.toString(config) + post
     }
     eval(args: any[]): any {
         switch (this.op) {
@@ -269,6 +304,7 @@ export class Unary extends Expr {
         Util.assert(op === "!")
     }
     toString(config = {}) {
+        config = reset(config)
         return this.op + this.e.toString(config)
     }
     eval(args: any[]): any {
@@ -304,6 +340,7 @@ export class Argument extends Prestate {
         super(ExprType.Arg, 0)
     }
     toString(config = {}) {
+        config = reset(config)
         if (this.i < 6) {
             return "arg" + this.i
         }
@@ -488,16 +525,16 @@ export class If extends Stmt {
     }
     toString() {
         if (this.thn.numberOfStmts() === 0) {
-            return "if (" + this.c.toString() + ") {} else {\n" +
+            return "if (" + this.c.toString(noparen()) + ") {} else {\n" +
             Util.indent(this.els.toString()) +
             "\n}"
         }
         if (this.els.numberOfStmts() === 0) {
-            return "if (" + this.c.toString() + ") {\n" +
+            return "if (" + this.c.toString(noparen()) + ") {\n" +
             Util.indent(this.thn.toString()) +
             "\n}"
         }
-        return "if (" + this.c.toString() + ") {\n" +
+        return "if (" + this.c.toString(noparen()) + ") {\n" +
             Util.indent(this.thn.toString()) +
             "\n} else {\n" +
             Util.indent(this.els.toString()) +
@@ -546,7 +583,7 @@ export class For extends Stmt {
         res += "for (var "
         res += this.variable.toString()
         res += " = "
-        res += this.start.toString()
+        res += this.start.toString(noparen())
         res += "; "
         res += this.variable.toString()
         res += " < "
@@ -665,9 +702,9 @@ export class Assign extends Stmt {
             prefix = "var "
         }
         if (this.rhs === null) {
-            return prefix + this.lhs.toString()
+            return prefix + this.lhs.toString(noparen())
         }
-        return prefix + this.lhs.toString() + " = " + this.rhs.toString()
+        return prefix + this.lhs.toString(noparen()) + " = " + this.rhs.toString(noparen())
     }
     equals(o) {
         return o instanceof Assign && o.lhs.equals(this.lhs) &&
@@ -713,7 +750,7 @@ export class FuncCall extends Stmt {
         }
         s += this.v.toString() + " = "
         var rcvArg = this.recv === null ? "global" : this.recv.toString();
-        var args = this.args.map((a) => a.toString())
+        var args = this.args.map((a) => a.toString(noparen()))
         s += this.f.toString() + ".apply(" + rcvArg + ", [ " + Util.join(args, ", ") + " ])"
         return s
     }
@@ -773,7 +810,7 @@ export class Return extends Stmt {
         super(StmtType.Return)
     }
     toString() {
-        return "return " + this.rhs.toString()
+        return "return " + this.rhs.toString(noparen())
     }
     equals(o) {
         return o instanceof Return && o.rhs.equals(this.rhs)
@@ -797,7 +834,7 @@ export class Throw extends Stmt {
         super(StmtType.Throw)
     }
     toString() {
-        return "throw " + this.rhs.toString()
+        return "throw " + this.rhs.toString(noparen())
     }
     equals(o) {
         return o instanceof Throw && o.rhs.equals(this.rhs)
@@ -864,7 +901,7 @@ export class DeleteProp extends Stmt {
                 }
             }
         }
-        return "delete " + this.o.toString() + "[" + this.f.toString() + "]"
+        return "delete " + this.o.toString() + "[" + this.f.toString(noparen()) + "]"
     }
     equals(o) {
         return o instanceof DeleteProp && o.o.equals(this.o) && o.f.equals(this.f)
@@ -892,8 +929,8 @@ export class DefineProp extends Stmt {
         super(StmtType.DefineProp)
     }
     toString() {
-        return "Object.defineProperty(" + this.o.toString() +
-            ", " + this.f.toString() + ", {value: " + this.v.toString() + "})"
+        return "Object.defineProperty(" + this.o.toString(noparen()) +
+            ", " + this.f.toString(noparen()) + ", {value: " + this.v.toString() + "})"
     }
     equals(o) {
         return o instanceof DefineProp && o.o.equals(this.o) && o.f.equals(this.f) && o.v.equals(this.v)
