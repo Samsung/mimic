@@ -291,6 +291,9 @@ export class Binary extends Expr {
         if (this.op === "+") {
             return "number"
         }
+        if (this.op === "==") {
+            return "boolean"
+        }
         Util.assert(false)
         return undefined
     }

@@ -129,7 +129,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                         if (maybe(0.3334)) {
                             news = Ast.makeAssign(s.lhs, randExp())
                         } else if (maybe(0.5)) {
-                            var field = Ast.makeField((<Data.Field>s.lhs).o, randExp())
+                            var field = Ast.makeField((<Data.Field>s.lhs).o, randExp({field: true}))
                             news = Ast.makeAssign(field, s.rhs)
                         } else {
                             var field = Ast.makeField(randExp({obj: true}), (<Data.Field>s.lhs).f)
@@ -146,7 +146,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                             if (s.lhs.type === Data.ExprType.Var && s.rhs.type === Data.ExprType.Field) {
                                 var f = <Data.Field>s.rhs
                                 if (maybe()) {
-                                    var exp = randExp()
+                                    var exp = randExp({field: true})
                                     news = Ast.makeAssign(s.lhs, Ast.makeField(f.o, exp), s.isDecl)
                                 } else {
                                     news = Ast.makeAssign(s.lhs, Ast.makeField(randExp({lhs: true}), f.f), s.isDecl)
@@ -170,7 +170,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     if (s.rhs.type === Data.ExprType.Field) {
                         var e = <Data.Field>s.rhs
                         if (maybe(0.3334)) {
-                            news = Ast.makeReturn(Ast.makeField(e.o, randExp()))
+                            news = Ast.makeReturn(Ast.makeField(e.o, randExp({field: true})))
                         } else if (maybe(0.5)) {
                             news = Ast.makeReturn(Ast.makeField(randExp({lhs: true}), e.f))
                         } else {
@@ -190,7 +190,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     break
                 case Data.StmtType.If:
                     s = <Data.If>ss
-                    news = Ast.makeIf(randExp( {num: true, bool: true}), s.thn, s.els)
+                    news = Ast.makeIf(randExp({num: true, bool: true}), s.thn, s.els)
                     break
                 case Data.StmtType.For:
                     s = <Data.For>ss
@@ -220,6 +220,7 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                 // new statement happens to be the same as the old one
                 return null
             }
+            print(news)
             return new Data.Program(p.body.replace(si, news))
         }),
     ]
@@ -276,9 +277,14 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
     var arr = "arr" in args && args.arr === true
     var num = "num" in args && args.num === true
     var bool = "bool" in args && args.bool === true
+    var str = "str" in args && args.str === true
+    if ("field" in args && args.field === true) {
+        num = true
+        str = true
+    }
 
     var nonPrimitive = lhs || obj || arr
-    var hasRequirement = lhs || obj || arr || num || bool
+    var hasRequirement = nonPrimitive || num || bool || str
 
     var zeroD = depth === 0
 
@@ -305,7 +311,7 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
         }),
         new WeightedPair(zeroD ? 0 : 0/*3*/, () => {
             // random new field
-            return <Data.Expr>Ast.makeField(recurse({obj: true}), recurse())
+            return <Data.Expr>Ast.makeField(recurse({obj: true}), recurse({field: true}))
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 2, () => {
             // random new addition
@@ -317,7 +323,7 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 1, () => {
             // random boolean not
-            return <Data.Expr>new Data.Unary("!", recurse({bool: true}))
+            return <Data.Expr>new Data.Unary("!", recurse())
         }),
         new WeightedPair(nonPrimitive ? 0 : 1, () => {
             // random new integer
@@ -329,17 +335,28 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
         if (e === null) return e
 
         // filter by requirement
-        if (e.hasValue() && hasRequirement) {
-            var t = typeof e.getValue()
-            if (t === "number" && num) {
+        var type = e.getType()
+        if (hasRequirement && type !== undefined) {
+            if (type === "number" && num) {
                 return e
             }
-            if (t === "object" && (obj || arr || lhs)) {
-                if (lhs && e.getValue() === null) {
+            if (type === "object" && (obj || arr || lhs)) {
+                if (lhs && e.type === Data.ExprType.Const && (<Data.Const>e).val === null) {
+                    // dereference of null
                     return null
                 }
                 return e
             }
+            if (type === "boolean" && bool) {
+                return e
+            }
+            if (type === "string" && str) {
+                return e
+            }
+            print("-==========")
+            print(e)
+            log(args)
+            line()
             return null // no match
         }
         // filter by depth
