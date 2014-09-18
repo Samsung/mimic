@@ -5,7 +5,7 @@
 This project requires `node`, its package manager `npm`, as well as `grunt` to run.  Make sure they are installed first (Ubuntu and alike):
 
     sudo apt-get install nodejs-legacy npm
-    npm install -g grunt-cli
+    sudo npm install -g grunt-cli
 
 Install all dependencies via `npm`:
 
