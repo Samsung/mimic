@@ -191,8 +191,7 @@ function genCandidateExpr(f: (...a: any[]) => any, initials: any[][]): Data.Pres
                  filtered.push(e.o)
                  continue
                  }*/
-                if (
-                    Array.isArray(e.o.getValue()) && e.f.getValue() === 'length') {
+                if (e.o.getType() === "object" && e.f.getValue() === 'length') {
                     // we always vary the array length, so no need to kep this
                     // but make sure we have the array itself
                     filtered.push(e.o)

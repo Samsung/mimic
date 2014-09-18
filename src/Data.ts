@@ -93,9 +93,6 @@ export enum ExprType {
  * Common ancestor for all expressions.
  */
 export class Expr extends Node {
-    // the value observed at runtime, if any
-    private value: any
-    private valueSet: boolean = false
     constructor(public type: ExprType, public depth: number) {
         super()
     }
@@ -116,16 +113,6 @@ export class Expr extends Node {
     equals(o): boolean {
         Util.assert(false)
         return false
-    }
-    hasValue() {
-        return this.valueSet
-    }
-    getValue() {
-        return this.value
-    }
-    setValue(val: any) {
-        this.value = val
-        this.valueSet = true
     }
 
     /**
@@ -158,6 +145,13 @@ export class Expr extends Node {
     toString(config = {}): string {
         Util.assert(false)
         return ""
+    }
+
+    /**
+     * Return the type of this expression (best effort, might not be known).
+     */
+    getType(): string {
+        return undefined
     }
 }
 
@@ -293,6 +287,13 @@ export class Binary extends Expr {
     isSafe(args: any[]): boolean {
         return this.a.isSafe(args) && this.b.isSafe(args)
     }
+    getType(): string {
+        if (this.op === "+") {
+            return "number"
+        }
+        Util.assert(false)
+        return undefined
+    }
 }
 
 /**
@@ -329,6 +330,13 @@ export class Unary extends Expr {
     }
     isSafe(args: any[]): boolean {
         return this.e.isSafe(args)
+    }
+    getType(): string {
+        if (this.op === "!") {
+            return "boolean"
+        }
+        Util.assert(false)
+        return undefined
     }
 }
 
@@ -427,7 +435,6 @@ export class VarDef {
 export class Const extends Expr {
     constructor(public val: any) {
         super(ExprType.Const, 0)
-        this.setValue(val)
         Util.assert(Util.isPrimitive(this.val))
     }
     toString(config = {}) {
@@ -461,6 +468,9 @@ export class Const extends Expr {
     }
     isSafe(args: any[]): boolean {
         return true
+    }
+    getType(): string {
+        return typeof this.val
     }
 }
 
