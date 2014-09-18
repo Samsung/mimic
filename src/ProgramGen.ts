@@ -278,7 +278,8 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
     var num = "num" in args && args.num === true
     var bool = "bool" in args && args.bool === true
     var str = "str" in args && args.str === true
-    var field = "field" in args && args.field === true;
+    var noconst = "noconst" in args && args.noconst === true
+    var field = "field" in args && args.field === true
     if (field) {
         num = true
         str = true
@@ -298,7 +299,7 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
             // random argument
             return <Data.Expr>new Data.Argument(Random.randInt(info.nArgs))
         }),
-        new WeightedPair(info.constants.length > 0 ? 1 : 0, () => {
+        new WeightedPair(info.constants.length > 0 && !noconst ? 1 : 0, () => {
             // random new constant from the program
             return <Data.Expr>randArr(info.constants)
         }),
@@ -316,17 +317,23 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 2, () => {
             // random new addition
-            return <Data.Expr>Ast.makeBinary(recurse({num: true}), "+", new Data.Const(maybe() ? 1 : -1))
+            return <Data.Expr>Ast.makeBinary(recurse({num: true, noconst: true}), "+", new Data.Const(maybe() ? 1 : -1))
         }),
         new WeightedPair(bool && !zeroD ? 1 : 0, () => {
             // random new comparison
-            return <Data.Expr>Ast.makeBinary(recurse(), "==", recurse())
+            var e1 = recurse()
+            var conf = {}
+            if (e1.type === Data.ExprType.Const) {
+                conf = { noconst: true }
+            }
+            var e2 = recurse(conf)
+            return <Data.Expr>Ast.makeBinary(e1, "==", e2)
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 1, () => {
             // random boolean not
-            return <Data.Expr>new Data.Unary("!", recurse())
+            return <Data.Expr>new Data.Unary("!", recurse({noconst: true}))
         }),
-        new WeightedPair(nonPrimitive ? 0 : 1, () => {
+        new WeightedPair(nonPrimitive || noconst ? 0 : 1, () => {
             // random new integer
             return <Data.Expr>new Data.Const(randInt(20)-10)
         }),
@@ -360,10 +367,6 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
             if (type === "string" && str) {
                 return e
             }
-            print("-==========")
-            print(e)
-            log(args)
-            line()
             return null // no match
         }
         // filter by depth
