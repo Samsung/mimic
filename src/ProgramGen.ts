@@ -278,7 +278,8 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
     var num = "num" in args && args.num === true
     var bool = "bool" in args && args.bool === true
     var str = "str" in args && args.str === true
-    if ("field" in args && args.field === true) {
+    var field = "field" in args && args.field === true;
+    if (field) {
         num = true
         str = true
     }
@@ -337,14 +338,20 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
         // filter by requirement
         var type = e.getType()
         if (hasRequirement && type !== undefined) {
+            var isConst = e.type === Data.ExprType.Const;
+            var constVal = (<Data.Const>e).val;
+            if (lhs && isConst && constVal === null) {
+                // dereference of null
+                return null
+            }
+            if (field && isConst && type === "number" && (constVal < 0 || constVal % 1 !== 0)) {
+                // only allow whole positive numbers as fields
+                return null
+            }
             if (type === "number" && num) {
                 return e
             }
             if (type === "object" && (obj || arr || lhs)) {
-                if (lhs && e.type === Data.ExprType.Const && (<Data.Const>e).val === null) {
-                    // dereference of null
-                    return null
-                }
                 return e
             }
             if (type === "boolean" && bool) {
