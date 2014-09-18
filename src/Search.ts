@@ -32,7 +32,7 @@ var Gray = Ansi.Gray
  */
 export function runSearch(f, a) {
     var config = new SearchConfig({
-        iterations: 20000,
+        iterations: 100000,
         cleanupIterations: 700,
         debug: 1,
     })
@@ -355,7 +355,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             p = newp
             badness = newbadness
         } else {
-            var W_BETA = 5.2
+            var W_BETA = 4.5
             var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
             if (maybe(alpha) && newbadness === badness) {
                 if (config.base.debug > 0) {

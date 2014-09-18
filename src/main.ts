@@ -203,49 +203,44 @@ Search.runSearch(f, a)
 
 
 /*
-function f2(arg0, arg1) {
+function f2(arg0, arg1, arg2) {
     var n0 = arg0.length
-    var n1
-    var n2
-    for (var i9 = 0; i9 < n0; i9 += 1) {
-        n1 = arg0[i9]
-        n2 = arg1.apply(undefined, [ n1, i9, arg0 ])
-        if (n2-1) {
-            break
-        }
+    var n1 = n0
+    var n2 = arg2
+    for (var i7 = 0; i7 < n0; i7 += 1) {
+        n1 = arg0[i7]
+        n2 = arg1.apply(undefined, [ n2, n1, i7, arg0 ])
     }
-    return true
+    return n2
 }
-function f3(arg0, arg1) {
+function f3(arg0, arg1, arg2) {
     var n0 = arg0.length
-    var n1
-    var n2
-    for (var i9 = 0; i9 < n0; i9 += 1) {
-        n1 = arg0[i9]
-        n2 = arg1.apply(undefined, [ n1, i9, arg0 ])
-        if (n2-1) {
-            break
-        }
+    var n1 = n0
+    var n2 = arg2
+    for (var i7 = 0; i7 < n0; i7 += 1) {
+        n1 = arg0[i7]
+        n2 = arg1.apply(undefined, [ n2, n1, i7, arg0 ])
     }
     return n2
 }
 
 var k = 0
-var inputs = InputGen.generateInputs(f, a).filter((i) => i[0].length > 4).filter((i) => k++ < 1)
-var ff = (x) => x < 10
-inputs = [
-    [[ 1, 1, 0, 0, 1 ], ff,],
-    [[ 0, 0, 0, 20, 1, 0 ], ff,],
-    [[ 1, 5, 1, 1, 1, 23 ], ff,],
-    [[ 1, 1, 0, 20, 3, 23 ], ff,],
-    [[ 1, 1, 2, 1, 3, 1 ], ff,],
-    [[ 0, 5, 1, 0, 1, 0 ], ff,],
-    [[], ff,],
-    [[], ff,],
-    [[ 1], ff,],
-    [[ 0 ], ff,],
-    [[ 0, 1, 1, 0, 3 ], ff,],
-]
+var inputs = InputGen.generateInputs(f, a)//.filter((i) => k++ < 1)
+//var ff = (x) => x < 10
+//inputs = [
+//    [[ 1, 1, 0, 0, 1 ], ff,],
+//    [[ 0, 0, 0, 20, 1, 0 ], ff,],
+//    [[ 1, 5, 1, 1, 1, 23 ], ff,],
+//    [[ 1, 1, 0, 20, 3, 23 ], ff,],
+//    [[ 1, 1, 2, 1, 3, 1 ], ff,],
+//    [[ 0, 5, 1, 0, 1, 0 ], ff,],
+//    [[], ff,],
+//    [[], ff,],
+//    [[ 1], ff,],
+//    [[ 0 ], ff,],
+//    [[ 0, 1, 1, 0, 3 ], ff,],
+//]
+inputs = [[[undefined], (previousValue, currentValue, index, array) => previousValue + currentValue, 0]]
 var traces = inputs.map((i) => Recorder.record(f, i))
 var traces2 = inputs.map((i) => Recorder.record(f2, i))
 var traces3 = inputs.map((i) => Recorder.record(f3, i))
@@ -264,6 +259,7 @@ print(Metric.evaluate2(f3, inputs, traces))
 
 line()
 for (var k = 0; k < inputs.length; k++) {
+    log(inputs[k])
     print(Metric.traceDistance(traces[k], traces2[k]))
 }
 print(".")
