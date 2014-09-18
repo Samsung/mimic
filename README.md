@@ -25,7 +25,7 @@ To run the model synthesis, the script `model-synth` can be used.  For instance:
 
 There is also the file `src/main.ts`, that contains various ways to run things.  Invoke it (after compilation) as follows:
 
-    node --harmony bin/main.js 0 0
+    node --harmony bin/src/main.js 0 0
 
 ## Tests
 
