@@ -278,7 +278,13 @@ export function traceDistance(a: Data.Trace, b: Data.Trace, p = null): number {
 function exprEquiv(a: Data.TraceExpr, b: Data.TraceExpr): boolean {
     if (a instanceof Data.TraceConst) {
         if (b instanceof Data.TraceConst) {
-            return (<Data.TraceConst>a).val === (<Data.TraceConst>b).val
+            var va = (<Data.TraceConst>a).val
+            var vb = (<Data.TraceConst>b).val
+            if (va !== va) {
+                // correct handling of NaN
+                return vb !== vb
+            }
+            return va === vb
         } else {
             return false
         }
