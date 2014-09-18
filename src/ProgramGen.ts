@@ -220,7 +220,6 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                 // new statement happens to be the same as the old one
                 return null
             }
-            print(news)
             return new Data.Program(p.body.replace(si, news))
         }),
     ]
