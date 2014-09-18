@@ -2,7 +2,11 @@
 
 ## Installation
 
-This project requires `node` (and its package manager `npm`) to run.
+This project requires `node`, its package manager `npm`, as well as `grunt` to run.  Make sure they are installed first (Ubuntu and alike):
+
+    sudo apt-get install nodejs-legacy npm
+    npm install -g grunt-cli
+
 Install all dependencies via `npm`:
 
     npm install
