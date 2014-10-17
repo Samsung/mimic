@@ -1,11 +1,14 @@
+
 /**
  * Various utility functions.
  *
  * @author Stefan Heule <stefanheule@gmail.com>
  */
 
+/// <reference path="../../ts-decl/node.d.ts" />
+
 import util = require('util');
-import random = require('random-js')
+var random = require('random-js')
 
 export function print(s: any) {
     if (typeof s === "object" && s != null && "toString" in s) {
@@ -52,7 +55,7 @@ export function argvlength() {
 // for now we keep this here, as it creates various spurious errors
 export function rrr(v?: number) {
     if (v === undefined) {
-        v = process.argv[2]
+        v = parseInt(process.argv[2])
     }
     return new random(random.engines.mt19937().seed(v))
 }
@@ -90,7 +93,7 @@ export function dedup2<T>(a: T[]): T[] {
 export function indexOfEquals<T>(a: T[], item: T, start: number = 0): number {
     var j = start
     var count = a.length
-    while (!a[j++].equals(item) && j < count) {}
+    while (!(<any>a[j++]).equals(item) && j < count) {}
     j--
     return (j === count) ? -1 : j
 }
@@ -133,7 +136,7 @@ export function clone<T>(obj: T): T {
 
     // Handle Object
     if (obj instanceof Object) {
-        var copy3 = Object.create(obj.__proto__);
+        var copy3 = Object.create(Object.getPrototypeOf(obj));
         for (var attr in obj) {
             if (obj.hasOwnProperty(attr)) copy3[attr] = clone(obj[attr]);
         }
@@ -202,7 +205,7 @@ export function arrayEquals<T>(a: T[], b: T[]): boolean {
         return false
     }
     for (var i = 0; i < a.length; i++) {
-        if (!a[i].equals(b[i])) {
+        if (!(<any>a[i]).equals(b[i])) {
             return false
         }
     }

@@ -4,10 +4,10 @@
  * @author Stefan Heule <stefanheule@gmail.com>
  */
 
-"use strict";
+//"use strict";
 
-/// <reference path="./mocha.d.ts" />
-/// <reference path="./assert.d.ts" />
+/// <reference path="../ts-decl/node.d.ts" />
+/// <reference path="../ts-decl/mocha.d.ts" />
 
 import ass = require('assert')
 import Ansi = require('../src/util/Ansicolors')
@@ -41,7 +41,7 @@ var fs:any = [
         },
         [{}, {g: "a", f: {}}, "a", 0],
         {
-            categories: 1,
+            categories: 1
         }
     ],
     [ // 1
@@ -49,7 +49,7 @@ var fs:any = [
         (arr) => arr.pop(),
         [['a', 'b', 'c']],
         {
-            categories: 2,
+            categories: 2
         }
     ],
     [ // 2
@@ -57,7 +57,7 @@ var fs:any = [
         (arr, v) => arr.push(v),
         [['a', 'b', 'c'], 'd'],
         {
-            categories: 1,
+            categories: 1
         }
     ],
     [ // 3
@@ -65,7 +65,7 @@ var fs:any = [
         (arr, i) => arr[i],
         [['a', 'b', 'c'], 2],
         {
-            categories: 1,
+            categories: 1
         }
     ],
     [ // 4
@@ -79,7 +79,7 @@ var fs:any = [
         },
         [['a', 'b', 'c'], 2],
         {
-            categories: 2,
+            categories: 2
         }
     ],
     [ // 5
@@ -88,7 +88,7 @@ var fs:any = [
         [(x) => x, 2],
         [(x) => 2*x, 2],
         {
-            categories: 1,
+            categories: 1
         }
     ],
     [ // 6
@@ -97,7 +97,7 @@ var fs:any = [
         [(o, x, v) => o[x] = v, {}, 0, 0],
         [(o, x, v) => undefined, {}, 0, 0],
         {
-            categories: 1,
+            categories: 1
         }
     ],
     [ // 7
@@ -105,7 +105,7 @@ var fs:any = [
         () => undefined,
         [],
         {
-            categories: 1,
+            categories: 1
         }
     ],
     [ // 8
@@ -113,7 +113,7 @@ var fs:any = [
         (a) => a.shift(),
         [['a','b','c','d','e']],
         {
-            categories: 2,
+            categories: 2
         }
     ],
     [ // 9
@@ -121,7 +121,7 @@ var fs:any = [
         (a, f) => a.every(f),
         [[0,5,2,20,3,23], (e) => e < 10],
         {
-            categories: 1,
+            categories: 1
         }
     ],
     [ // 10
@@ -130,7 +130,7 @@ var fs:any = [
         [[1,2,3], (e) => e < 10],
         [[1,2,3], (e) => e > 10],
         {
-            categories: 1,
+            categories: 1
         }
     ],
     [ // 11
@@ -138,7 +138,7 @@ var fs:any = [
         (a, f) => a.forEach(f),
         [[1,2,3], (e) => 0],
         {
-            categories: 1,
+            categories: 1
         }
     ],
 ]
@@ -197,7 +197,7 @@ var tests = [
 ]
 
 for (var k = 0; k < tests.length; k++) {
-    describe(tests[k][0], () => {
+    describe(<string>tests[k][0], () => {
         for (var i = 0; i < fs.length; i++) {
             var name = fs[i][0]
             var f = fs[i][1]

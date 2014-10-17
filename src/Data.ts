@@ -563,7 +563,7 @@ export class If extends Stmt {
     numberOfStmts(): number {
         return 1 + this.thn.numberOfStmts() + this.els.numberOfStmts()
     }
-    replace(i: number, news: Stmt) {
+    replace(i: number, news: Stmt): Stmt {
         Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
         if (i === 0) {
             return news
@@ -620,7 +620,7 @@ export class For extends Stmt {
     numberOfStmts(): number {
         return 1 + this.body.numberOfStmts()
     }
-    replace(i: number, news: Stmt) {
+    replace(i: number, news: Stmt): Stmt {
         Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
         if (i === 0) {
             return news

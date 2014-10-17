@@ -12,7 +12,7 @@ import Data = require('./Data')
 import Random = require('./util/Random')
 
 // enable proxies
-import harmonyrefl = require('harmony-reflect');
+var harmonyrefl = require('harmony-reflect');
 harmonyrefl;
 declare var Proxy: <T>(target: T, handler: Object) => T;
 declare var Reflect: any
