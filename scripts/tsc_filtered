@@ -1,4 +1,0 @@
-#!/bin/bash
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-/usr/local/bin/tsc --outDir $DIR/../bin/src $@ 2>&1 | $DIR/filter.py
