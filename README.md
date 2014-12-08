@@ -32,3 +32,8 @@ There is also the file `src/main.ts`, that contains various ways to run things. 
 Tests are written using mocha, and can be run by the following command:
 
     npm test
+
+License
+-------
+
+The model synthesis code is distributed under the [Apache License](http://www.apache.org/licenses/LICENSE-2.0.html).
