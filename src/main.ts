@@ -211,11 +211,11 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 10, [8000, 0], true)
-//Search.runSearch(f, a)
+Search.runSearch(f, a)
 
 
 
-
+/*
 // Run some jQuery on a html fragment
 var jsdom = require("jsdom");
 
@@ -225,7 +225,7 @@ for (a in global) {
 print("----");
 for (a in jsdom) {
   print(a);
-}
+}*/
 
 /*
 jsdom.env(

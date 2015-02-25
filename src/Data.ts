@@ -68,7 +68,9 @@ export class Node {
 function clone(config) {
     var res = {}
     for (var k in config) {
-        res[k] = config[k]
+        if (config.hasOwnProperty(k)) {
+            res[k] = config[k]
+        }
     }
     return res
 }
@@ -214,8 +216,7 @@ export class Field extends Prestate {
         return [this.o, this.f]
     }
     anychildren(): any[] {
-        var res: any[] = this.children()
-        return res
+        return this.children()
     }
     toSkeleton(): string {
         return this.o.toSkeleton() + "[" + this.f.toSkeleton() + "]"
@@ -226,10 +227,7 @@ export class Field extends Prestate {
         }
         var o = this.o.eval(args)
         var i = this.f.eval(args)
-        if (Array.isArray(o) && (i < 0 || i >= o.length)) {
-            return false
-        }
-        return true
+        return !(Array.isArray(o) && (i < 0 || i >= o.length));
     }
     isUpdateNop(args: any[], val: any): boolean {
         return this.eval(args) === val
@@ -572,8 +570,7 @@ export class If extends Stmt {
         return [this.c, this.thn, this.els]
     }
     anychildren(): any[] {
-        var res: any[] = this.children()
-        return res
+        return this.children()
     }
     numberOfStmts(): number {
         return 1 + this.thn.numberOfStmts() + this.els.numberOfStmts()
@@ -629,8 +626,7 @@ export class For extends Stmt {
         return [this.variable, this.start, this.end, this.inc, this.body]
     }
     anychildren(): any[] {
-        var res: any[] = this.children()
-        return res
+        return this.children()
     }
     numberOfStmts(): number {
         return 1 + this.body.numberOfStmts()
@@ -746,8 +742,7 @@ export class Assign extends Stmt {
         return [this.lhs, this.rhs]
     }
     anychildren(): any[] {
-        var res: any[] = this.children()
-        return res
+        return this.children()
     }
     toSkeleton(): string {
         if (this.rhs === null) {
@@ -807,8 +802,7 @@ export class FuncCall extends Stmt {
         return res
     }
     anychildren(): any[] {
-        var res: any[] = this.children()
-        return res
+        return this.children()
     }
     toSkeleton(): string {
         var s = ""
@@ -847,8 +841,7 @@ export class Return extends Stmt {
         return [this.rhs]
     }
     anychildren(): any[] {
-        var res: any[] = this.children()
-        return res
+        return this.children()
     }
     toSkeleton(): string {
         return "ret " + this.rhs.toSkeleton()
@@ -871,8 +864,7 @@ export class Throw extends Stmt {
         return [this.rhs]
     }
     anychildren(): any[] {
-        var res: any[] = this.children()
-        return res
+        return this.children()
     }
     toSkeleton(): string {
         return "throw " + this.rhs.toSkeleton()
@@ -938,8 +930,7 @@ export class DeleteProp extends Stmt {
         return [this.o, this.f]
     }
     anychildren(): any[] {
-        var res: any[] = this.children()
-        return res
+        return this.children()
     }
     toSkeleton(): string {
         return "del " + this.f.toSkeleton() + " of " + this.o.toSkeleton()
@@ -967,8 +958,7 @@ export class DefineProp extends Stmt {
         return [this.o, this.f, this.v]
     }
     anychildren(): any[] {
-        var res: any[] = this.children()
-        return res
+        return this.children()
     }
     toSkeleton(): string {
         return "def " + this.f.toSkeleton() + " of " + this.o.toSkeleton() + " as " + this.v.toSkeleton()

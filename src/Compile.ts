@@ -139,7 +139,7 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
                 stmts.push(new Data.DeleteProp(expr(ev.target), expr(ev.name)))
                 break
             default:
-                Util.assert(false, () => "unknown event kind: " + e)
+                Util.assert(false, ((inner_e) => () => "unknown event kind: " + inner_e)(e))
         }
     }
     return stmts;
