@@ -212,47 +212,16 @@ var name = fs[i][0]
 var f = fs[i][1]
 var a = fs[i].slice(2)
 var a0 = a[0]
-
-//howMany(f, a, 10, [8000, 0], true)
 var config = new Search.SearchConfig()
 config.loopIndex = Util.argvlength() > 4 ? parseInt(Util.argv(4)) : 0
-Search.runSearch(f, a, config)
+
+
+//howMany(f, a, 10, [8000, 0], true)
+//Search.runSearch(f, a, config)
 
 
 //InputGen.generateInputs(f, a).map((a) => log(a))
 
-/*
-// Run some jQuery on a html fragment
-var jsdom = require("jsdom");
-
-for (a in global) {
-  print(a);
-}
-print("----");
-for (a in jsdom) {
-  print(a);
-}*/
-
-/*
-jsdom.env(
-  '<p><a class="the-link" href="https://github.com/tmpvar/jsdom">jsdom!</a></p>',
-  ["http://code.jquery.com/jquery.js"],
-  function (errors, window) {
-    var document = proxify(window.document);
-    print("createElement")
-    var newDiv = document.createElement("div");
-    print("createTextNode")
-    var newContent = document.createTextNode("Hi there and greetings!");
-    print("appendChild")
-    newDiv.appendChild(newContent); //add the text node to the newly created div. 
-
-    // // add the newly created element and its content into the DOM 
-    // var currentDiv = document.getElementById("div1"); 
-    // document.body.insertBefore(newDiv, currentDiv); 
-    // console.log("contents of a.the-link:", window.$("div").text());
-  }
-);
-*/
 
 
 /*
