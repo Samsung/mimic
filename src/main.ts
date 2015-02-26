@@ -255,27 +255,19 @@ jsdom.env(
 /*
 function f2(arg0, arg1, arg2) {
     var n0 = arg0.length
-    var n1 = n0
-    var n2 = arg2
-    for (var i7 = 0; i7 < n0; i7 += 1) {
-        n1 = arg0[i7]
-        n2 = arg1.apply(undefined, [ n2, n1, i7, arg0 ])
+    for (var i2 = 0; i2 < arguments.length-1; i2 += 1) {
+        arg0[n0+i2] = arguments[i2+1]
+        if (i2==arguments.length) {
+            break
+        }
     }
-    return n2
-}
-function f3(arg0, arg1, arg2) {
-    var n0 = arg0.length
-    var n1 = n0
-    var n2 = arg2
-    for (var i7 = 0; i7 < n0; i7 += 1) {
-        n1 = arg0[i7]
-        n2 = arg1.apply(undefined, [ n2, n1, i7, arg0 ])
-    }
-    return n2
+    arg0.length = (i2+n0);
+    var n1 = arg0.length
+    return (i2+n0)
 }
 
 var k = 0
-var inputs = InputGen.generateInputs(f, a)//.filter((i) => k++ < 1)
+var inputs = InputGen.generateInputs(f, a).filter((i) => k++ < 10)
 //var ff = (x) => x < 10
 //inputs = [
 //    [[ 1, 1, 0, 0, 1 ], ff,],
@@ -290,31 +282,22 @@ var inputs = InputGen.generateInputs(f, a)//.filter((i) => k++ < 1)
 //    [[ 0 ], ff,],
 //    [[ 0, 1, 1, 0, 3 ], ff,],
 //]
-inputs = [[[undefined], (previousValue, currentValue, index, array) => previousValue + currentValue, 0]]
+//inputs = [[[undefined], (previousValue, currentValue, index, array) => previousValue + currentValue, 0]]
 var traces = inputs.map((i) => Recorder.record(f, i))
 var traces2 = inputs.map((i) => Recorder.record(f2, i))
-var traces3 = inputs.map((i) => Recorder.record(f3, i))
 a0 = inputs[0]
 var t1 = Recorder.record(f, a0)
 print(t1)
 var t2 = Recorder.record(f2, a0)
 print(t2)
-var t3 = Recorder.record(f3, a0)
-print(t3)
 log(inputs)
 line()
 print(Metric.evaluate2(f2, inputs, traces))
-line()
-print(Metric.evaluate2(f3, inputs, traces))
 
 line()
 for (var k = 0; k < inputs.length; k++) {
     log(inputs[k])
     print(Metric.traceDistance(traces[k], traces2[k]))
-}
-print(".")
-for (var k = 0; k < inputs.length; k++) {
-    print(Metric.traceDistance(traces[k], traces3[k]))
 }
 */
 
