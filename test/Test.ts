@@ -249,13 +249,13 @@ describe("Recorder", () => {
 describe("Search.combinePrograms", () => {
     var v0 = new Data.Var();
     var p0 = new Data.Seq([
-        <Data.Stmt>new Data.Assign(v0, new Data.Field(new Data.Argument(0), new Data.Const("length")), true),
+        <Data.Stmt>new Data.Assign(v0, new Data.Field(new Data.Argument(new Data.Const(0)), new Data.Const("length")), true),
         <Data.Stmt>new Data.Assign(new Data.Var(), new Data.Const(2), true)
     ])
 
     var v1 = new Data.Var();
     var p1 = new Data.Seq([
-        <Data.Stmt>new Data.Assign(v1, new Data.Field(new Data.Argument(0), new Data.Const("length")), true),
+        <Data.Stmt>new Data.Assign(v1, new Data.Field(new Data.Argument(new Data.Const(0)), new Data.Const("length")), true),
     ])
 
     var p = Search.combinePrograms([p0, p1])

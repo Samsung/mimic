@@ -311,7 +311,7 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
     var options: Random.WeightedPair<() => Data.Expr>[] = [
         new WeightedPair(info.nArgs > 0 ? 6 : 0, () => {
             // random argument
-            return <Data.Expr>new Data.Argument(Random.randInt(info.nArgs))
+            return <Data.Expr>new Data.Argument(new Data.Const(Random.randInt(info.nArgs)))
         }),
         new WeightedPair(info.constants.length > 0 && !noconst ? 1 : 0, () => {
             // random new constant from the program

@@ -53,7 +53,7 @@ export function record(f: (..._: any[]) => any, args: any[], budget: number = 10
     var iargs = []
     for (var i = 0; i < args.length; i++) {
         iargs[i] = proxify(args[i])
-        var ai = new Data.Argument(i)
+        var ai = new Data.Argument(new Data.Const(i))
         state.addCurState(iargs[i], ai)
         state.addPreState(iargs[i], [ai])
     }

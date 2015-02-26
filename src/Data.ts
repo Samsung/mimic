@@ -360,44 +360,42 @@ export class Unary extends Expr {
  * The i-th argument of a function.
  */
 export class Argument extends Prestate {
-    constructor(public i: number) {
+    constructor(public i: Expr) {
         super(ExprType.Arg, 0)
     }
     toString(config = {}) {
         config = reset(config)
-        if (this.i < 6) {
-            return "arg" + this.i
+        if (this.i instanceof Const && (<Const>this.i).val < 6) {
+            return "arg" + (<Const>this.i).val
         }
-        return "arguments[" + this.i + "]"
+        return "arguments[" + this.i.toString(noparen(config)) + "]"
     }
     eval(args: any[]): any {
-        return args[this.i]
+        return args[this.i.eval(args)]
     }
     update(args: any[], val: any): any {
-        args[this.i] = val;
+        args[this.i.eval(args)] = val;
     }
     equals(o): boolean {
-        return o instanceof Argument && o.i === this.i
+        return o instanceof Argument && o.i.equals(this.i)
     }
     children(): Node[] {
-        return []
+        return [this.i]
     }
     anychildren(): any[] {
-        var res: any[] = this.children()
-        res = res.concat([this.i])
-        return res
+        return this.children()
     }
     toSkeleton(): string {
-        return "arg(" + this.i + ")"
+        return "arg(" + this.i.toSkeleton() + ")"
     }
     canBeUpdated(args: any[]): boolean {
         return this.isSafe(args)
     }
     isUpdateNop(args: any[], val: any): boolean {
-        return args[this.i] === val
+        return args[this.i.eval(args)] === val
     }
     isSafe(args: any[]): boolean {
-        return this.i < args.length
+        return this.i.eval(args) < args.length
     }
 }
 
