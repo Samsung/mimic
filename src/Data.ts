@@ -361,10 +361,10 @@ export class Unary extends Expr {
  */
 export class Argument extends Prestate {
     constructor(public i: Expr) {
+        super(ExprType.Arg, 0)
         if (!(i instanceof Expr)) {
             Util.assert(false);
         }
-        super(ExprType.Arg, 0)
     }
     toString(config = {}) {
         config = reset(config)
