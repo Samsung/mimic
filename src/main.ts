@@ -217,14 +217,14 @@ config.loopIndex = Util.argvlength() > 4 ? parseInt(Util.argv(4)) : 0
 
 
 //howMany(f, a, 10, [8000, 0], true)
-//Search.runSearch(f, a, config)
+Search.runSearch(f, a, config)
 
 
 //InputGen.generateInputs(f, a).map((a) => log(a))
 
 
 
-var debugFun = true
+var debugFun = false
 function f2(arg0, arg1, arg2) {
     var n0 = arg0.length
     var n1
