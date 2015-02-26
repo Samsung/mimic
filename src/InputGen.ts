@@ -55,7 +55,7 @@ export function generate(init: any, n: number): any[] {
         return []
     } else if (type === "undefined") {
         // TODO better strategy
-        return [undefined]
+        return []
     } else if (type === "function") {
         // TODO better strategy
         return []

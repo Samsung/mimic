@@ -211,9 +211,10 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 10, [8000, 0], true)
-Search.runSearch(f, a)
+//Search.runSearch(f, a)
 
 
+InputGen.generateInputs(f, a).map((a) => log(a))
 
 /*
 // Run some jQuery on a html fragment
