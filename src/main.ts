@@ -217,18 +217,18 @@ config.loopIndex = Util.argvlength() > 4 ? parseInt(Util.argv(4)) : 0
 
 
 //howMany(f, a, 10, [8000, 0], true)
-Search.runSearch(f, a, config)
+//Search.runSearch(f, a, config)
 
 
 //InputGen.generateInputs(f, a).map((a) => log(a))
 
 
 
-var debugFun = false
+var debugFun = true
 function f2(arg0, arg1, arg2) {
     var n0 = arg0.length
     var n1
-    var n2
+    var n2 = true
     for (var i9 = 0; i9 < n0; i9 += 1) {
         n1 = arg0[i9]
         n2 = arg1.apply(undefined, [ n1, i9, arg0 ])
@@ -263,14 +263,17 @@ if (debugFun) {
     print(t1)
     var t2 = Recorder.record(f2, a0)
     print(t2)
-    log(inputs)
+    //log(inputs)
     line()
     print(Metric.evaluate2(f2, inputs, traces))
 
     line()
     for (var k = 0; k < inputs.length; k++) {
-        log(inputs[k])
-        print(Metric.traceDistance(traces[k], traces2[k]))
+        var m = Metric.traceDistance(traces[k], traces2[k]);
+        if (m > 0) {
+            log(inputs[k])
+            print(m)
+        }
     }
 }
 
