@@ -49,6 +49,13 @@ export function generate(init: any, n: number): any[] {
                 var oneless = Util.clone(init)
                 oneless.pop()
                 res.push(oneless)
+
+                var onemore = Util.clone(init)
+                var c = generate(init[init.length - 1], 1)
+                if (c.length > 0) {
+                    onemore.push(c[0])
+                    res.push(onemore)
+                }
             }
             return res
         }
