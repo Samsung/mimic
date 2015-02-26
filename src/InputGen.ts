@@ -109,23 +109,23 @@ export function categorize(inputs, traces: Data.Trace[], loop: StructureInferenc
 export function generateInputs(f: (...a: any[]) => any, args: any[][]) {
     var candidates = genCandidateExpr(f, args)
     var result = generateInputsAux(f, args, candidates)
-    var newRes = []
-    result.map((i) => {
-        newRes.push(i)
-        if (i.length > 0) {
-            //var oneless = Util.clone(init)
-            //oneless.pop()
-            //res.push(oneless)
-
-            var onemore = Util.clone(i)
-            var c = generate(i[i.length - 1], 1)
-            if (c.length > 0) {
-                onemore.push(c[0])
-                newRes.push(onemore)
-            }
-        }
-    })
-    return newRes
+    //var newRes = []
+    //result.map((i) => {
+    //    newRes.push(i)
+    //    if (i.length > 0) {
+    //        //var oneless = Util.clone(init)
+    //        //oneless.pop()
+    //        //res.push(oneless)
+    //
+    //        var onemore = Util.clone(i)
+    //        var c = generate(i[i.length - 1], 1)
+    //        if (c.length > 0) {
+    //            onemore.push(c[0])
+    //            newRes.push(onemore)
+    //        }
+    //    }
+    //})
+    return result
 }
 
 function generateInputsAux(f: (...a: any[]) => any, initials: any[][], exprs: Data.Prestate[]): any[][] {
