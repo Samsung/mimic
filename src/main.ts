@@ -224,22 +224,23 @@ Search.runSearch(f, a, config)
 
 
 
-/*
+var debugFun = false
 function f2(arg0, arg1, arg2) {
     var n0 = arg0.length
-    for (var i2 = 0; i2 < arguments.length-1; i2 += 1) {
-        arg0[n0+i2] = arguments[i2+1]
-        if (i2==arguments.length) {
+    var n1
+    var n2
+    for (var i9 = 0; i9 < n0; i9 += 1) {
+        n1 = arg0[i9]
+        n2 = arg1.apply(undefined, [ n1, i9, arg0 ])
+        if (!n2) {
             break
         }
     }
-    arg0.length = (i2+n0);
-    var n1 = arg0.length
-    return (i2+n0)
+    return n2
 }
-
-var k = 0
-var inputs = InputGen.generateInputs(f, a).filter((i) => k++ < 10)
+if (debugFun) {
+    var k = 0
+    var inputs = InputGen.generateInputs(f, a).filter((i) => k++ < 1000)
 //var ff = (x) => x < 10
 //inputs = [
 //    [[ 1, 1, 0, 0, 1 ], ff,],
@@ -255,23 +256,23 @@ var inputs = InputGen.generateInputs(f, a).filter((i) => k++ < 10)
 //    [[ 0, 1, 1, 0, 3 ], ff,],
 //]
 //inputs = [[[undefined], (previousValue, currentValue, index, array) => previousValue + currentValue, 0]]
-var traces = inputs.map((i) => Recorder.record(f, i))
-var traces2 = inputs.map((i) => Recorder.record(f2, i))
-a0 = inputs[0]
-var t1 = Recorder.record(f, a0)
-print(t1)
-var t2 = Recorder.record(f2, a0)
-print(t2)
-log(inputs)
-line()
-print(Metric.evaluate2(f2, inputs, traces))
+    var traces = inputs.map((i) => Recorder.record(f, i))
+    var traces2 = inputs.map((i) => Recorder.record(f2, i))
+    a0 = inputs[0]
+    var t1 = Recorder.record(f, a0)
+    print(t1)
+    var t2 = Recorder.record(f2, a0)
+    print(t2)
+    log(inputs)
+    line()
+    print(Metric.evaluate2(f2, inputs, traces))
 
-line()
-for (var k = 0; k < inputs.length; k++) {
-    log(inputs[k])
-    print(Metric.traceDistance(traces[k], traces2[k]))
+    line()
+    for (var k = 0; k < inputs.length; k++) {
+        log(inputs[k])
+        print(Metric.traceDistance(traces[k], traces2[k]))
+    }
 }
-*/
 
 
 /*
