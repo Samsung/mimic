@@ -219,7 +219,7 @@ function isEqualModulaVar(a: Data.Expr, b: Data.Expr, vm: Map<Data.Var, Data.Var
         case Data.ExprType.Arg:
             aa = <Data.Argument>a
             bb = <Data.Argument>b
-            return aa.i === bb.i
+            return rec(aa.i, bb.i)
         case Data.ExprType.Var:
             aa = <Data.Var>a
             bb = <Data.Var>b
