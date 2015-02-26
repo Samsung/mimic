@@ -45,12 +45,7 @@ var Gray = Ansi.Gray
 /**
  * Run a search, an output various debug information along the way.
  */
-export function runSearch(f, a) {
-    var config = new SearchConfig({
-        iterations: 100000,
-        cleanupIterations: 700,
-        debug: 1,
-    })
+export function runSearch(f, a, config: SearchConfig = new SearchConfig()) {
     Gray("Configuration: " + config.toString())
     var res = search(f, a, config)
     Gray("Found in " + res.iterations + " iterations:")
@@ -66,7 +61,7 @@ export function runSearch(f, a) {
 /**
  * Search for a model of a given function.
  */
-export function search(f: (...a: any[]) => any, args: any[][], config: SearchConfig = new SearchConfig()): SearchResult {
+export function search(f: (...a: any[]) => any, args: any[][], config: SearchConfig): SearchResult {
     if (config.debug) Ansi.Gray("Recording original execution...")
     var trace = Recorder.record(f, args[0])
     if (config.debug) print(trace)
@@ -83,7 +78,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         var i = 0
         if (config.debug) print(loops.filter((x) => i++ < 4).join("\n"))
         // for now, only use first loop
-        loop = loops[0]
+        loop = loops[config.loopIndex]
     }
     if (config.debug) Ansi.Gray("Found " + loops.length + " possible loops.")
     if (config.debug) Ansi.Gray("Using this loop: " + loop)
@@ -128,7 +123,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
             metric: (pp) => Metric.evaluate(pp, inputs, realTraces),
             iterations: iterations,
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
-            base: config,
+            base: config
         })
         result.executions = inputs.length * result.iterations
 
@@ -186,7 +181,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
             metric: (pp) => Metric.evaluate(pp, cleanupInputs, cleanupTraces, true),
             iterations: config.cleanupIterations,
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
-            base: config,
+            base: config
         })
         secondarySearch.executions = cleanupInputs.length * secondarySearch.iterations
         p = secondarySearch.result
@@ -290,7 +285,7 @@ export class SearchResult {
         result: <Data.Program>null,
         score: -1,
         executions: 0,
-        time: 0,
+        time: 0
     })
     public iterations: number
     public result: Data.Program
@@ -322,21 +317,24 @@ export class SearchResult {
 
 export class SearchConfig {
     static DEFAULT = {
-        iterations: 5000,
+        iterations: 100000,
         cleanupIterations: 700,
-        debug: 0,
+        debug: 1,
+        loopIndex: 0
     }
     constructor(o: SearchConfig = SearchConfig.DEFAULT) {
         this.iterations = o.iterations
         this.cleanupIterations = o.cleanupIterations
         this.debug = o.debug
+        this.loopIndex = o.loopIndex
     }
     iterations: number
     cleanupIterations: number
     debug: number
+    loopIndex: number
 
     toString(): string {
-        return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup"
+        return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup, using loop " + this.loopIndex
     }
 }
 
@@ -401,7 +399,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
         result: p,
         score: badness,
         executions: -1,
-        time:time,
+        time:time
     })
 }
 

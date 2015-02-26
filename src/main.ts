@@ -91,6 +91,7 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0], verbose = false
             iterations: max[0],
             cleanupIterations: max[1],
             debug: 0,
+            loopIndex: 0
         })
         if (res.score === 0) {
             success += 1
@@ -213,7 +214,9 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 10, [8000, 0], true)
-Search.runSearch(f, a)
+var config = new Search.SearchConfig()
+config.loopIndex = Util.argvlength() > 4 ? parseInt(Util.argv(4)) : 0
+Search.runSearch(f, a, config)
 
 
 //InputGen.generateInputs(f, a).map((a) => log(a))
