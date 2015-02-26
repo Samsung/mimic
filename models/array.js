@@ -1,5 +1,5 @@
 
-
+// loopIndex: 3
 function push(arg0) {
     var n0 = arg0.length
     for (var i2 = 0; i2 < (arguments.length-1); i2 += 1) {
@@ -49,6 +49,46 @@ function every(arg0, arg1) {
         if (!n2) {
             break
         }
+    }
+    return n2
+}
+
+function some(arg0, arg1) {
+    var n0 = arg0.length
+    var n1
+    var n2 = false
+    for (var i3 = 0; i3 < n0; i3 += 1) {
+        n1 = arg0[i3]
+        n2 = arg1.apply(undefined, [ n1, i3, arg0 ])
+        if (n2) {
+            break
+        }
+    }
+    return n2
+}
+
+// loopIndex: 1
+function indexOf() {
+
+}
+
+function forEach(arg0, arg1) {
+    var n0 = arg0.length
+    var n1
+    var n2 = n1
+    for (var i7 = 0; i7 < n0; i7 += 1) {
+        n1 = arg0[i7]
+        n2 = arg1.apply(undefined, [ n1, i7, arg0 ])
+    }
+}
+
+function reduce(arg0, arg1, arg2) {
+    var n0 = arg0.length
+    var n1
+    var n2 = arg2
+    for (var i7 = 0; i7 < n0; i7 += 1) {
+        n1 = arg0[i7]
+        n2 = arg1.apply(undefined, [ n2, n1, i7, arg0 ])
     }
     return n2
 }
