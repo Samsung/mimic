@@ -361,6 +361,9 @@ export class Unary extends Expr {
  */
 export class Argument extends Prestate {
     constructor(public i: Expr) {
+        if (!(i instanceof Expr)) {
+            Util.assert(false);
+        }
         super(ExprType.Arg, 0)
     }
     toString(config = {}) {
@@ -405,10 +408,14 @@ export class Argument extends Prestate {
 export class Var extends Expr {
     static _count = 0
     name: string
-    constructor(prefix: string = "n") {
+    constructor(prefix: string = "n", arguments: boolean = false) {
         super(ExprType.Var, 0)
-        this.name = prefix + Var._count
-        Var._count++
+        if (arguments) {
+            this.name = "arguments"
+        } else {
+            this.name = prefix + Var._count
+            Var._count++
+        }
     }
     toString(config = {}) {
         if ("novar" in config) {

@@ -126,8 +126,10 @@ var fs:any = [
     ],
     [ // 2
         "Array.prototype.push",
-        (arr, v) => arr.push(v),
-        [['a', 'b', 'c'], 'd']
+        (arr, ...args) => Array.prototype.push.apply(arr, args),
+        [['a', 'b', 'c'], 'd'],
+        [['a', 'b', 'c'], 'd', 'e', 'f'],
+        [['a', 'b', 'c'], 'd', 'e', 'f', 'h']
     ],
     [ // 3
         "array index",
@@ -211,10 +213,10 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 
 //howMany(f, a, 10, [8000, 0], true)
-//Search.runSearch(f, a)
+Search.runSearch(f, a)
 
 
-InputGen.generateInputs(f, a).map((a) => log(a))
+//InputGen.generateInputs(f, a).map((a) => log(a))
 
 /*
 // Run some jQuery on a html fragment

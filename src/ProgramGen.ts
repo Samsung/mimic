@@ -80,6 +80,12 @@ class MaybeAstFactory {
         }
         return new Data.Return(a)
     }
+    static makeArgument(a: Data.Expr): Data.Argument {
+        if (a === null) {
+            return null
+        }
+        return new Data.Argument(a)
+    }
     static makeThrow(a: Data.Expr): Data.Throw {
         if (a === null) {
             return null
@@ -305,7 +311,16 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
     var zeroD = depth === 0
 
     var recurse = (a: any = {}) => {
+        if (depth <= 0) return null
         return randomExpr(info, stmtIdx, a, depth - 1)
+    }
+
+    var randomVar = () => {
+        var varDef: Data.VarDef = randArr(info.variables)
+        if (varDef.definedAt >= stmtIdx) {
+            return null
+        }
+        return <Data.Expr>varDef.v
     }
 
     var options: Random.WeightedPair<() => Data.Expr>[] = [
@@ -313,17 +328,21 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
             // random argument
             return <Data.Expr>new Data.Argument(new Data.Const(Random.randInt(info.nArgs)))
         }),
+        new WeightedPair(info.nArgs > 0 ? 2 : 0, () => {
+            // random argument
+            return <Data.Expr>Ast.makeArgument(recurse({num: true, noconst: true}))
+        }),
+        new WeightedPair(info.nArgs > 0 ? 2 : 0, () => {
+            // random argument
+            return <Data.Expr>Ast.makeField(new Data.Var("arguments", true), new Data.Const("length"))
+        }),
         new WeightedPair(info.constants.length > 0 && !noconst ? 1 : 0, () => {
             // random new constant from the program
             return <Data.Expr>randArr(info.constants)
         }),
         new WeightedPair(info.variables.length > 0 ? 4 : 0, () => {
             // random variable from the program
-            var varDef: Data.VarDef = randArr(info.variables)
-            if (varDef.definedAt >= stmtIdx) {
-                return null
-            }
-            return <Data.Expr>varDef.v
+            return randomVar()
         }),
         new WeightedPair(zeroD ? 0 : 0/*3*/, () => {
             // random new field
@@ -332,6 +351,10 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
         new WeightedPair(nonPrimitive || zeroD ? 0 : 2, () => {
             // random new addition
             return <Data.Expr>Ast.makeBinary(recurse({num: true, noconst: true}), "+", new Data.Const(maybe() ? 1 : -1))
+        }),
+        new WeightedPair(nonPrimitive || zeroD ? 0 : 1, () => {
+            // random new addition of two variables
+            return <Data.Expr>Ast.makeBinary(randomVar(), "+", randomVar())
         }),
         new WeightedPair(bool && !zeroD ? 1 : 0, () => {
             // random new comparison
