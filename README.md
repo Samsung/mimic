@@ -21,7 +21,7 @@ Note that some type warnings;  these can safely be ignored.  You may want to mak
 
 To run the model synthesis, the script `model-synth` can be used.  For instance:
 
-    ./model-synth "x,y" "return x+1" "[1]"
+    ./model-synth synth "x,y" "return x+1" "[1]"
 
 There is also the file `src/main.ts`, that contains various ways to run things.  Invoke it (after compilation) as follows:
 
