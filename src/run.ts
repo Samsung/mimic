@@ -26,40 +26,59 @@ import Util = require('./util/Util')
 import Ansi = require('./util/Ansicolors')
 import Data = require('./Data')
 import Search = require('./Search')
+import Recorder = require('./Recorder')
 import StructureInference = require('./StructureInference')
 
 var log = Util.log
 var print = Util.print
 var line = Util.line
 
-// run search
+var commands = ["synth", "record"]
+
+function error(message) {
+    print(Ansi.red("Error: " + message))
+    Util.exit(1)
+}
+
 var argc = Util.argvlength();
 if (argc < 6) {
-    print("Usage: model-synth subcommand arg-names function-body args0 [args1 [args2 ...]]")
+    print("Usage: model-synth (" + commands.join("|") + ") arg-names function-body args0 [args1 [args2 ...]]")
     print('Example: model-synth synth "x,y" "return x+1" "[1]"')
+    print("")
+    print("  synth   synthesize a model for a given function")
+    print("  record  record a trace for a given function")
 } else {
     var subcommand = Util.argv(2)
+    if (commands.indexOf(subcommand) == -1) {
+        error("unknown subcommand '" + subcommand + "', use one of: " + commands.join(", "))
+    }
     var fstr = Util.argv(3).split(",")
     fstr.push(Util.argv(4))
     try {
         var f = Function.apply(null, fstr)
     } catch (e) {
-        print(Ansi.red("Error: Could not parse function '"+fstr+"'"))
-        print("  " + e)
-        Util.exit(1)
+        error("Could not parse function '"+fstr+"'\n  " + e)
     }
     var args = []
     for (var i = 0; i < argc - 5; i++) {
-
         try {
             var arg = Util.argv(i+5)
             args.push(eval(arg))
         } catch (e) {
-            print(Ansi.red("Error: Could not parse argument " + (i+2) + " '"+arg+"':"))
-            print("  " + e)
-            Util.exit(1)
+            error("Error: Could not parse argument " + (i+2) + " '"+arg+"':\n  " + e)
         }
     }
-    Search.runSearch(f, args)
-}
 
+    if (subcommand === "synth") {
+        Search.runSearch(f, args)
+    } else if (subcommand === "record") {
+        if (args.length > 1) {
+            error("Can only record a trace for one set of arguments.")
+        }
+        if (args.length < 1) {
+            error("No arguments provided.")
+        }
+        var trace = Recorder.record(f, args[0])
+        print(trace)
+    }
+}
