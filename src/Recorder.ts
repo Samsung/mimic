@@ -86,6 +86,8 @@ export function record(f: (..._: any[]) => any, args: any[], budget: number = 10
     trace.setConstants(state.constants)
 
     state = null
+    //state = new State(100000)
+    //state.doRecord = false
 
     return trace
 }
@@ -121,6 +123,10 @@ class State {
             this.constants.push(new Data.Const(v))
             return new Data.TraceConst(v)
         }
+        if (!this.proxy2object.has(v)) {
+            // newly allocated object
+            return new Data.TraceAlloc(v)
+        }
         Util.assert(this.proxy2object.has(v), () => "texpr only accepts proxied inputs")
         return new Data.TraceExpr(this.preState.get(v), this.curState.get(v))
     }
@@ -145,6 +151,9 @@ class State {
 
 var state: State = null
 var common = function (target: Object): Data.TraceExpr {
+    //if (!state.object2proxy.has(target)) {
+    //    return;
+    //}
     Util.assert(state.object2proxy.has(target), () => "target not proxied")
     var res = state.texpr(state.object2proxy.get(target))
     Util.assert(res !== undefined, () => "target TraceExpr undefined")

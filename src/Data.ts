@@ -1248,3 +1248,15 @@ export class TraceConst extends TraceExpr {
         return s
     }
 }
+export class TraceAlloc extends TraceExpr {
+    constructor(public val: any) {
+        super([<Expr>new Const(undefined)], [<Expr>new Const(undefined)])
+    }
+    toString(config = {}): string {
+        var s = "Allocated"
+        s += "("
+        s += Util.inspect(this.val, false)
+        s += ")"
+        return s
+    }
+}
