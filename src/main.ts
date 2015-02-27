@@ -217,7 +217,7 @@ config.loopIndex = Util.argvlength() > 4 ? parseInt(Util.argv(4)) : 0
 
 
 //howMany(f, a, 10, [8000, 0], true)
-Search.runSearch(f, a, config)
+//Search.runSearch(f, a, config)
 
 
 //InputGen.generateInputs(f, a).map((a) => log(a))

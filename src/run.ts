@@ -34,12 +34,13 @@ var line = Util.line
 
 // run search
 var argc = Util.argvlength();
-if (argc < 5) {
-    print("Usage: model-synth arg-names function-body args0 [args1 [args2 ...]]")
-    print('Example: model-synth "x,y" "return x+1" "[1]"')
+if (argc < 6) {
+    print("Usage: model-synth subcommand arg-names function-body args0 [args1 [args2 ...]]")
+    print('Example: model-synth synth "x,y" "return x+1" "[1]"')
 } else {
-    var fstr = Util.argv(2).split(",")
-    fstr.push(Util.argv(3))
+    var subcommand = Util.argv(2)
+    var fstr = Util.argv(3).split(",")
+    fstr.push(Util.argv(4))
     try {
         var f = Function.apply(null, fstr)
     } catch (e) {
@@ -48,13 +49,13 @@ if (argc < 5) {
         Util.exit(1)
     }
     var args = []
-    for (var i = 0; i < argc - 4; i++) {
+    for (var i = 0; i < argc - 5; i++) {
 
         try {
-            var arg = Util.argv(i+4)
+            var arg = Util.argv(i+5)
             args.push(eval(arg))
         } catch (e) {
-            print(Ansi.red("Error: Could not parse argument " + (i+1) + " '"+arg+"':"))
+            print(Ansi.red("Error: Could not parse argument " + (i+2) + " '"+arg+"':"))
             print("  " + e)
             Util.exit(1)
         }
