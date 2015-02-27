@@ -352,7 +352,7 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
             // random new addition
             return <Data.Expr>Ast.makeBinary(recurse({num: true, noconst: true}), "+", new Data.Const(maybe() ? 1 : -1))
         }),
-        new WeightedPair(nonPrimitive || zeroD ? 0 : 1, () => {
+        new WeightedPair(nonPrimitive || zeroD || info.variables.length  == 0 ? 0 : 1, () => {
             // random new addition of two variables
             return <Data.Expr>Ast.makeBinary(randomVar(), "+", randomVar())
         }),
