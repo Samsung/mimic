@@ -406,15 +406,22 @@ export class Argument extends Prestate {
  * A local variable.
  */
 export class Var extends Expr {
-    static _count = 0
+    static _count: Object = {}
     name: string
-    constructor(prefix: string = "n", arguments: boolean = false) {
+    constructor(prefix: string = "n", fixedName: boolean = false) {
         super(ExprType.Var, 0)
-        if (arguments) {
-            this.name = "arguments"
+        if (fixedName) {
+            this.name = prefix
         } else {
-            this.name = prefix + Var._count
-            Var._count++
+            // TODO: why is this necessary??
+            if (typeof(Var._count) === "number") {
+                Var._count = {}
+            }
+            if (!(prefix in Var._count)) {
+                Var._count[prefix] = 0
+            }
+            this.name = prefix + Var._count[prefix]
+            Var._count[prefix]++
         }
     }
     toString(config = {}) {

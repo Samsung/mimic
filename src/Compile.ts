@@ -92,7 +92,10 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
                 }
             }
         })
-        bodystmt.push(new Data.If(new Data.Const(false), new Data.Break(), Data.Seq.Empty))
+        var resvar = new Data.Var("result", true)
+        var resres: Data.Stmt = new Data.Assign(resvar, resvar);
+        bodystmt.push(new Data.If(new Data.Const(false), new Data.Seq([resres, <Data.Stmt>new Data.Break()]), Data.Seq.Empty))
+        bodystmt.push(resres)
         var body = new Data.Seq(bodystmt)
 
         var res: Data.Stmt[] = vars.map((v) => new Data.Assign(v, null, true))
@@ -148,11 +151,19 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
  * Compile a trace to a program.
  */
 export function compileTrace(trace: Data.Trace, loop?: StructureInference.Proposal): Data.Program {
-    var stmts = compileEventList(trace.events, loop, trace)
+    var resvar = new Data.Assign(new Data.Var("result", true), null, true)
+    var stmts: Data.Stmt[] = compileEventList(trace.events, loop, trace)
     if (trace.isNormalReturn) {
-        stmts.push(new Data.Return(expr(trace.getResult())))
+        var res = expr(trace.getResult())
+        if (res instanceof Data.Const) {
+            resvar.rhs = res
+            stmts.push(new Data.Return(resvar.lhs))
+        } else {
+            stmts.push(new Data.Return(res))
+        }
     } else {
         stmts.push(new Data.Throw(expr(trace.getException())))
     }
+    stmts = [<Data.Stmt>resvar].concat(stmts)
     return new Data.Program(new Data.Seq(stmts))
 }
