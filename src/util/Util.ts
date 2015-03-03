@@ -72,6 +72,9 @@ export function rrr(v?: number) {
     if (v === undefined) {
         v = parseInt(process.argv[2])
     }
+    if (v == -1) {
+        v = Math.floor(Math.random() * 100000);
+    }
     return new random(random.engines.mt19937().seed(v))
 }
 
