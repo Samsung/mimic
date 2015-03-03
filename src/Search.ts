@@ -50,12 +50,14 @@ export function runSearch(f, a, config: SearchConfig = new SearchConfig()) {
     var res = search(f, a, config)
     Gray("Found in " + res.iterations + " iterations:")
     Gray(Util.indent(res.getStats()))
+    var exit = 1
     if (res.score > 0) {
         Ansi.Red("  Score: " + res.score)
     } else {
         Gray("  Score: " + res.score)
     }
     print(res.result.toString())
+    Util.exit(exit)
 }
 
 /**
