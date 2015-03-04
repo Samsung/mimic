@@ -273,3 +273,32 @@ describe("Search.combinePrograms", () => {
         Util.assert((<Data.Assign>p.allStmts()[1]).isDecl, () => "should be a decl")
     })
 })
+
+describe("Search.combinePrograms2", () => {
+    var v0 = new Data.Var();
+    var p0 = new Data.Seq([
+        <Data.Stmt>new Data.Marker(),
+        <Data.Stmt>new Data.Assign(v0, new Data.Field(new Data.Argument(new Data.Const(0)), new Data.Const("length")), true),
+        <Data.Stmt>new Data.Assign(new Data.Var(), new Data.Const(2), true)
+    ])
+
+    var v1 = new Data.Var();
+    var p1 = new Data.Seq([
+        <Data.Stmt>new Data.Marker(),
+        <Data.Stmt>new Data.Assign(v1, new Data.Field(new Data.Argument(new Data.Const(0)), new Data.Const("length")), true),
+    ])
+
+    var p = Search.combinePrograms([p0, p1])
+
+    it("should find common statements", () => {
+        ass.equal(p.numberOfStmts(), 6)
+        Util.assert(p.allStmts()[0].type === Data.StmtType.Assign, () => "should be an assignment")
+        Util.assert(p.allStmts()[1].type === Data.StmtType.Assign, () => "should be an assignment")
+        Util.assert(p.allStmts()[2].type === Data.StmtType.If, () => "should be an if")
+    })
+
+    it("should find common statements", () => {
+        Util.assert((<Data.Assign>p.allStmts()[0]).isDecl, () => "should be a decl")
+        Util.assert((<Data.Assign>p.allStmts()[1]).isDecl, () => "should be a decl")
+    })
+})

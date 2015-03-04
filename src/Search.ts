@@ -281,8 +281,8 @@ export function combinePrograms(progs: Data.Stmt[]) {
             if (av.name != bv.name) {
                 prefix.push(new Data.Assign(bv, av, true))
             }
-            a = a.replace(0, Data.Seq.Empty)
-            b = b.replace(0, Data.Seq.Empty)
+            a = a.replace(aind, Data.Seq.Empty)
+            b = b.replace(bind, Data.Seq.Empty)
             aind = 0
             bind = 0
         } else {
