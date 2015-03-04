@@ -319,8 +319,8 @@ export class SearchResult {
 
 export class SearchConfig {
     static DEFAULT = {
-        iterations: 100000,
-        cleanupIterations: 700,
+        iterations: 50000,
+        cleanupIterations: 0,
         debug: 1,
         loopIndex: 0
     }
