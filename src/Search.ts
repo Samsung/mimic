@@ -236,20 +236,38 @@ export function combinePrograms(progs: Data.Stmt[]) {
     var isLocalVarAssign = (s: Data.Stmt) => s.type === Data.StmtType.Assign &&
         (<Data.Assign>s).isDecl && (<Data.Assign>s).rhs != null &&
         (<Data.Assign>s).rhs.type === Data.ExprType.Field
+    var isMarker = (s: Data.Stmt) => s.type === Data.StmtType.Marker
+    var isResultAssign = (s: Data.Stmt) => s.type === Data.StmtType.Assign &&
+        (<Data.Assign>s).lhs.type === Data.ExprType.Var &&
+        (<Data.Var>((<Data.Assign>s).lhs)).name === "result"
     var getVar = (s: Data.Stmt) => <Data.Var>(<Data.Assign>s).lhs
     var getRhs = (s: Data.Stmt) => (<Data.Assign>s).rhs
     var prefix: Data.Stmt[] = []
 
     var vm = new Map<Data.Var, Data.Var>()
 
+    var aind = 0
+    var bind = 0
     while (true) {
         var as = a.allStmts()
         var bs = b.allStmts()
-        if (as.length === 0 || bs.length === 0) {
+        if (as.length <= aind || bs.length <= bind) {
             break
         }
-        var a0 = as[0]
-        var b0 = bs[0]
+        var a0 = as[aind]
+        var b0 = bs[bind]
+
+        // skip result assignments and markers
+        if (isResultAssign(a0) || isMarker(a0)) {
+            aind += 1
+            continue
+        }
+        if (isResultAssign(b0) || isMarker(b0)) {
+            bind += 1
+            continue
+        }
+
+        // we can only deal with variable assignments here
         if (!isLocalVarAssign(a0) || !isLocalVarAssign(b0)) {
             break
         }
@@ -265,6 +283,8 @@ export function combinePrograms(progs: Data.Stmt[]) {
             }
             a = a.replace(0, Data.Seq.Empty)
             b = b.replace(0, Data.Seq.Empty)
+            aind = 0
+            bind = 0
         } else {
             break
         }
