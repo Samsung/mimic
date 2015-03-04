@@ -54,6 +54,7 @@ export function runSearch(f, a, config: SearchConfig = new SearchConfig()) {
     if (res.score > 0) {
         Ansi.Red("  Score: " + res.score)
     } else {
+        exit = 0
         Gray("  Score: " + res.score)
     }
     print(res.result.toString())
