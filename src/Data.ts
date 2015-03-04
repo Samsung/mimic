@@ -413,10 +413,6 @@ export class Var extends Expr {
         if (fixedName) {
             this.name = prefix
         } else {
-            // TODO: why is this necessary??
-            if (typeof(Var._count) === "number") {
-                Var._count = {}
-            }
             if (!(prefix in Var._count)) {
                 Var._count[prefix] = 0
             }
