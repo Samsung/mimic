@@ -226,17 +226,17 @@ Search.runSearch(f, a, config)
 
 var debugFun = false
 function f2(arg0, arg1, arg2) {
+    var result = -1
     var n0 = arg0.length
-    var n1
-    var n2 = true
-    for (var i9 = 0; i9 < n0; i9 += 1) {
-        n1 = arg0[i9]
-        n2 = arg1.apply(undefined, [ n1, i9, arg0 ])
-        if (!n2) {
+    var n1 = arg0
+    for (var i0 = 0; i0 < n0; i0 += 1) {
+        n1 = arg0[i0]
+        if (n1==arg1) {
+            result = i0
             break
         }
     }
-    return n2
+    return result
 }
 if (debugFun) {
     var k = 0
