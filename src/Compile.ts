@@ -40,22 +40,23 @@ export function compile(prog: Data.Program): (...a: any[]) => any {
  */
 export function compile2(prog: string): (...a: any[]) => any {
     return function (...a: any[]): any {
+        var recv = Recorder.getReceiver()
         if (a.length === 0) {
-            return new Function('"use strict";' + prog).apply(null, a)
+            return new Function('"use strict";' + prog).apply(recv, a)
         } else if (a.length === 1) {
-            return new Function("arg0", '"use strict";' + prog).apply(null, a)
+            return new Function("arg0", '"use strict";' + prog).apply(recv, a)
         } else if (a.length === 2) {
-            return new Function("arg0", "arg1", '"use strict";' + prog).apply(null, a)
+            return new Function("arg0", "arg1", '"use strict";' + prog).apply(recv, a)
         } else if (a.length === 3) {
-            return new Function("arg0", "arg1", "arg2", '"use strict";' + prog).apply(null, a)
+            return new Function("arg0", "arg1", "arg2", '"use strict";' + prog).apply(recv, a)
         } else if (a.length === 4) {
-            return new Function("arg0", "arg1", "arg2", "arg3", '"use strict";' + prog).apply(null, a)
+            return new Function("arg0", "arg1", "arg2", "arg3", '"use strict";' + prog).apply(recv, a)
         } else if (a.length === 5) {
-            return new Function("arg0", "arg1", "arg2", "arg3", "arg4", '"use strict";' + prog).apply(null, a)
+            return new Function("arg0", "arg1", "arg2", "arg3", "arg4", '"use strict";' + prog).apply(recv, a)
         } else if (a.length === 6) {
-            return new Function("arg0", "arg1", "arg2", "arg3", "arg4", "arg5", '"use strict";' + prog).apply(null, a)
+            return new Function("arg0", "arg1", "arg2", "arg3", "arg4", "arg5", '"use strict";' + prog).apply(recv, a)
         }
-        return new Function('"use strict";' + prog).apply(Recorder.getReceiver(), a)
+        return new Function('"use strict";' + prog).apply(recv, a)
     }
 }
 
