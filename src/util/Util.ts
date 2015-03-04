@@ -74,6 +74,7 @@ export function rrr(v?: number) {
     }
     if (v == -1) {
         v = Math.floor(Math.random() * 100000);
+        print("Seed: " + v)
     }
     return new random(random.engines.mt19937().seed(v))
 }
