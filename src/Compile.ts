@@ -22,6 +22,7 @@
 import Util = require('./util/Util')
 import Ansi = require('./util/Ansicolors')
 import Data = require('./Data')
+import Recorder = require('./Recorder')
 import StructureInference = require('./StructureInference')
 
 var log = Util.log
@@ -54,7 +55,7 @@ export function compile2(prog: string): (...a: any[]) => any {
         } else if (a.length === 6) {
             return new Function("arg0", "arg1", "arg2", "arg3", "arg4", "arg5", '"use strict";' + prog).apply(null, a)
         }
-        return new Function('"use strict";' + prog).apply(null, a)
+        return new Function('"use strict";' + prog).apply(Recorder.getReceiver(), a)
     }
 }
 
@@ -68,6 +69,9 @@ function expr(e: Data.TraceExpr) {
  */
 function compileEventList(events: Data.Event[], loop: StructureInference.Proposal = null, trace: Data.Trace = null) {
     var stmts:Data.Stmt[] = []
+
+    // add a fake statement to make sure we get can catch infinite loops
+    stmts.push(new Data.Marker())
 
     /**
      * Given a body, this method assembles a for loop.

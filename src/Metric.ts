@@ -67,7 +67,7 @@ export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: 
         // give a budget of 110% compared to the real trace, but always
         // give at least 5 more, but don't exceed than 20 more
         var budget = base + Math.min(20, Math.max(5, 0.1 * base))
-        var candidateTrace = Recorder.record(code, inputs[i], budget)
+        var candidateTrace = Recorder.record(f, inputs[i], budget)
         var td = traceDistance(realTraces[i], candidateTrace, p)
         Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td

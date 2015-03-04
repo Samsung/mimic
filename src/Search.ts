@@ -234,7 +234,7 @@ export function combinePrograms(progs: Data.Stmt[]) {
     var a = progs.pop()
 
     var isLocalVarAssign = (s: Data.Stmt) => s.type === Data.StmtType.Assign &&
-        (<Data.Assign>s).isDecl &&
+        (<Data.Assign>s).isDecl && (<Data.Assign>s).rhs != null &&
         (<Data.Assign>s).rhs.type === Data.ExprType.Field
     var getVar = (s: Data.Stmt) => <Data.Var>(<Data.Assign>s).lhs
     var getRhs = (s: Data.Stmt) => (<Data.Assign>s).rhs

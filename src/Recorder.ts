@@ -108,14 +108,19 @@ class State {
     public curState = new Map<Object, Data.Expr[]>()
     public preStates: Data.Prestate[] = []
     public constants: Data.Const[] = []
+    private budgetUsed = 0
     constructor(public budget: number) {
     }
     /** record an event */
     record(ev: Data.Event) {
-        if (this.trace.events.length > this.budget) {
+        if (this.budgetUsed > this.budget) {
             throw new BudgetExhausted()
         }
         this.trace.extend(ev)
+    }
+    /** add a step in the execution (for budget calculations) */
+    addStep() {
+        this.budgetUsed += 1
     }
     /** get the trace expression for an (unproxied) value */
     texpr(v: any): Data.TraceExpr {
@@ -154,6 +159,7 @@ var common = function (target: Object): Data.TraceExpr {
     //if (!state.object2proxy.has(target)) {
     //    return;
     //}
+    state.addStep()
     Util.assert(state.object2proxy.has(target), () => "target not proxied")
     var res = state.texpr(state.object2proxy.get(target))
     Util.assert(res !== undefined, () => "target TraceExpr undefined")
@@ -311,6 +317,20 @@ function proxify<T>(o: T): T {
     state.proxy2object.set(p, o)
     state.object2proxy.set(o, p)
     return p
+}
+
+var recv = Proxy({}, {
+    set: function(target, name: string, value, receiver) {
+        if (state != null) {
+            state.addStep()
+        }
+        return Reflect.set(target, name, value, receiver)
+    }
+})
+
+/** Returns a receiver that is used for function calls to prevent infinite loops. */
+export function getReceiver() {
+    return recv
 }
 
 /**

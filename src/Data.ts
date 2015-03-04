@@ -517,6 +517,7 @@ export enum StmtType {
     Seq,
     FuncCall,
     Break,
+    Marker,
 }
 
 /**
@@ -722,6 +723,34 @@ export class Seq extends Stmt {
             startIdx += this.stmts[i].numberOfStmts()
         }
         return res
+    }
+}
+
+/**
+ * An marker statement (has no effect, just used for internal purposes)
+ */
+export class Marker extends Stmt {
+    constructor() {
+        super(StmtType.Marker)
+    }
+    toString() {
+        return "if (this != null) this.budget = 1"
+    }
+    equals(o) {
+        return o instanceof Marker
+    }
+    children(): Node[] {
+        return []
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
+    }
+    toSkeleton(): string {
+        return "marker"
+    }
+    getVariables(startIdx: number = 0): VarDef[] {
+        return []
     }
 }
 

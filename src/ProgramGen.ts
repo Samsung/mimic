@@ -232,6 +232,8 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                     break
                 case Data.StmtType.Break:
                     return null // cannot modify breaks
+                case Data.StmtType.Marker:
+                    return null
                 default:
                     Util.assert(false, () => "unhandled statement modification: " + ss)
                     break
