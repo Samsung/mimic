@@ -194,9 +194,17 @@ function search_test(f, a, a0, name, oracle, k) {
             debug: 0,
             loopIndex: 0
         })
-        // make tests more deterministic
-        Random.resetRandomness(1)
-        var res = Search.search(f, a, config)
+        var res: Search.SearchResult
+        var i
+        // allow for 5 tries
+        for (i = 0; i < 5; i++) {
+            // make tests more deterministic
+            Random.resetRandomness(i)
+            res = Search.search(f, a, config)
+            if (res.score == 0) {
+                break
+            }
+        }
         if (res.score > 0) {
             print(res.result)
         }
