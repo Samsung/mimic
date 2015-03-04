@@ -99,7 +99,6 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
         var resvar = new Data.Var("result", true)
         var resres: Data.Stmt = new Data.Assign(resvar, resvar);
         bodystmt.push(new Data.If(new Data.Const(false), new Data.Seq([resres, <Data.Stmt>new Data.Break()]), Data.Seq.Empty))
-        bodystmt.push(resres)
         var body = new Data.Seq(bodystmt)
 
         var res: Data.Stmt[] = vars.map((v) => new Data.Assign(v, null, true))
