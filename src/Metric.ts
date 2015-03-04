@@ -62,7 +62,6 @@ export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trac
 }
 export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: Data.Trace[], programLength: number = 10, finalizing: boolean = false, p = null): number {
     var badness = 0
-    var code = f
     for (var i = 0; i < inputs.length; i++) {
         var base = realTraces[i].events.length
         // give a budget of 110% compared to the real trace, but always
