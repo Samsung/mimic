@@ -229,15 +229,18 @@ Search.runSearch(f, a, config)
 
 
 
-var debugFun = false
+var debugFun = true
 function f2(arg0, arg1, arg2) {
-    var result = -1
+    var result = []
     var n0 = arg0.length
-    var n1 = arg0
+    var n1
     for (var i0 = 0; i0 < n0; i0 += 1) {
         n1 = arg0[i0]
-        if (n1==arg1) {
-            result = i0
+        if (arg0) {
+            result[i0] = n1
+        }
+        if (i0 >= 2) {
+            result = result
             break
         }
     }
@@ -273,7 +276,7 @@ if (debugFun) {
     print(Metric.evaluate2(f2, inputs, traces))
 
     line()
-    for (var k = 0; k < inputs.length; k++) {
+    for (var k = 0; k < inputs.length && true; k++) {
         var m = Metric.traceDistance(traces[k], traces2[k]);
         if (m > 0) {
             log(inputs[k])
