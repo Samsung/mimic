@@ -259,7 +259,7 @@ export class Field extends Prestate {
 export class Binary extends Expr {
     constructor(public a: Expr, public op: string, public b: Expr) {
         super(ExprType.Binary, 1+Math.max(a.depth, b.depth))
-        Util.assert(op === "+" || op === "==")
+        Util.assert(op === "+" || op === "==" || op === "<")
     }
     toString(config = {}) {
         var pre = "("
@@ -313,6 +313,9 @@ export class Binary extends Expr {
             return "number"
         }
         if (this.op === "==") {
+            return "boolean"
+        }
+        if (this.op === "<") {
             return "boolean"
         }
         Util.assert(false)

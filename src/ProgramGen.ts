@@ -365,7 +365,7 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
             return <Data.Expr>Ast.makeBinary(randomVar(), "+", randomVar())
         }),
         new WeightedPair(bool && !zeroD ? 1 : 0, () => {
-            // random new comparison
+            // random new equality comparison
             var e1 = recurse()
             var conf = {}
             if (e1.type === Data.ExprType.Const) {
@@ -373,6 +373,16 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
             }
             var e2 = recurse(conf)
             return <Data.Expr>Ast.makeBinary(e1, "==", e2)
+        }),
+        new WeightedPair(bool && !zeroD ? 1 : 0, () => {
+            // random new arithmetic comparison
+            var e1 = recurse({ num: true })
+            var conf = { num: true }
+            if (e1.type === Data.ExprType.Const) {
+                conf = { noconst: true, num: true }
+            }
+            var e2 = recurse(conf)
+            return <Data.Expr>Ast.makeBinary(e1, "<", e2)
         }),
         new WeightedPair(nonPrimitive || zeroD ? 0 : 1, () => {
             // random boolean not
