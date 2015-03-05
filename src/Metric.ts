@@ -52,6 +52,7 @@ var W_WRONG_PARAM = 0.5
 var W_CALL_WRONG = 0.9
 var W_CALL_MISSING = 1
 
+
 /**
  * Evaluate how well program `p' behaves on the given inputs (the traces in `realTraces' are used as the
  * gold standard).  Returns a non-negative value, where 0 means the program behaves identically (w.r.t. to our
@@ -284,6 +285,43 @@ export function traceDistance(a: Data.Trace, b: Data.Trace, p = null): number {
     return badness
 }
 
+/** Returns a distance metric for two trace allocations */
+function allocDist(va: Data.TraceAlloc, vb: Data.TraceAlloc): number {
+    var fieldsA = []
+    var fieldsB = []
+    for (var f in va) {
+        if (va.hasOwnProperty(f)) {
+            fieldsA.push(f)
+        }
+    }
+    for (var f in vb) {
+        if (vb.hasOwnProperty(f)) {
+            fieldsB.push(f)
+        }
+    }
+    // TODO: this only works for primitive values at the moment
+    var found = 0
+    var wrongVal = 0
+    var missing = 0
+    for (var fa in fieldsA) {
+        if (fa in fieldsB) {
+            found += 1
+            if (va[fa] !== vb[fa]) {
+                // field present, but value is different
+                wrongVal += 1
+            } else {
+                // field equivalent, happy
+            }
+        } else {
+            missing += 1
+        }
+    }
+    var tooMany = fieldsB.length - found
+    var div = fieldsA.length
+    if (div == 0) div = 1
+    return (wrongVal * 0.6 + missing + tooMany) * DISTANCE_NORM / div
+}
+
 /**
  * Compare two TraceExpr by considering their pre-state expressions.
  * Returns true if the two expressions are either the same primitive constant, or refer to the same
@@ -308,21 +346,7 @@ function exprEquiv(a: Data.TraceExpr, b: Data.TraceExpr): boolean {
     } else if (a.type === Data.TraceExprType.Alloc) {
         var va = (<Data.TraceAlloc>a).val
         var vb = (<Data.TraceAlloc>b).val
-        var fields = []
-        for (var f in va) {
-            fields.push(f)
-        }
-        for (var f in vb) {
-            fields.push(f)
-        }
-        // TODO: this only works for primitive values at the moment
-        for (var f in fields) {
-            if (vb.hasOwnProperty(f) != va.hasOwnProperty(f)) return false
-            if (va.hasOwnProperty(f)) {
-                if (va[f] !== vb[f]) return false
-            }
-        }
-        return true
+        return allocDist(va, vb) === 0
     }
     Util.assert(false)
     return false
@@ -332,6 +356,11 @@ function exprEquiv(a: Data.TraceExpr, b: Data.TraceExpr): boolean {
 function exprDistance(a: Data.TraceExpr, b: Data.TraceExpr) {
     if (exprEquiv(a, b)) {
         return 0
+    }
+    if (a.type === Data.TraceExprType.Alloc && b.type === Data.TraceExprType.Alloc) {
+        var va = (<Data.TraceAlloc>a).val
+        var vb = (<Data.TraceAlloc>b).val
+        return allocDist(va, vb)
     }
     return DISTANCE_NORM
 }
