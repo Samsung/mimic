@@ -244,6 +244,13 @@ export class Field extends Prestate {
         Util.assert(this.o instanceof Prestate)
         return (<Prestate>this.o).getBase()
     }
+    getType() {
+        if (this.f instanceof Const && (<Const>this.f).val === "length" &&
+            this.o instanceof Var && (<Var>this.o).name === "arguments") {
+            return "number"
+        }
+        return undefined
+    }
 }
 
 /**

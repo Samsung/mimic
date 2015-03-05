@@ -380,6 +380,11 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
         }
         if (p.body.numberOfStmts() === 0) break;
         var newp = config.randomChange(p)
+        var str = null
+        if (str != null && newp.toString().indexOf(str) != -1) {
+            print(newp)
+            print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        }
         var newbadness = config.metric(newp)
         if (newbadness < badness) {
             if (config.base.debug > 0) {
