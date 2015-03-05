@@ -1158,7 +1158,7 @@ export class Trace {
 }
 
 /**
- * An enum for all statements.
+ * An enum for all events.
  */
 export enum EventKind {
     EGet = 2000,
@@ -1268,6 +1268,15 @@ export class EDeleteProperty extends Event {
 }
 
 /**
+ * An enum for trace expressions.
+ */
+export enum TraceExprType {
+    General = 3000,
+    Const,
+    Alloc,
+}
+
+/**
  * An expression used when recording a trace.  Because there are often many possible expression
  * when recording a trace (e.g., because there were aliases in the input), a list of expressions
  * is used.  Furthermore, both expressions that are valid (only) in the pre-state are recorded
@@ -1275,6 +1284,7 @@ export class EDeleteProperty extends Event {
  * that particular point in the trace (used for program generation from a trace).
  */
 export class TraceExpr {
+    type: TraceExprType = TraceExprType.General
     constructor(public preState: Expr[], public curState: Expr[]) {
         var isConst = false
         Util.assert(preState.length > 0 && curState.length > 0)
@@ -1318,6 +1328,7 @@ export class TraceExpr {
 export class TraceConst extends TraceExpr {
     constructor(public val: any) {
         super([<Expr>new Const(val)], [<Expr>new Const(val)])
+        this.type = TraceExprType.Const
     }
     toString(config = {}): string {
         var s = ""
@@ -1330,6 +1341,7 @@ export class TraceConst extends TraceExpr {
 export class TraceAlloc extends TraceExpr {
     constructor(public val: any) {
         super([<Expr>new Const(undefined)], [<Expr>new Const(undefined)])
+        this.type = TraceExprType.Alloc
     }
     toString(config = {}): string {
         var s = "Allocated"

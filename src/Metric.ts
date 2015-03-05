@@ -290,24 +290,42 @@ export function traceDistance(a: Data.Trace, b: Data.Trace, p = null): number {
  * object (in the pre-state).
  */
 function exprEquiv(a: Data.TraceExpr, b: Data.TraceExpr): boolean {
-    if (a instanceof Data.TraceConst) {
-        if (b instanceof Data.TraceConst) {
-            var va = (<Data.TraceConst>a).val
-            var vb = (<Data.TraceConst>b).val
-            if (va !== va) {
-                // correct handling of NaN
-                return vb !== vb
-            }
-            return va === vb
-        } else {
-            return false
-        }
-    } else if (b instanceof Data.TraceConst) {
+    if (a.type !== b.type) {
         return false
     }
-    var as = a.preStateStrings()
-    var bs = b.preStateStrings()
-    return as.some((a) => bs.indexOf(a) !== -1)
+    if (a.type === Data.TraceExprType.Const) {
+        var va = (<Data.TraceConst>a).val
+        var vb = (<Data.TraceConst>b).val
+        if (va !== va) {
+            // correct handling of NaN
+            return vb !== vb
+        }
+        return va === vb
+    } else if (a.type === Data.TraceExprType.General) {
+        var as = a.preStateStrings()
+        var bs = b.preStateStrings()
+        return as.some((a) => bs.indexOf(a) !== -1)
+    } else if (a.type === Data.TraceExprType.Alloc) {
+        var va = (<Data.TraceAlloc>a).val
+        var vb = (<Data.TraceAlloc>b).val
+        var fields = []
+        for (var f in va) {
+            fields.push(f)
+        }
+        for (var f in vb) {
+            fields.push(f)
+        }
+        // TODO: this only works for primitive values at the moment
+        for (var f in fields) {
+            if (vb.hasOwnProperty(f) != va.hasOwnProperty(f)) return false
+            if (va.hasOwnProperty(f)) {
+                if (va[f] !== vb[f]) return false
+            }
+        }
+        return true
+    }
+    Util.assert(false)
+    return false
 }
 
 
