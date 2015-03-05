@@ -157,13 +157,20 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
 export function compileTrace(trace: Data.Trace, loop?: StructureInference.Proposal): Data.Program {
     var resvar = new Data.Assign(new Data.Var("result", true), null, true)
     var stmts: Data.Stmt[] = compileEventList(trace.events, loop, trace)
+    var alloc = trace.getResult() instanceof Data.TraceAlloc
     if (trace.isNormalReturn) {
-        var res = expr(trace.getResult())
-        if (res instanceof Data.Const) {
-            resvar.rhs = res
+        if (alloc) {
+            var obj = <Data.TraceAlloc>trace.getResult()
+            resvar.rhs = new Data.Alloc(Array.isArray(obj.val))
             stmts.push(new Data.Return(resvar.lhs))
         } else {
-            stmts.push(new Data.Return(res))
+            var res = expr(trace.getResult())
+            if (res instanceof Data.Const) {
+                resvar.rhs = res
+                stmts.push(new Data.Return(resvar.lhs))
+            } else {
+                stmts.push(new Data.Return(res))
+            }
         }
     } else {
         stmts.push(new Data.Throw(expr(trace.getException())))

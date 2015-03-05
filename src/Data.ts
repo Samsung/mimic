@@ -104,6 +104,7 @@ export enum ExprType {
     Const,
     Binary,
     Unary,
+    Alloc,
 }
 
 /**
@@ -495,6 +496,52 @@ export class Const extends Expr {
     }
     getType(): string {
         return typeof this.val
+    }
+}
+
+/**
+ * An newly allocated object or array.
+ */
+export class Alloc extends Expr {
+    constructor(public isArray: boolean) {
+        super(ExprType.Alloc, 0)
+    }
+    toString(config = {}) {
+        if (this.isArray) {
+            return "[]";
+        }
+        return "{}"
+    }
+    eval(args: any[]): any {
+        if (this.isArray) {
+            return [];
+        }
+        return {};
+    }
+    update(args: any[], val: any): any {
+        Util.assert(false, () => "cannot update allocation")
+    }
+    equals(o): boolean {
+        return o instanceof Alloc && o.isArray === this.isArray
+    }
+    children(): Node[] {
+        return []
+    }
+    anychildren(): any[] {
+        var res: any[] = this.children()
+        return res
+    }
+    toSkeleton(): string {
+        return this.toString()
+    }
+    canBeUpdated(args: any[]): boolean {
+        return false
+    }
+    isSafe(args: any[]): boolean {
+        return true
+    }
+    getType(): string {
+        return typeof this.eval([])
     }
 }
 

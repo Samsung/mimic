@@ -160,6 +160,9 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                         if (s.rhs === null) {
                             // only a variable declaration -> add an initializer
                             news = Ast.makeAssign(s.lhs, randExp(), s.isDecl)
+                        } else if (s.rhs.type === Data.ExprType.Alloc) {
+                            // leave allocations
+                            return null
                         } else if (s.rhs.type === Data.ExprType.Var && s.lhs.type === Data.ExprType.Var && s.lhs.name == "result") {
                             // result variable assignment
                             news = Ast.makeAssign(s.lhs, randExp(), s.isDecl)
