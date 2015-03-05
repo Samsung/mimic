@@ -204,6 +204,11 @@ var fs:any = [
         [List.LinkedList.make([1,2]), 3],
         [List.LinkedList.make([]), 3],
     ],
+    [ // 15
+        "Array.prototype.slice",
+        (a: any[]) => a.slice(0, 3),
+        [[1,2,3,4,5,6]],
+    ],
 ]
 
 
