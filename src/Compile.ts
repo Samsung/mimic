@@ -68,7 +68,7 @@ function expr(e: Data.TraceExpr) {
 /**
  * Compile a list of events
  */
-function compileEventList(events: Data.Event[], loop: StructureInference.Proposal = null, trace: Data.Trace = null) {
+function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureInference.Proposal = null, trace: Data.Trace = null) {
     var stmts:Data.Stmt[] = []
 
     // add a fake statement to make sure we get can catch infinite loops
@@ -77,7 +77,7 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
     /**
      * Given a body, this method assembles a for loop.
      */
-    function buildForLoop(bodystmt: Data.Stmt[]): Data.Stmt[] {
+    function buildForLoop(bodystmt: Data.Stmt[], alloc: boolean): Data.Stmt[] {
         // extract all variables, so that they can be declared outside of the loop
         var vars: Data.Var[] = []
         bodystmt.forEach((n) => {
@@ -100,6 +100,7 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
         var resvar = new Data.Var("result", true)
         var resres: Data.Stmt = new Data.Assign(resvar, resvar);
         bodystmt.push(new Data.If(new Data.Const(false), new Data.Seq([resres, <Data.Stmt>new Data.Break()]), Data.Seq.Empty))
+        bodystmt.push(new Data.If(new Data.Const(false), new Data.Assign(new Data.Field(resvar, new Data.Const(0)), new Data.Const(0)), Data.Seq.Empty))
         var body = new Data.Seq(bodystmt)
 
         var res: Data.Stmt[] = vars.map((v) => new Data.Assign(v, null, true))
@@ -110,7 +111,7 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
     for (var i = 0; i < events.length; i++) {
         var e = events[i]
         if (loop !== null && loop.loopStart === i) {
-            stmts = stmts.concat(buildForLoop(compileEventList(events.slice(i, i + loop.loopLength))))
+            stmts = stmts.concat(buildForLoop(compileEventList(events.slice(i, i + loop.loopLength), alloc), alloc))
             /*for (var k = 0; k < loop.numIterations; k++) {
                 line()
                 print(events.slice(i+k*loop.loopLength, i+k*loop.loopLength+loop.loopLength).join("\n"))
@@ -156,8 +157,8 @@ function compileEventList(events: Data.Event[], loop: StructureInference.Proposa
  */
 export function compileTrace(trace: Data.Trace, loop?: StructureInference.Proposal): Data.Program {
     var resvar = new Data.Assign(new Data.Var("result", true), null, true)
-    var stmts: Data.Stmt[] = compileEventList(trace.events, loop, trace)
     var alloc = trace.getResult() instanceof Data.TraceAlloc
+    var stmts: Data.Stmt[] = compileEventList(trace.events, alloc, loop, trace)
     if (trace.isNormalReturn) {
         if (alloc) {
             var obj = <Data.TraceAlloc>trace.getResult()
