@@ -205,9 +205,14 @@ var fs:any = [
         [List.LinkedList.make([]), 3],
     ],
     [ // 15
-        "Array.prototype.slice",
+        "Array.prototype.slice(0,3)",
         (a: any[]) => a.slice(0, 3),
         [[1,2,3,4,5,6]],
+    ],
+    [ // 16
+        "Array.prototype.slice",
+        (a: any[], low, high) => a.slice(0, high),
+        [[1,2,3], 0, 3],
     ],
 ]
 
@@ -233,14 +238,16 @@ Search.runSearch(f, a, config)
 var debugFun = true
 function f2(arg0, arg1, arg2) {
     var result = []
+    if (this != null) this.budget = 1
     var n0 = arg0.length
-    var n1
-    for (var i0 = 0; i0 < n0; i0 += 1) {
+    var n1 = result[arguments.length]
+    for (var i0 = 0; i0 < arg2; i0 += 1) {
+        if (this != null) this.budget = 1
         n1 = arg0[i0]
-        if (arg0) {
+        if (true) {
             result[i0] = n1
         }
-        if (i0 >= 2) {
+        if (arguments.length -1 < i0) {
             result = result
             break
         }
