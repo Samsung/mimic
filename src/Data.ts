@@ -26,6 +26,14 @@ var log = Util.log
 var line = Util.line
 
 /**
+ * Serialization code (stupid, but works well enough)
+ */
+export class Serialize {
+
+}
+
+
+/**
  * Common ancestor for expressions and statements.
  */
 export class Node {

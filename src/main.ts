@@ -224,7 +224,7 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 var config = new Search.SearchConfig()
 config.loopIndex = Util.argvlength() > 4 ? parseInt(Util.argv(4)) : 0
-config.cleanupIterations = 700
+//config.cleanupIterations = 700
 
 
 //howMany(f, a, 10, [8000, 0], true)
@@ -279,12 +279,19 @@ if (debugFun) {
     print(t1)
     var t2 = Recorder.record(f2, a0)
     print(t2)
+
+    line()
+    var prog = Compile.compileTrace(t1);
+    print(prog)
+    line()
+    var jsonstr = JSON.stringify(prog);
+    print(JSON.parse(jsonstr))
     //log(inputs)
     line()
     print(Metric.evaluate2(f2, inputs, traces))
 
     line()
-    for (var k = 0; k < inputs.length && true; k++) {
+    for (var k = 0; k < inputs.length && false; k++) {
         var m = Metric.traceDistance(traces[k], traces2[k]);
         if (m > 0) {
             log(inputs[k])
