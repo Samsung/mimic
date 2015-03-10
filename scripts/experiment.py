@@ -36,41 +36,42 @@ def run_all(workdir, n):
   if os.path.exists(out):
     shutil.rmtree(out)
   os.mkdir(out)
-  examples = []
-  for path, dirs, files in os.walk(workdir):
-    base = path[len(workdir)+1:]
-    examples += map(lambda x: base + "/" + x, files)
+  categories = []
+  for f in os.listdir(workdir):
+    if os.path.isfile(workdir + "/" + f):
+      categories.append(f)
 
   line = "-" * 80
-  for e in examples:
-    name = e[0:-5].replace("/", "-")
+  for e in categories:
+    category = e[0:-5].replace("/", "-")
     try:
-      example = json.loads(open(workdir + "/" + e).read())
+      examples = json.loads(open(workdir + "/" + e).read())
     except ValueError as ex:
       print "Failed to parse configuration: " + str(ex)
       sys.exit(1)
-    title = example['name']
-    function = "\n".join(example['function'])
-    argnames = example['argnames']
-    arguments = example['arguments']
-    print line
-    print "Experiment: " + title
-    args = '"' + ('" "'.join(arguments)) + '"'
-    succ_time = 0.0
-    succ_count = 0
-    for i in range(n):
-      sys.stdout.write('  Running try #' + str(i+1))
-      sys.stdout.flush()
-      t = time.time()
-      command = './model-synth synth --out "%s/%s-%d.js" "%s" "%s" %s' % (out, name, i, argnames, function, args)
-      val, output = execute(command)
-      elapsed_time = time.time() - t
-      print ". Exit status %d after %.2f seconds." % (val, elapsed_time)
-      if val == 0:
-        succ_count += 1
-        succ_time += elapsed_time
-    print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
-    print "Average time until success: %.2f seconds" % (succ_time * 100.0 / float(n))
+    for example in examples:
+      title = example['name']
+      function = "\n".join(example['function'])
+      argnames = example['argnames']
+      arguments = example['arguments']
+      print line
+      print "Experiment: " + title
+      args = '"' + ('" "'.join(arguments)) + '"'
+      succ_time = 0.0
+      succ_count = 0
+      for i in range(n):
+        sys.stdout.write('  Running try #' + str(i+1))
+        sys.stdout.flush()
+        t = time.time()
+        command = './model-synth synth --out "%s/%s-%d.js" "%s" "%s" %s' % (out, category, i, argnames, function, args)
+        val, output = execute(command)
+        elapsed_time = time.time() - t
+        print ". Exit status %d after %.2f seconds." % (val, elapsed_time)
+        if val == 0:
+          succ_count += 1
+          succ_time += elapsed_time
+      print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
+      print "Average time until success: %.2f seconds" % (succ_time / float(n))
   print line
 
 def get_time():
