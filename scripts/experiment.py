@@ -51,9 +51,9 @@ def main():
       sys.exit(1)
     for example in examples:
       title = example['name']
-      if argv.filter != "" and re.search(argv.filter, title, re.UNICODE) is not None:
+      if argv.filter != "" and re.search(argv.filter, title, re.UNICODE) is None:
         continue
-      name = title[title.rfind("."):]
+      name = title[title.rfind(".")+1:]
       function = "\n".join(example['function'])
       argnames = example['argnames']
       arguments = example['arguments']
