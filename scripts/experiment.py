@@ -16,6 +16,7 @@ import json
 import threading
 import subprocess
 import shutil
+import re
 
 # ------------------------------------------
 # main entry point
@@ -59,6 +60,7 @@ def run_all(workdir, n):
       args = '"' + ('" "'.join(arguments)) + '"'
       succ_time = 0.0
       succ_count = 0
+      succ_iterations = 0
       for i in range(n):
         sys.stdout.write('  Running try #' + str(i+1))
         sys.stdout.flush()
@@ -70,8 +72,11 @@ def run_all(workdir, n):
         if val == 0:
           succ_count += 1
           succ_time += elapsed_time
+          iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
+          succ_iterations += iters
       print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
       print "Average time until success: %.2f seconds" % (succ_time / float(n))
+      print "Average iterations until success: %.1f" % (float(succ_iterations) / float(n))
   print line
 
 def get_time():
