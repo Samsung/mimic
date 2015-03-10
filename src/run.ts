@@ -28,6 +28,7 @@ import Data = require('./Data')
 import Search = require('./Search')
 import Recorder = require('./Recorder')
 import StructureInference = require('./StructureInference')
+var fs = require('fs')
 
 var log = Util.log
 var print = Util.print
@@ -73,7 +74,23 @@ if (argc < 6) {
     }
 
     if (subcommand === "synth") {
-        Search.runSearch(f, args)
+        var config = new Search.SearchConfig()
+        Ansi.Gray("Configuration: " + config.toString())
+        var res = Search.search(f, args, config)
+        Ansi.Gray("Found in " + res.iterations + " iterations:")
+        Ansi.Gray(Util.indent(res.getStats()))
+        var exit = 1
+        if (res.score > 0) {
+            Ansi.Red("  Score: " + res.score)
+        } else {
+            exit = 0
+            Ansi.Gray("  Score: " + res.score)
+            if ("out" in argv) {
+                fs.writeFileSync(argv.out, res.result.toString() + "\n");
+            }
+        }
+        print(res.result.toString())
+        Util.exit(exit)
     } else if (subcommand === "record") {
         if (args.length > 1) {
             error("Can only record a trace for one set of arguments.")
