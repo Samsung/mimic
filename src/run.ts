@@ -81,6 +81,9 @@ if (argc < 6) {
 
     if (subcommand === "synth") {
         var config = new Search.SearchConfig()
+        if ("cleanup" in argv) {
+            config.cleanupIterations = 1000
+        }
         Ansi.Gray("Configuration: " + config.toString())
         var res = Search.search(f, args, config)
         Ansi.Gray("Found in " + res.iterations + " iterations:")
@@ -92,10 +95,10 @@ if (argc < 6) {
             exit = 0
             Ansi.Gray("  Score: " + res.score)
             if ("out" in argv) {
-                fs.writeFileSync(argv.out, res.result.toString() + "\n");
+                fs.writeFileSync(argv.out, res.result.toFullProgram("f") + "\n");
             }
         }
-        print(res.result.toString())
+        print(res.result.toFullProgram("f"))
         Util.exit(exit)
     } else if (subcommand === "record") {
         if (args.length > 1) {

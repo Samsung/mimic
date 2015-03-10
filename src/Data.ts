@@ -1084,6 +1084,27 @@ export class Program {
         }
         return Util.indent(this.body.toString())
     }
+    toFullProgram(name: string) {
+        var body = this.toString()
+        var n = 100
+        var res = "function " + name + "("
+        while (body.indexOf("arg" + n) == -1 && n > 0) {
+            n -= 1
+        }
+        n += 1
+        var i = 0
+        while (i < n) {
+            if (i != 0) {
+                res += ", "
+            }
+            res += "arg" + i
+            i += 1
+        }
+        res += ") {\n"
+        res += body
+        res += "\n}"
+        return res
+    }
     getVariables(): VarDef[] {
         return this.body.getVariables()
     }
