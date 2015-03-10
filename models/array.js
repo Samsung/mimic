@@ -83,12 +83,12 @@ function forEach(arg0, arg1) {
 }
 
 function reduce(arg0, arg1, arg2) {
-    var n0 = arg0.length
-    var n1
-    var n2 = arg2
-    for (var i7 = 0; i7 < n0; i7 += 1) {
-        n1 = arg0[i7]
-        n2 = arg1.apply(undefined, [ n2, n1, i7, arg0 ])
-    }
-    return n2
+  var n0 = arg0.length
+  var n1
+  var n2 = arg2
+  for (var i0 = 0; i0 < n0; i0 += 1) {
+    n1 = arg0[i0]
+    n2 = arg1.call(undefined, n2, n1, i0, arg0)
+  }
+  return n2
 }
