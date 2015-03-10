@@ -22,20 +22,29 @@ import re
 # main entry point
 # ------------------------------------------
 
+def get_time():
+  return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+
 def main():
   parser = argparse.ArgumentParser(description='Run synthesis experiment.')
   parser.add_argument('-n', type=int, help='Number of repetitions', default=5)
   parser.add_argument('--filter', type=str, help='Filter which experiments to run', default="")
+  parser.add_argument('-r', '--run', help='Only run the first experiment', action='store_true')
 
   argv = parser.parse_args()
 
   workdir = os.path.abspath(os.path.dirname(__file__) + "/../tests")
   n = argv.n
 
-  out = workdir + "/out"
-  if os.path.exists(out):
-    shutil.rmtree(out)
-  os.mkdir(out)
+
+  only_run = argv.run
+
+  out = ""
+  if not only_run:
+    out = workdir + "/out"
+    if os.path.exists(out):
+      shutil.rmtree(out)
+    os.mkdir(out)
   categories = []
   for f in os.listdir(workdir):
     if os.path.isfile(workdir + "/" + f):
@@ -57,17 +66,23 @@ def main():
       function = "\n".join(example['function'])
       argnames = example['argnames']
       arguments = example['arguments']
-      print line
-      print "Experiment: " + title
+      if not only_run:
+        print line
+        print "Experiment: " + title
       args = '"' + ('" "'.join(arguments)) + '"'
       succ_time = 0.0
       succ_count = 0
       succ_iterations = 0
       for i in range(n):
-        sys.stdout.write('  Running try #' + str(i+1))
-        sys.stdout.flush()
+        if not only_run:
+          sys.stdout.write('  Running try #' + str(i+1))
+          sys.stdout.flush()
         t = time.time()
         command = './model-synth synth --out "%s/%s-%s-%d.js" "%s" "%s" %s' % (out, category, name, i, argnames, function, args)
+        if only_run:
+          command = './model-synth synth "%s" "%s" %s' % (argnames, function, args)
+          os.system(command)
+          sys.exit(0)
         val, output = execute(command)
         elapsed_time = time.time() - t
         print ". Exit status %d after %.2f seconds." % (val, elapsed_time)
@@ -80,9 +95,6 @@ def main():
       print "Average time until success: %.2f seconds" % (succ_time / float(n))
       print "Average iterations until success: %.1f" % (float(succ_iterations) / float(n))
   print line
-
-def get_time():
-  return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
 # print a string to a file
 def fprint(f, s):
