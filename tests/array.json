@@ -20,6 +20,29 @@
   "arguments": [
     "[0,5,2,20,3,23], function f(e) { return e < 10; }, {}"
   ]
+},
+
+{
+  "name": "Array.prototype.some",
+  "function": [
+    "return Array.prototype.some.apply(self, Array.prototype.slice.call(arguments, 1))"
+  ],
+  "argnames": "self, arg0, arg1, arg2",
+  "arguments": [
+    "[1,2,3], function f(e) { return e < 10; }, {}",
+    "[1,2,3], function f(e) { return e > 10; }, {}"
+  ]
+},
+
+{
+  "name": "Array.prototype.reduce",
+  "function": [
+    "return Array.prototype.reduce.apply(self, Array.prototype.slice.call(arguments, 1))"
+  ],
+  "argnames": "self, arg0, arg1, arg2",
+  "arguments": [
+    "[1,2,3], function f(previousValue, currentValue, index, array) { return previousValue + currentValue; }, 0"
+  ]
 }
 
 ]
