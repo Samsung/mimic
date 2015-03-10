@@ -25,14 +25,13 @@ import re
 def main():
   parser = argparse.ArgumentParser(description='Run synthesis experiment.')
   parser.add_argument('-n', type=int, help='Number of repetitions', default=5)
+  parser.add_argument('--filter', type=str, help='Filter which experiments to run', default="")
 
-  args = parser.parse_args()
+  argv = parser.parse_args()
 
-  run_all(os.path.abspath(os.path.dirname(__file__) + "/../tests"), args.n)
+  workdir = os.path.abspath(os.path.dirname(__file__) + "/../tests")
+  n = argv.n
 
-  print "Done :)"
-
-def run_all(workdir, n):
   out = workdir + "/out"
   if os.path.exists(out):
     shutil.rmtree(out)
@@ -52,6 +51,9 @@ def run_all(workdir, n):
       sys.exit(1)
     for example in examples:
       title = example['name']
+      if argv.filter != "" and re.search(argv.filter, title, re.UNICODE) is not None:
+        continue
+      name = title[title.rfind("."):]
       function = "\n".join(example['function'])
       argnames = example['argnames']
       arguments = example['arguments']
@@ -65,7 +67,7 @@ def run_all(workdir, n):
         sys.stdout.write('  Running try #' + str(i+1))
         sys.stdout.flush()
         t = time.time()
-        command = './model-synth synth --out "%s/%s-%d.js" "%s" "%s" %s' % (out, category, i, argnames, function, args)
+        command = './model-synth synth --out "%s/%s-%s-%d.js" "%s" "%s" %s' % (out, category, name, i, argnames, function, args)
         val, output = execute(command)
         elapsed_time = time.time() - t
         print ". Exit status %d after %.2f seconds." % (val, elapsed_time)
