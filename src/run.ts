@@ -23,6 +23,7 @@
 
 import main = require('./main')
 import Util = require('./util/Util')
+import Random = require('./util/Random')
 import Ansi = require('./util/Ansicolors')
 import Data = require('./Data')
 import Search = require('./Search')
@@ -54,7 +55,12 @@ if (argc < 6) {
         error("unknown subcommand '" + subcommand + "', use one of: " + commands.join(", "))
     }
 
-    var argv = require('minimist')(process.argv.slice(3));
+    var argv = require('minimist')(process.argv.slice(3))
+    if ('seed' in argv) {
+        Random.resetRandomness(+argv.seed)
+    } else {
+        Random.resetRandomness(-1)
+    }
 
     var fstr = argv._[0].split(",")
     fstr.push(argv._[1])
