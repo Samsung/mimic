@@ -18,7 +18,7 @@
   ],
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
-    "[0,5,2,20,3,23], function f(e) { return e < 10; }"
+    "[0,5,2,20,3,23], function f(e) { return e < 10; }, {}"
   ]
 }
 
