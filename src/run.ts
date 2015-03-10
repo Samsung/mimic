@@ -43,7 +43,7 @@ function error(message) {
 var argc = Util.argvlength();
 if (argc < 6) {
     print("Usage: model-synth (" + commands.join("|") + ") arg-names function-body args0 [args1 [args2 ...]]")
-    print('Example: model-synth synth "x,y" "return x+1" "[1]"')
+    print('Example: model-synth synth "x,y" "return x+1" "1"')
     print("")
     print("  synth   synthesize a model for a given function")
     print("  record  record a trace for a given function")
@@ -52,20 +52,23 @@ if (argc < 6) {
     if (commands.indexOf(subcommand) == -1) {
         error("unknown subcommand '" + subcommand + "', use one of: " + commands.join(", "))
     }
-    var fstr = Util.argv(3).split(",")
-    fstr.push(Util.argv(4))
+
+    var argv = require('minimist')(process.argv.slice(3));
+
+    var fstr = argv._[0].split(",")
+    fstr.push(argv._[1])
     try {
         var f = Function.apply(null, fstr)
     } catch (e) {
         error("Could not parse function '"+fstr+"'\n  " + e)
     }
     var args = []
-    for (var i = 0; i < argc - 5; i++) {
+    for (var i = 0; i < argv._.length - 2; i++) {
         try {
-            var arg = Util.argv(i+5)
-            args.push(eval(arg))
+            var arg = argv._[2+i]
+            args.push(eval("[" + arg + "]"))
         } catch (e) {
-            error("Error: Could not parse argument " + (i+2) + " '"+arg+"':\n  " + e)
+            error("Error: Could not parse argument " + (i) + " '"+arg+"':\n  " + e)
         }
     }
 

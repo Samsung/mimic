@@ -13,6 +13,7 @@
     "cli-color": "^0.3.2",
     "assert": "^1.1.1",
     "typescript": "^1.0.1",
+    "minimist": "^1.1.0",
     "util": "^0.10.3"
   },
   "devDependencies": {
