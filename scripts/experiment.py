@@ -15,6 +15,7 @@ import argparse
 import json
 import threading
 import subprocess
+import shutil
 
 # ------------------------------------------
 # main entry point
@@ -31,28 +32,46 @@ def main():
   print "Done :)"
 
 def run_all(workdir, n):
+  out = workdir + "/out"
+  if os.path.exists(out):
+    shutil.rmtree(out)
+  os.mkdir(out)
   examples = []
   for path, dirs, files in os.walk(workdir):
     base = path[len(workdir)+1:]
     examples += map(lambda x: base + "/" + x, files)
 
+  line = "-" * 80
   for e in examples:
+    name = e[0:-5].replace("/", "-")
     try:
       example = json.loads(open(workdir + "/" + e).read())
     except ValueError as ex:
       print "Failed to parse configuration: " + str(ex)
       sys.exit(1)
-    name = example['name']
+    title = example['name']
     function = "\n".join(example['function'])
-    argnames = example[u'argnames']
+    argnames = example['argnames']
     arguments = example['arguments']
-    print "-" * 80
-    print "Experiment: " + name
+    print line
+    print "Experiment: " + title
     args = '"' + ('" "'.join(arguments)) + '"'
-    val, output = execute('./model-synth synth "%s" "%s" %s' % (argnames, function, args))
-    print output
-
-
+    succ_time = 0.0
+    succ_count = 0
+    for i in range(n):
+      sys.stdout.write('  Running try #' + str(i+1))
+      sys.stdout.flush()
+      t = time.time()
+      command = './model-synth synth --out "%s/%s-%d.js" "%s" "%s" %s' % (out, name, i, argnames, function, args)
+      val, output = execute(command)
+      elapsed_time = time.time() - t
+      print ". Exit status %d after %.2f seconds." % (val, elapsed_time)
+      if val == 0:
+        succ_count += 1
+        succ_time += elapsed_time
+    print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
+    print "Average time until success: %.2f seconds" % (succ_time * 100.0 / float(n))
+  print line
 
 def get_time():
   return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
