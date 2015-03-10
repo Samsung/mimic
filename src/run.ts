@@ -82,7 +82,7 @@ if (argc < 6) {
     if (subcommand === "synth") {
         var config = new Search.SearchConfig()
         if ("cleanup" in argv) {
-            config.cleanupIterations = 1000
+            config.cleanupIterations = argv.cleanup
         }
         Ansi.Gray("Configuration: " + config.toString())
         var res = Search.search(f, args, config)

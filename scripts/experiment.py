@@ -80,7 +80,7 @@ def main():
         t = time.time()
         command = './model-synth synth --out "%s/%s-%s-%d.js" "%s" "%s" %s' % (out, category, name, i, argnames, function, args)
         if only_run:
-          command = './model-synth synth --cleanup "%s" "%s" %s' % (argnames, function, args)
+          command = './model-synth synth --cleanup 1000 "%s" "%s" %s' % (argnames, function, args)
           os.system(command)
           sys.exit(0)
         val, output = execute(command)
