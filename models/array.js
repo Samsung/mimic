@@ -39,18 +39,18 @@ function shift(arg0) {
     }
 }
 
-function every(arg0, arg1) {
-    var n0 = arg0.length
-    var n1
-    var n2 = true
-    for (var i9 = 0; i9 < n0; i9 += 1) {
-        n1 = arg0[i9]
-        n2 = arg1.apply(undefined, [ n1, i9, arg0 ])
-        if (!n2) {
-            break
-        }
+function every(arg0, arg1, arg2) {
+  var n0 = arg0.length
+  var n1
+  var n2 = true
+  for (var i0 = 0; i0 < n0; i0 += 1) {
+    n1 = arg0[i0]
+    n2 = arg1.call(arg2, n1, i0, arg0)
+    if (!n2) {
+      break
     }
-    return n2
+  }
+  return n2
 }
 
 function some(arg0, arg1) {
