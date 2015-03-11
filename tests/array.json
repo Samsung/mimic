@@ -102,6 +102,19 @@
   "arguments": [
     "[1,2,3], function f(previousValue, currentValue, index, array) { return previousValue + currentValue; }, 0"
   ]
+},
+
+{
+  "name": "Handwritten sum function",
+  "function": [
+    "var result = 0; for (var i = 0; i < a.length; i++) result += a[i]; return result;"
+  ],
+  "loop": 1,
+  "argnames": "a",
+  "arguments": [
+    "[1,2,3]",
+    "[4,5,6]"
+  ]
 }
 
 ]
