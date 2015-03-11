@@ -31,6 +31,7 @@ def main():
   parser.add_argument('-n', type=int, help='Number of repetitions', default=5)
   parser.add_argument('--filter', type=str, help='Filter which experiments to run', default="")
   parser.add_argument('-r', '--run', help='Only run the first experiment', action='store_true')
+  parser.add_argument('--verify', help='Verify that all experiments are successful at least some of the time', action='store_true')
 
   argv = parser.parse_args()
 
@@ -39,6 +40,10 @@ def main():
 
 
   only_run = argv.run
+  verify = argv.verify
+  if only_run and verify:
+    print "Cannot both --run and --verify"
+    sys.exit(1)
 
   out = ""
   if not only_run:
@@ -75,26 +80,34 @@ def main():
       succ_count = 0
       succ_iterations = 0
       for i in range(n):
-        if not only_run:
-          sys.stdout.write('  Running try #' + str(i+1))
-          sys.stdout.flush()
-        t = time.time()
-        command = './model-synth synth --out "%s/%s-%s-%d.js" "%s" "%s" %s' % (out, category, name, i, argnames, function, args)
         if only_run:
           command = './model-synth synth --cleanup 1000 --iterations 100000000 "%s" "%s" %s' % (argnames, function, args)
           os.system(command)
           sys.exit(0)
+        sys.stdout.write('  Running try #' + str(i+1))
+        sys.stdout.flush()
+        t = time.time()
+        more = ""
+        if "loop" in example:
+          more = " --loop " + example['loop']
+        command = './model-synth synth --out "%s/%s-%s-%d.js" "%s" "%s" %s' % (out, category, name, i, argnames, function, args)
         val, output = execute(command, 60)
         elapsed_time = time.time() - t
         print ". Exit status %d after %.2f seconds." % (val, elapsed_time)
         if val == 0:
           succ_count += 1
+          if verify:
+            break
           succ_time += elapsed_time
           iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
           succ_iterations += iters
-      print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
-      print "Average time until success: %.2f seconds" % (succ_time / float(n))
-      print "Average iterations until success: %.1f" % (float(succ_iterations) / float(n))
+      if verify:
+        if succ_count == 0:
+          print "ERROR: didn't succeed :("
+      else:
+        print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
+        print "Average time until success: %.2f seconds" % (succ_time / float(n))
+        print "Average iterations until success: %.1f" % (float(succ_iterations) / float(n))
   print line
 
 # print a string to a file
