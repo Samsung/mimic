@@ -107,8 +107,8 @@ def main():
           print "ERROR: didn't succeed :("
       else:
         print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
-        print "Average time until success: %.2f seconds" % (succ_time / float(n))
-        print "Average iterations until success: %.1f" % (float(succ_iterations) / float(n))
+        print "Average time until success: %.2f seconds" % (succ_time / float(succ_count))
+        print "Average iterations until success: %.1f" % (float(succ_iterations) / float(succ_count))
   print line
 
 # print a string to a file
