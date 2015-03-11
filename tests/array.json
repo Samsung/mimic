@@ -48,6 +48,17 @@
 },
 
 {
+  "name": "Array.prototype.map",
+  "function": [
+    "return Array.prototype.map.apply(self, Array.prototype.slice.call(arguments, 1))"
+  ],
+  "argnames": "self, arg0, arg1, arg2",
+  "arguments": [
+    "[1,2,3,4], function f(e) { return e + 1; }"
+  ]
+},
+
+{
   "name": "Array.prototype.every",
   "function": [
     "return Array.prototype.every.apply(self, Array.prototype.slice.call(arguments, 1))"

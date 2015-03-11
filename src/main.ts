@@ -214,6 +214,11 @@ var fs:any = [
         (a: any[], low, high) => a.slice(0, high),
         [[1,2,3], 0, 3],
     ],
+    [ // 17
+        "Array.prototype.map",
+        (a: any[], b) => a.map(b),
+        [[1,2,3], (x) => x+1],
+    ],
 ]
 
 
@@ -227,7 +232,7 @@ var config = new Search.SearchConfig()
 
 
 //howMany(f, a, 10, [8000, 0], true)
-Search.runSearch(f, a, config)
+//Search.runSearch(f, a, config)
 
 
 //InputGen.generateInputs(f, a).map((a) => log(a))
@@ -239,15 +244,17 @@ function f2(arg0, arg1, arg2) {
     var result = []
     if (this != null) this.budget = 1
     var n0 = arg0.length
-    var n1 = result[arguments.length]
-    for (var i0 = 0; i0 < arg2; i0 += 1) {
+    var n1 = result
+    var n2 = arguments[arguments.length]
+    for (var i0 = 0; i0 < n0; i0 += 1) {
         if (this != null) this.budget = 1
         n1 = arg0[i0]
-        if (true) {
-            result[i0] = n1
+        n2 = arg1.call(undefined, n1, i0, arg0)
+        if (arg1) {
+            result[i0] = n2
         }
-        if (arguments.length -1 < i0) {
-            result = result
+        if (arg1<n2) {
+            result = n0[n1]
             break
         }
     }
@@ -290,7 +297,7 @@ if (debugFun) {
     print(Metric.evaluate2(f2, inputs, traces))
 
     line()
-    for (var k = 0; k < inputs.length && false; k++) {
+    for (var k = 0; k < inputs.length && true; k++) {
         var m = Metric.traceDistance(traces[k], traces2[k]);
         if (m > 0) {
             log(inputs[k])
