@@ -17,6 +17,7 @@ import threading
 import subprocess
 import shutil
 import re
+import signal
 
 # ------------------------------------------
 # main entry point
@@ -80,10 +81,10 @@ def main():
         t = time.time()
         command = './model-synth synth --out "%s/%s-%s-%d.js" "%s" "%s" %s' % (out, category, name, i, argnames, function, args)
         if only_run:
-          command = './model-synth synth --cleanup 1000 "%s" "%s" %s' % (argnames, function, args)
+          command = './model-synth synth --cleanup 1000 --iterations 100000000 "%s" "%s" %s' % (argnames, function, args)
           os.system(command)
           sys.exit(0)
-        val, output = execute(command)
+        val, output = execute(command, 60)
         elapsed_time = time.time() - t
         print ". Exit status %d after %.2f seconds." % (val, elapsed_time)
         if val == 0:
@@ -108,33 +109,33 @@ def fprinta(f, s):
   f.write(s)
   f.close()
 
-def execute(cmd):
-  return Command(cmd).run(None)
+def execute(cmd, timeout=100000000):
+  out = ""
+  try:
+    with timeout_c(seconds=timeout):
+      try:
+        out = subprocess.check_output(cmd, shell=True)
+        return (0, out)
+      except subprocess.CalledProcessError as ex:
+        return (ex.returncode, ex.output)
+  except TimeoutError:
+    return (-1, "")
 
-# taken from http://stackoverflow.com/questions/1191374/subprocess-with-timeout
-class Command(object):
-  def __init__(self, cmd):
-    self.cmd = cmd
-    self.process = None
-    self.output = ""
-    self.error = ""
+# from http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish
+class timeout_c:
+  def __init__(self, seconds=1, error_message='Timeout'):
+    self.seconds = seconds
+    self.error_message = error_message
+  def handle_timeout(self, signum, frame):
+    raise TimeoutError(self.error_message)
+  def __enter__(self):
+    signal.signal(signal.SIGALRM, self.handle_timeout)
+    signal.alarm(self.seconds)
+  def __exit__(self, type, value, traceback):
+    signal.alarm(0)
 
-  def run(self, timeout):
-    def target():
-      self.process = subprocess.Popen(self.cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-      self.output = self.process.stdout.read()
-      self.error = self.process.stderr.read()
-      self.child = self.process.communicate()[0]
-
-    thread = threading.Thread(target=target)
-    thread.start()
-
-    thread.join(timeout)
-    if thread.is_alive():
-      self.process.terminate()
-      thread.join()
-    retval = self.process.returncode
-    return (retval, self.output + "\n" + self.error)
+class TimeoutError(Exception):
+  pass
 
 if __name__ == '__main__':
   main()
