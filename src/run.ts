@@ -84,6 +84,9 @@ if (argc < 6) {
         if ("cleanup" in argv) {
             config.cleanupIterations = argv.cleanup
         }
+        if ("iterations" in argv) {
+            config.iterations = argv.iterations
+        }
         Ansi.Gray("Configuration: " + config.toString())
         var res = Search.search(f, args, config)
         Ansi.Gray("Found in " + res.iterations + " iterations:")
