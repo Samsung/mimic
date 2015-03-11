@@ -16,12 +16,12 @@
   "function": [
     "return Array.prototype.push.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 3,
+  "loop": 2,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
-    "['a', 'b', 'c'], 'd'",
-    "['a', 'b', 'c'], 'd', 'e', 'f'",
-    "['a', 'b', 'c'], 'd', 'e', 'f', 'h'"
+    "[1,2,3], 4, 5, 6",
+    "[1,2,3], 4",
+    "[1,2,3], 4, 5, 6, 7"
   ]
 },
 

@@ -80,17 +80,18 @@ def main():
       succ_count = 0
       succ_iterations = 0
       for i in range(n):
+        more = ""
+        if "loop" in example:
+          more = " --loop " + str(example['loop'])
         if only_run:
-          command = './model-synth synth --cleanup 1000 --iterations 100000000 "%s" "%s" %s' % (argnames, function, args)
+          command = './model-synth synth ' + more + ' --cleanup 1000 --iterations 100000000 "%s" "%s" %s' % (argnames, function, args)
+          print command
           os.system(command)
           sys.exit(0)
         sys.stdout.write('  Running try #' + str(i+1))
         sys.stdout.flush()
         t = time.time()
-        more = ""
-        if "loop" in example:
-          more = " --loop " + example['loop']
-        command = './model-synth synth --out "%s/%s-%s-%d.js" "%s" "%s" %s' % (out, category, name, i, argnames, function, args)
+        command = './model-synth synth ' + more + ' --out "%s/%s-%s-%d.js" "%s" "%s" %s' % (out, category, name, i, argnames, function, args)
         val, output = execute(command, 60)
         elapsed_time = time.time() - t
         print ". Exit status %d after %.2f seconds." % (val, elapsed_time)
