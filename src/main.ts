@@ -223,7 +223,6 @@ var f = fs[i][1]
 var a = fs[i].slice(2)
 var a0 = a[0]
 var config = new Search.SearchConfig()
-config.loopIndex = Util.argvlength() > 4 ? parseInt(Util.argv(4)) : 0
 //config.cleanupIterations = 700
 
 

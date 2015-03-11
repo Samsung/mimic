@@ -77,14 +77,18 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     if (config.debug) Ansi.Gray("Loop inference...")
     var loops = StructureInference.infer(traces)
     var loop = null
+    var loopindex = 0
     if (loops.length > 0) {
         var i = 0
         if (config.debug) print(loops.filter((x) => i++ < 4).join("\n"))
-        // for now, only use first loop
-        loop = loops[config.loopIndex]
+        // randomly choose a loop
+        while (Random.maybe(0.3) && loopindex < loops.length-1) {
+            loopindex += 1
+        }
+        loop = loops[loopindex]
     }
     if (config.debug) Ansi.Gray("Found " + loops.length + " possible loops.")
-    if (config.debug) Ansi.Gray("Using this loop: " + loop)
+    if (config.debug && loop != null) Ansi.Gray("Using this loop [" + loopindex + "]: " + loop)
 
     if (config.debug) Ansi.Gray("Input categorization...")
     var categories = InputGen.categorize(inputs, traces, loop)
@@ -347,21 +351,18 @@ export class SearchConfig {
         iterations: 50000,
         cleanupIterations: 0,
         debug: 1,
-        loopIndex: 0
     }
     constructor(o: SearchConfig = SearchConfig.DEFAULT) {
         this.iterations = o.iterations
         this.cleanupIterations = o.cleanupIterations
         this.debug = o.debug
-        this.loopIndex = o.loopIndex
     }
     iterations: number
     cleanupIterations: number
     debug: number
-    loopIndex: number
 
     toString(): string {
-        return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup, using loop " + this.loopIndex
+        return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup"
     }
 }
 
