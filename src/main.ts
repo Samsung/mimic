@@ -219,6 +219,11 @@ var fs:any = [
         (a: any[], b) => a.map(b),
         [[1,2,3], (x) => x+1],
     ],
+    [ // 18
+        "Array.prototype.filter",
+        (a: any[], b) => a.filter(b),
+        [[0,5,2,20,3,23], (x) => x<2],
+    ],
 ]
 
 
@@ -302,6 +307,10 @@ if (debugFun) {
         if (m > 0) {
             log(inputs[k])
             print(m)
+            print(traces[k])
+            print("====")
+            print(traces2[k])
+            Util.line()
         }
     }
 }

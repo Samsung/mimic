@@ -88,6 +88,11 @@ export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: 
 export function traceDistance(a: Data.Trace, b: Data.Trace, p = null): number {
     var debug = false
 
+    var newDistance = true
+    if (newDistance) {
+        return traceDistanceNew(a, b, p)
+    }
+
     if (debug) {
         print(p)
     }
@@ -262,6 +267,68 @@ export function traceDistance(a: Data.Trace, b: Data.Trace, p = null): number {
     badness += Math.min(notInA,notInB) * W_CALL_WRONG
 
     if (debug) print("after call: " + badness)
+
+    // normalize by the length of a
+    if (a.events.length > 0) {
+        badness /= a.events.length
+    }
+
+    // compare the last statement (return or throw)
+    if (a.isNormalReturn === b.isNormalReturn) {
+        if (a.isNormalReturn) {
+            badness += W_EXIT * exprDistance(a.getResult(), b.getResult())/DISTANCE_NORM
+        } else {
+            badness += W_EXIT * exprDistance(a.getException(), b.getException())/DISTANCE_NORM
+        }
+    } else {
+        // different way to return
+        badness += W_ERROR_EXIT
+    }
+
+    if (debug) print("result: " + badness)
+
+    return badness
+}
+
+function dist(a: Data.Event, b: Data.Event) {
+    var aa = a.getParts()
+    var bb = b.getParts()
+    var badness = 0
+    for (var i = 0; i < aa.length; i++) {
+        badness += exprDistance(aa[i], bb[i])/DISTANCE_NORM
+    }
+    return badness / aa.length
+}
+
+/**
+ * Determine how 'close' two traces are, and return a number describing the closeness.  0 is identical,
+ * and the higher, the less similar the traces are.  This is a metric.
+ */
+export function traceDistanceNew(a: Data.Trace, b: Data.Trace, p = null): number {
+    var debug = false
+
+    if (debug) {
+        print(p)
+    }
+
+    var badness = 0
+
+    // exhausting computational budget is bad
+    Util.assert(!a.isExhaustedBudget, () => "a should not have exhausted it's budget")
+    if (b.isExhaustedBudget) {
+        return W_EXHAUSTED
+    }
+
+    var kinds = [Data.EventKind.ESet, Data.EventKind.ESet, Data.EventKind.EApply, Data.EventKind.EDeleteProperty]
+    var events = kinds.map((kind) => [a.eventsOfKind(kind), b.eventsOfKind(kind)])
+    for (var tmp in events) {
+        var aa = events[tmp][0]
+        var bb = events[tmp][1]
+        for (var i = 0; i < Math.min(aa.length, bb.length); i++) {
+            badness += 0.5 * dist(aa[i], bb[i])
+        }
+        badness += Math.abs(aa.length - bb.length)
+    }
 
     // normalize by the length of a
     if (a.events.length > 0) {

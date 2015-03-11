@@ -1228,6 +1228,9 @@ export class Event {
         s += " := "
         return s
     }
+    getParts(): TraceExpr[] {
+        return [this.target].concat(this.otherArgs)
+    }
 }
 
 export class EGet extends Event {
