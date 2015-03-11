@@ -85,6 +85,9 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         while (Random.maybe(0.3) && loopindex < loops.length-1) {
             loopindex += 1
         }
+        if (config.loopIndex != -1) {
+            loopindex = config.loopIndex
+        }
         loop = loops[loopindex]
     }
     if (config.debug) Ansi.Gray("Found " + loops.length + " possible loops.")
@@ -351,15 +354,18 @@ export class SearchConfig {
         iterations: 50000,
         cleanupIterations: 0,
         debug: 1,
+        loopIndex: -1
     }
     constructor(o: SearchConfig = SearchConfig.DEFAULT) {
         this.iterations = o.iterations
         this.cleanupIterations = o.cleanupIterations
         this.debug = o.debug
+        this.loopIndex = o.loopIndex
     }
     iterations: number
     cleanupIterations: number
     debug: number
+    loopIndex: number
 
     toString(): string {
         return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup"
