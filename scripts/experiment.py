@@ -112,14 +112,10 @@ def fprinta(f, s):
 def execute(cmd, timeout=100000000):
   out = ""
   try:
-    with timeout_c(seconds=timeout):
-      try:
-        out = subprocess.check_output(cmd, shell=True)
-        return (0, out)
-      except subprocess.CalledProcessError as ex:
-        return (ex.returncode, ex.output)
-  except TimeoutError:
-    return (-1, "")
+    out = subprocess.check_output("timeout " + str(timeout) + "s " + cmd, shell=True)
+    return (0, out)
+  except subprocess.CalledProcessError as ex:
+    return (ex.returncode, ex.output)
 
 # from http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish
 class timeout_c:
