@@ -232,7 +232,7 @@ var config = new Search.SearchConfig()
 
 
 //howMany(f, a, 10, [8000, 0], true)
-//Search.runSearch(f, a, config)
+Search.runSearch(f, a, config)
 
 
 //InputGen.generateInputs(f, a).map((a) => log(a))
@@ -241,6 +241,24 @@ var config = new Search.SearchConfig()
 
 var debugFun = true
 function f2(arg0, arg1, arg2) {
+    var result = []
+    if (this != null) this.budget = 1
+    var n0 = arg0.length
+    var n1 = arguments[arg1]
+    var n2 = result
+    for (var i0 = 0; i0 < n0; i0 += 1) {
+        if (this != null) this.budget = 1
+        n1 = arg0[i0]
+        n2 = arg1.call(arg2, n1, i0, arg0)
+        if (n2) {
+            result[i0] = n1
+        }
+        if (0) {
+            result = n2[arguments.length]
+            break
+        }
+    }
+    return result
 }
 if (debugFun) {
     var k = 0
