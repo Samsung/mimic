@@ -241,24 +241,6 @@ var config = new Search.SearchConfig()
 
 var debugFun = true
 function f2(arg0, arg1, arg2) {
-    var result = []
-    if (this != null) this.budget = 1
-    var n0 = arg0.length
-    var n1 = result
-    var n2 = arguments[arguments.length]
-    for (var i0 = 0; i0 < n0; i0 += 1) {
-        if (this != null) this.budget = 1
-        n1 = arg0[i0]
-        n2 = arg1.call(undefined, n1, i0, arg0)
-        if (arg1) {
-            result[i0] = n2
-        }
-        if (arg1<n2) {
-            result = n0[n1]
-            break
-        }
-    }
-    return result
 }
 if (debugFun) {
     var k = 0

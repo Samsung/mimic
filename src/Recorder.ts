@@ -160,7 +160,7 @@ var common = function (target: Object): Data.TraceExpr {
     //    return;
     //}
     state.addStep()
-    Util.assert(state.object2proxy.has(target), () => "target not proxied")
+    Util.assert(state.object2proxy.has(target), () => "target not proxied: " + Util.inspect(target))
     var res = state.texpr(state.object2proxy.get(target))
     Util.assert(res !== undefined, () => "target TraceExpr undefined")
     return res

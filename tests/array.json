@@ -90,6 +90,18 @@
   "arguments": [
     "[1,2,3], function f(previousValue, currentValue, index, array) { return previousValue + currentValue; }, 0"
   ]
+},
+
+{
+  "name": "Array.prototype.reduceRight",
+  "function": [
+    "return Array.prototype.reduceRight.apply(self, Array.prototype.slice.call(arguments, 1))"
+  ],
+  "loop": 0,
+  "argnames": "self, arg0, arg1, arg2",
+  "arguments": [
+    "[1,2,3], function f(previousValue, currentValue, index, array) { return previousValue + currentValue; }, 0"
+  ]
 }
 
 ]

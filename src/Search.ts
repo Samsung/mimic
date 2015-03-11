@@ -391,10 +391,9 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
         }
         if (p.body.numberOfStmts() === 0) break;
         var newp = config.randomChange(p)
-        var str = null
+        var str = null//"(n0-i0)-1"
         if (str != null && newp.toString().indexOf(str) != -1) {
-            print(newp)
-            print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            Ansi.Red(newp)
         }
         var newbadness = config.metric(newp)
         if (newbadness < badness) {

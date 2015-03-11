@@ -364,6 +364,10 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
             // random new addition of two variables
             return <Data.Expr>Ast.makeBinary(randomVar(), "+", randomVar())
         }),
+        new WeightedPair(nonPrimitive || zeroD || info.variables.length  == 0 ? 0 : 1, () => {
+            // random new subtraction of two variables
+            return <Data.Expr>Ast.makeBinary(Ast.makeBinary(randomVar(), "-", randomVar()), "-", new Data.Const(1))
+        }),
         new WeightedPair(bool && !zeroD ? 1 : 0, () => {
             // random new equality comparison
             var e1 = recurse()
