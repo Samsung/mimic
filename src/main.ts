@@ -219,6 +219,14 @@ var fs:any = [
         (a: any[], b) => a.map(b),
         [[1,2,3], (x) => x+1],
     ],
+    [ // 18
+        "our sum function",
+        (a: any[]) => {
+            var result = 0; for (var i = 0; i < a.length; i++) result += a[i]; return result; },
+        [[4,5,6]],
+        [[1,2,3]],
+
+    ],
 ]
 
 
