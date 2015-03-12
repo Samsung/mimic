@@ -29,6 +29,7 @@ def get_time():
 def main():
   parser = argparse.ArgumentParser(description='Run synthesis experiment.')
   parser.add_argument('-n', type=int, help='Number of repetitions', default=10)
+  parser.add_argument('-t', '--threads', type=int, help='Number of threads (-1 = 1/2 of cores available)', default=-1)
   parser.add_argument('--timeout', type=int, help='Timeout in seconds', default=60)
   parser.add_argument('--filter', type=str, help='Filter which experiments to run', default="")
   parser.add_argument('-r', '--run', help='Only run the first experiment.  Usually used together with --filter', action='store_true')
@@ -60,12 +61,13 @@ def main():
   out = workdir + "/out"
   if not os.path.exists(out):
     os.mkdir(out)
-  out = out + "/" + time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
+  out = out + "/" + time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
   if os.path.exists(out):
     print "ERROR, out directory exists already: " + out
     sys.exit(1)
   os.mkdir(out)
 
+  results = {}
   for f in fncs:
     print line
     print "Experiment: " + f.title
@@ -76,25 +78,36 @@ def main():
       sys.stdout.write('  Running try #' + str(i+1))
       sys.stdout.flush()
       t = time.time()
-      command = './model-synth synth --iterations 100000000 --out "%s/%s-%s-%d.js" %s' % (out, f.category, f.name, i, f.get_command_args())
-      val, output = execute(command, argv.timeout)
+      filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
+      command = './model-synth synth --iterations 100000000 --out "%s.js" %s' % (filename, f.get_command_args())
+      exitstatus, output = execute(command, argv.timeout)
+      log = "Experiment: " + f.title + "\n"
+      log += command + "\n"
+      log += line + "\n"
+      log += output + "\n"
+      log += line + "\n"
       elapsed_time = time.time() - t
-      print ". Exit status %d after %.2f seconds." % (val, elapsed_time)
-      if val == 0:
-        succ_count += 1
-        if verify:
-          break
-        succ_time += elapsed_time
+      log += ". Exit status %d after %.2f seconds.\n" % (exitstatus, elapsed_time)
+      fprint(filename + ".log.txt", log)
+      iters = -1
+      if exitstatus == 0:
         iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
-        succ_iterations += iters
-    if verify:
-      if succ_count == 0:
-        print "ERROR: didn't succeed :("
-    else:
-      print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
-      if succ_count > 0:
-        print "Average time until success: %.2f seconds" % (succ_time / float(succ_count))
-        print "Average iterations until success: %.1f" % (float(succ_iterations) / float(succ_count))
+      if f.title not in results:
+        results[f.title] = {
+          'name': f.title,
+          'results': []
+        }
+      results[f.title]['results'].append({
+        'iterations': iters,
+        'time': elapsed_time,
+        'exitstatus': exitstatus
+      })
+      jn = json.dumps(results, sort_keys=True, indent=2, separators=(',', ': '))
+      fprint(out + "/result.json", jn)
+    # print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
+    # if succ_count > 0:
+    #   print "Average time until success: %.2f seconds" % (succ_time / float(succ_count))
+    #   print "Average iterations until success: %.1f" % (float(succ_iterations) / float(succ_count))
   print line
 
 # print a string to a file
@@ -114,7 +127,7 @@ class Function(object):
   def __init__(self, data, category):
     self.category = category
     self.title = data['name']
-    self.name = self.title[self.title.rfind(".")+1:]
+    self.shortname = self.title[self.title.rfind(".")+1:]
     self.code = "\n".join(data['function'])
     self.argnames = data['argnames']
     self.arguments = data['arguments']
