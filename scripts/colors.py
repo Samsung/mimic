@@ -14,7 +14,10 @@
 # COL_NO_COLOR="\033[0m"
 
 def grey(val):
-  return "\033[38;5;244m" + str(val) + "\033[0m"
+  return "\033[38;5;244m" + unicode(val) + "\033[0m"
 
 def red(val):
-  return "\033[38;5;1m" + str(val) + "\033[0m"
+  return "\033[38;5;1m" + unicode(val) + "\033[0m"
+
+def green(val):
+  return "\033[38;5;2m" + unicode(val) + "\033[0m"
