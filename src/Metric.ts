@@ -332,7 +332,7 @@ export function traceDistanceNew(a: Data.Trace, b: Data.Trace, p = null): number
 
     // normalize by the length of a
     if (a.events.length > 0) {
-        badness /= a.events.length
+        //badness /= a.events.length
     }
 
     // compare the last statement (return or throw)
