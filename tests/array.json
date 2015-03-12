@@ -127,7 +127,7 @@
   {
     "name": "Handwritten array max",
     "function": [
-      "var result = -100000; for (var i = 0; i < a.length; i++) if (a[i] > result) result = a[i]; return result;"
+      "var result = -Infinity; for (var i = 0; i < a.length; i++) if (a[i] > result) result = a[i]; return result;"
     ],
     "loop": 1,
     "argnames": "a",
@@ -140,7 +140,7 @@
   {
     "name": "Handwritten array min",
     "function": [
-      "var result = 100000; for (var i = 0; i < a.length; i++) if (a[i] < result) result = a[i]; return result;"
+      "var result = Infinity; for (var i = 0; i < a.length; i++) if (a[i] < result) result = a[i]; return result;"
     ],
     "loop": 1,
     "argnames": "a",
