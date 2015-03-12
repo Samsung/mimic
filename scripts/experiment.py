@@ -74,38 +74,42 @@ def main():
     print line
     print "Experiment: " + f.title
     for i in range(n):
-      filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
-      t = time.time()
-      command = '%s --out "%s.js" %s' % (base_command, filename, f.get_command_args())
-      exitstatus, output = execute(command, argv.timeout)
-      log = "Experiment: " + f.title + "\n"
-      log += command + "\n"
-      log += line + "\n"
-      log += output + "\n"
-      log += line + "\n"
-      elapsed_time = time.time() - t
-      log += ". Exit status %d after %.2f seconds.\n" % (exitstatus, elapsed_time)
-      fprint(filename + ".log.txt", log)
-      iters = -1
-      if exitstatus == 0:
-        iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
-      if f.title not in results:
-        results[f.title] = {
-          'name': f.title,
-          'results': []
-        }
-      results[f.title]['results'].append({
-        'iterations': iters,
-        'time': elapsed_time,
-        'exitstatus': exitstatus
-      })
-      jn = json.dumps(results, sort_keys=True, indent=2, separators=(',', ': '))
-      fprint(out + "/result.json", jn)
+      run_experiment(f, i)
     # print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
     # if succ_count > 0:
     #   print "Average time until success: %.2f seconds" % (succ_time / float(succ_count))
     #   print "Average iterations until success: %.1f" % (float(succ_iterations) / float(succ_count))
   print line
+
+
+def run_experiment(f, i):
+  filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
+  t = time.time()
+  command = '%s --out "%s.js" %s' % (base_command, filename, f.get_command_args())
+  exitstatus, output = execute(command, argv.timeout)
+  log = "Experiment: " + f.title + "\n"
+  log += command + "\n"
+  log += line + "\n"
+  log += output + "\n"
+  log += line + "\n"
+  elapsed_time = time.time() - t
+  log += ". Exit status %d after %.2f seconds.\n" % (exitstatus, elapsed_time)
+  fprint(filename + ".log.txt", log)
+  iters = -1
+  if exitstatus == 0:
+    iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
+  # if f.title not in results:
+  #   results[f.title] = {
+  #     'name': f.title,
+  #     'results': []
+  #   }
+  # results[f.title]['results'].append({
+  #   'iterations': iters,
+  #   'time': elapsed_time,
+  #   'exitstatus': exitstatus
+  # })
+  # jn = json.dumps(results, sort_keys=True, indent=2, separators=(',', ': '))
+  # fprint(out + "/result.json", jn)
 
 # print a string to a file
 def fprint(f, s):
