@@ -13,18 +13,20 @@ import os
 import time
 import argparse
 import json
-import threading
 import subprocess
-import shutil
 import re
-import signal
+import status
+import colors
+
+line = "-" * 80
+base_command = './model-synth synth --iterations 100000000 --colors 0'
+q = None # the queue used for communication
+argv = None # the arguments
+out = None # the output folder
 
 # ------------------------------------------
 # main entry point
 # ------------------------------------------
-
-def get_time():
-  return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
 def main():
   parser = argparse.ArgumentParser(description='Run synthesis experiment.')
@@ -35,12 +37,11 @@ def main():
   parser.add_argument('-r', '--run', help='Only run the first experiment.  Usually used together with --filter', action='store_true')
   parser.add_argument('--verify', help='Verify that all experiments are successful at least some of the time', action='store_true')
 
+  global argv
   argv = parser.parse_args()
 
   workdir = os.path.abspath(os.path.dirname(__file__) + "/../tests")
   n = argv.n
-
-  line = "-" * 80
 
   only_run = argv.run
   verify = argv.verify
@@ -49,7 +50,6 @@ def main():
     sys.exit(1)
 
   fncs = parse_functions(workdir, argv.filter)
-  base_command = './model-synth synth --iterations 100000000 --colors 0'
   if only_run:
     f = fncs[0]
     command = base_command + ' --cleanup 1000 ' + f.get_command_args()
@@ -59,6 +59,7 @@ def main():
     sys.exit(os.system(command))
 
   # create a directory to store information
+  global out
   out = workdir + "/out"
   if not os.path.exists(out):
     os.mkdir(out)
@@ -72,14 +73,9 @@ def main():
   for f in fncs:
     print line
     print "Experiment: " + f.title
-    succ_time = 0.0
-    succ_count = 0
-    succ_iterations = 0
     for i in range(n):
-      sys.stdout.write('  Running try #' + str(i+1))
-      sys.stdout.flush()
-      t = time.time()
       filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
+      t = time.time()
       command = '%s --out "%s.js" %s' % (base_command, filename, f.get_command_args())
       exitstatus, output = execute(command, argv.timeout)
       log = "Experiment: " + f.title + "\n"
