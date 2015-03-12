@@ -18,6 +18,12 @@
 
 import Util = require('./Util')
 
+var use_color = true
+
+export function set_use_color(val: boolean) {
+    use_color = val
+}
+
 export function green(s: string) {
     return xterm(2)(s);
 }
@@ -26,6 +32,7 @@ export function red(s: string) {
 }
 export function xterm(n: number): (s: string) => string {
     return (s: string) => {
+        if (!use_color) return s
         return '\033[38;5;'+n+'m' + s + '\033[0m'
     }
 }

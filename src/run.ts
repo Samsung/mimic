@@ -61,6 +61,9 @@ if (argc < 6) {
     } else {
         Random.resetRandomness(-1)
     }
+    if ('colors' in argv && argv.colors == '0') {
+        Ansi.set_use_color(false)
+    }
 
     var fstr = argv._[0].split(",")
     fstr.push(argv._[1])

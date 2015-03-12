@@ -49,9 +49,10 @@ def main():
     sys.exit(1)
 
   fncs = parse_functions(workdir, argv.filter)
+  base_command = './model-synth synth --iterations 100000000 --colors 0'
   if only_run:
     f = fncs[0]
-    command = './model-synth synth --cleanup 1000 --iterations 100000000 ' + f.get_command_args()
+    command = base_command + ' --cleanup 1000 ' + f.get_command_args()
     print "Running the example: " + f.title
     print command
     print line
@@ -79,7 +80,7 @@ def main():
       sys.stdout.flush()
       t = time.time()
       filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
-      command = './model-synth synth --iterations 100000000 --out "%s.js" %s' % (filename, f.get_command_args())
+      command = '%s --out "%s.js" %s' % (base_command, filename, f.get_command_args())
       exitstatus, output = execute(command, argv.timeout)
       log = "Experiment: " + f.title + "\n"
       log += command + "\n"
