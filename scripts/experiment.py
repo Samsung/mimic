@@ -30,7 +30,7 @@ def main():
   parser = argparse.ArgumentParser(description='Run synthesis experiment.')
   parser.add_argument('-n', type=int, help='Number of repetitions', default=5)
   parser.add_argument('--filter', type=str, help='Filter which experiments to run', default="")
-  parser.add_argument('-r', '--run', help='Only run the first experiment', action='store_true')
+  parser.add_argument('-r', '--run', help='Only run the first experiment.  Usually used together with --filter', action='store_true')
   parser.add_argument('--verify', help='Verify that all experiments are successful at least some of the time', action='store_true')
 
   argv = parser.parse_args()
@@ -45,12 +45,18 @@ def main():
     print "Cannot both --run and --verify"
     sys.exit(1)
 
+  # create a directory to store information
   out = ""
   if not only_run:
     out = workdir + "/out"
+    if not os.path.exists(out):
+      os.mkdir(out)
+    out = out + "/" + time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
     if os.path.exists(out):
-      shutil.rmtree(out)
+      print "ERROR, out directory exists already: " + out
+      sys.exit(1)
     os.mkdir(out)
+
   categories = []
   for f in os.listdir(workdir):
     if os.path.isfile(workdir + "/" + f):
@@ -131,22 +137,6 @@ def execute(cmd, timeout=100000000):
     return (0, out)
   except subprocess.CalledProcessError as ex:
     return (ex.returncode, ex.output)
-
-# from http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish
-class timeout_c:
-  def __init__(self, seconds=1, error_message='Timeout'):
-    self.seconds = seconds
-    self.error_message = error_message
-  def handle_timeout(self, signum, frame):
-    raise TimeoutError(self.error_message)
-  def __enter__(self):
-    signal.signal(signal.SIGALRM, self.handle_timeout)
-    signal.alarm(self.seconds)
-  def __exit__(self, type, value, traceback):
-    signal.alarm(0)
-
-class TimeoutError(Exception):
-  pass
 
 if __name__ == '__main__':
   main()
