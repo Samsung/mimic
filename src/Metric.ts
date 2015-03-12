@@ -319,7 +319,7 @@ export function traceDistanceNew(a: Data.Trace, b: Data.Trace, p = null): number
         return W_EXHAUSTED
     }
 
-    var kinds = [Data.EventKind.ESet, Data.EventKind.ESet, Data.EventKind.EApply, Data.EventKind.EDeleteProperty]
+    var kinds = [Data.EventKind.EGet, Data.EventKind.ESet, Data.EventKind.EApply, Data.EventKind.EDeleteProperty]
     var events = kinds.map((kind) => [a.eventsOfKind(kind), b.eventsOfKind(kind)])
     for (var tmp in events) {
         var aa = events[tmp][0]
