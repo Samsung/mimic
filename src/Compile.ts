@@ -99,7 +99,11 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
         })
         var resvar = new Data.Var("result", true)
         var resres: Data.Stmt = new Data.Assign(resvar, resvar);
-        bodystmt.push(new Data.If(new Data.Const(false), new Data.Assign(new Data.Field(resvar, new Data.Const(0)), new Data.Const(0)), Data.Seq.Empty))
+        var resassign: Data.Stmt = new Data.Assign(new Data.Field(resvar, new Data.Const(0)), new Data.Const(0));
+        if (!alloc) {
+            resassign = resres
+        }
+        bodystmt.push(new Data.If(new Data.Const(false), resassign, Data.Seq.Empty))
         bodystmt.push(new Data.If(new Data.Const(false), new Data.Seq([resres, <Data.Stmt>new Data.Break()]), Data.Seq.Empty))
         var body = new Data.Seq(bodystmt)
 
