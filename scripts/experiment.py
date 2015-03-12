@@ -96,7 +96,7 @@ def main():
   stat.init_progress(len(tasks))
   global q
   q = Queue()
-  pool = Pool(maxtasksperchild=1)
+  pool = Pool(processes=threads, maxtasksperchild=1)
   pool.map_async(run_experiment, tasks)
   done = 0
   while True:
