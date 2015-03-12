@@ -256,28 +256,28 @@ Search.runSearch(f, a, config)
 
 var debugFun = true
 function f2(arg0, arg1, arg2) {
-    var result = []
+    var result = 15
     if (this != null) this.budget = 1
     var n0 = arg0.length
-    var n1 = arguments[arg1]
-    var n2 = result
-    for (var i0 = 0; i0 < n0; i0 += 1) {
+    var n1
+    var n2
+    for (var i0 = 0; i0 < 0; i0 += 1) {
         if (this != null) this.budget = 1
-        n1 = arg0[i0]
-        n2 = arg1.call(arg2, n1, i0, arg0)
-        if (n2) {
-            result[i0] = n1
+        n1 = arg0[0]
+        n2 = arg0.length
+        if (false) {
+            result = result
         }
-        if (0) {
-            result = n2[arguments.length]
+        if (false) {
+            result = result
             break
         }
     }
-    return result
+    return i0
 }
 if (debugFun) {
     var k = 0
-    var inputs = InputGen.generateInputs(f, a).filter((i) => k++ < 1000)
+    var inputs = InputGen.generateInputs(f, a).filter((i) => k++ < 1)
 //var ff = (x) => x < 10
 //inputs = [
 //    [[ 1, 1, 0, 0, 1 ], ff,],
