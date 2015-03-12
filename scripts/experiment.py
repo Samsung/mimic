@@ -17,6 +17,9 @@ import subprocess
 import re
 import status
 import colors
+import multiprocessing
+from multiprocessing import Pool
+from multiprocessing import Queue
 
 line = "-" * 80
 base_command = './model-synth synth --iterations 100000000 --colors 0'
@@ -69,20 +72,59 @@ def main():
     sys.exit(1)
   os.mkdir(out)
 
+  threads = argv.threads
+  if threads < 0:
+    threads = multiprocessing.cpu_count() / 2
+
+  # run the experiment
+  tasks = []
+  c = 0
+  print
+  for f, i in flatten(map(lambda f: map(lambda i: (f, i), range(n)), fncs)):
+    tasks.append((c, f, i))
+    c += 1
   results = {}
-  for f in fncs:
-    print line
-    print "Experiment: " + f.title
-    for i in range(n):
-      run_experiment(f, i)
-    # print "Success rate: %.2f%%" % (float(succ_count) * 100.0/float(n))
-    # if succ_count > 0:
-    #   print "Average time until success: %.2f seconds" % (succ_time / float(succ_count))
-    #   print "Average iterations until success: %.1f" % (float(succ_iterations) / float(succ_count))
+  print "Running experiment with %d functions and %d iterations" % (len(fncs), n)
+  print "  Using %d threads" % threads
   print line
+  stat = status.get_status()
+  stat.set_message("Working...")
+  stat.init_progress(len(tasks))
+  global q
+  q = Queue()
+  pool = Pool(maxtasksperchild=1)
+  pool.map_async(run_experiment, tasks)
+  done = 0
+  while True:
+    data = q.get()
+    if data[0] == 0 and data[2] == "done":
+      done += 1
+      stat.inc_progress(force_update=True)
+      if done == len(tasks):
+        break
+      continue
+    if data[0] == 1: # print a message
+      stat.info(data[2])
+    elif data[0] == 2: # print a message
+      stat.writeln(data[2])
+    else:
+      print data
+      assert False # unexpected message format
+  pool.close()
+  pool.join()
+  stat.end_progress()
 
 
-def run_experiment(f, i):
+def send_msg(id, msg, color=False):
+  global q
+  q.put((2 if color else 1, id, msg))
+
+def send_done(id):
+  global q
+  q.put((0, id, "done"))
+
+def run_experiment(data):
+  taskid, f, i = data
   filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
   t = time.time()
   command = '%s --out "%s.js" %s' % (base_command, filename, f.get_command_args())
@@ -110,6 +152,9 @@ def run_experiment(f, i):
   # })
   # jn = json.dumps(results, sort_keys=True, indent=2, separators=(',', ': '))
   # fprint(out + "/result.json", jn)
+  send_msg(taskid, "%s: finished with status %d after %.2f seconds" % (f.shortname, exitstatus, elapsed_time))
+  send_done(taskid)
+
 
 # print a string to a file
 def fprint(f, s):
@@ -122,6 +167,9 @@ def fprinta(f, s):
   f = open(f, 'a')
   f.write(s)
   f.close()
+
+def flatten(l):
+  return [item for sublist in l for item in sublist]
 
 # a function that we might want to synthesize
 class Function(object):
@@ -144,6 +192,10 @@ class Function(object):
       return res
     else:
       return "--loop " + str(self.loop) + " " + res
+
+  # simple string representation
+  def __repr__(self):
+    return self.title
 
 def parse_functions(workdir, filter = None):
   """
