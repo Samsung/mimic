@@ -131,9 +131,8 @@ def fprinta(f, s):
   f.close()
 
 def execute(cmd, timeout=100000000):
-  out = ""
   try:
-    out = subprocess.check_output("timeout " + str(timeout) + "s " + cmd, shell=True)
+    out = subprocess.check_output("timeout " + str(timeout) + "s " + cmd, shell=True, stderr=subprocess.STDOUT)
     return (0, out)
   except subprocess.CalledProcessError as ex:
     return (ex.returncode, ex.output)
