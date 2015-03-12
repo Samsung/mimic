@@ -86,11 +86,14 @@ def main():
     c += 1
   results = {}
   print "Running experiment..."
-  print "  %d function(s)" % len(fncs)
-  print "  %d iterations" % n
-  print "  %d threads" % threads
-  print "  output directory: 'tests/out/%s'" % timefordir
+  print "  function(s):        %d" % len(fncs)
+  print "  iterations:         %d" % n
+  print "  timeout:            %s seconds" % argv.timeout
+  print "  number of threads:  %d" % threads
+  print "  output directory:   tests/out/%s" % timefordir
   print line
+  success = 0
+  nosuccess = 0
   stat = status.get_status()
   stat.set_message("Working...")
   stat.init_progress(len(tasks))
@@ -111,6 +114,24 @@ def main():
       stat.info(data[2])
     elif data[0] == 2: # print a message
       stat.writeln(data[2])
+    elif data[0] == 3:
+      # process result
+      f = data[2]
+      o = data[3]
+      if f.title not in results:
+        results[f.title] = {
+          'name': f.title,
+          'results': []
+        }
+      results[f.title]['results'].append(o)
+      if o['exitstatus'] == 0:
+        success += 1
+      else:
+        nosuccess += 1
+      stat.set_message("Success for %d [ %.2f%% ]" % (success, float(success)/float(nosuccess + success)))
+      # update file on disk
+      jn = json.dumps(results, sort_keys=True, indent=2, separators=(',', ': '))
+      fprint(out + "/result.json", jn)
     else:
       print data
       assert False # unexpected message format
@@ -122,6 +143,10 @@ def main():
 def send_msg(id, msg, color=False):
   global q
   q.put((2 if color else 1, id, msg))
+
+def send_result(id, f, o):
+  global q
+  q.put((3, id, f, o))
 
 def send_done(id):
   global q
@@ -144,19 +169,16 @@ def run_experiment(data):
   iters = -1
   if exitstatus == 0:
     iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
-  # if f.title not in results:
-  #   results[f.title] = {
-  #     'name': f.title,
-  #     'results': []
-  #   }
-  # results[f.title]['results'].append({
-  #   'iterations': iters,
-  #   'time': elapsed_time,
-  #   'exitstatus': exitstatus
-  # })
-  # jn = json.dumps(results, sort_keys=True, indent=2, separators=(',', ': '))
-  # fprint(out + "/result.json", jn)
-  send_msg(taskid, "%s: finished with status %d after %.2f seconds" % (f.shortname, exitstatus, elapsed_time))
+    send_msg(taskid, "%s: success after %.2f seconds and %d iterations" % (f.shortname, elapsed_time, iters))
+  elif exitstatus == 124:
+    send_msg(taskid, "%s: timed out" % (f.shortname))
+  else:
+    send_msg(taskid, "%s: failed with status %d" % (f.shortname, exitstatus))
+  send_result(id, f, {
+    'iterations': iters,
+    'time': elapsed_time,
+    'exitstatus': exitstatus
+  })
   send_done(taskid)
 
 
