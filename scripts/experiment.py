@@ -66,7 +66,8 @@ def main():
   out = workdir + "/out"
   if not os.path.exists(out):
     os.mkdir(out)
-  out = out + "/" + time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
+  timefordir = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
+  out = out + "/" + timefordir
   if os.path.exists(out):
     print "ERROR, out directory exists already: " + out
     sys.exit(1)
@@ -84,8 +85,11 @@ def main():
     tasks.append((c, f, i))
     c += 1
   results = {}
-  print "Running experiment with %d functions and %d iterations" % (len(fncs), n)
-  print "  Using %d threads" % threads
+  print "Running experiment..."
+  print "  %d function(s)" % len(fncs)
+  print "  %d iterations" % n
+  print "  %d threads" % threads
+  print "  output directory: 'tests/out/%s'" % timefordir
   print line
   stat = status.get_status()
   stat.set_message("Working...")

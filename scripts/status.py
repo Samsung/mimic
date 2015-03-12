@@ -64,7 +64,7 @@ class Status(object):
       sys.stdout.write(str(text))
 
   def show_status(self):
-    self.stdwrite("-" * 60)
+    self.stdwrite("-" * 80)
     self.stdwrite("\n")
     self.stdwrite(self.message + "\n")
     self.status_last_update = time.time()
