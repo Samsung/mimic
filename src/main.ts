@@ -241,6 +241,9 @@ var a = fs[i].slice(2)
 var a0 = a[0]
 var config = new Search.SearchConfig()
 //config.cleanupIterations = 700
+if (Util.argvlength() > 4) {
+    config.loopIndex = +Util.argv(4)
+}
 
 
 //howMany(f, a, 10, [8000, 0], true)
