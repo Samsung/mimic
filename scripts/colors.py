@@ -21,3 +21,6 @@ def red(val):
 
 def green(val):
   return "\033[38;5;2m" + unicode(val) + "\033[0m"
+
+def yellow(val):
+  return "\033[38;5;3m" + unicode(val) + "\033[0m"

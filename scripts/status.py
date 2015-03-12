@@ -76,6 +76,7 @@ class Status(object):
     self.stdwrite(self.progress_cur)
     self.stdwrite(" / ")
     self.stdwrite(self.progress_max)
+    self.stdwrite(" - %.2f%%" % (float(self.progress_cur) * 100.0 / float(self.progress_max)))
     self.move_cursor_back()
 
   def clear_status(self):

@@ -129,7 +129,7 @@ def main():
         success += 1
       else:
         nosuccess += 1
-      stat.set_message("Success for %d [ %.2f%% ]" % (success, 100.0*float(success)/float(nosuccess + success)))
+      stat.set_message("Overall statistics: success for %d out of %d (%.2f%%)" % (success, nosuccess + success, 100.0*float(success)/float(nosuccess + success)))
       # update file on disk
       jn = json.dumps(results, sort_keys=True, indent=2, separators=(',', ': '))
       fprint(out + "/result.json", jn)
@@ -170,11 +170,11 @@ def run_experiment(data):
   iters = -1
   if exitstatus == 0:
     iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
-    msg = "%s: success after %.2fseconds and %d iterations" % (f.shortname, elapsed_time, iters)
+    msg = "%s: success after %.2f seconds and %d iterations" % (f.shortname, elapsed_time, iters)
     icon = colors.green(u"✓")
   elif exitstatus == 124:
     msg = "%s: timed out" % (f.shortname)
-    icon = colors.grey(u"✗")
+    icon = colors.yellow(u"✗")
   else:
     msg = "%s: failed with status %d" % (f.shortname, exitstatus)
     icon = colors.red(u"✗")
