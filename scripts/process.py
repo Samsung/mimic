@@ -47,7 +47,7 @@ def main():
   try:
     data = json.loads(open(folder + "/result.json").read())
     print line
-    print "Function\tSuccess rate (normal metric)\tSuccess rate )naive metric)"
+    print "Function\tSuccess rate (normal metric)\tSuccess rate (naive metric)"
     print line
     for ex in data:
       results = data[ex]['results']
