@@ -94,6 +94,13 @@ export function traceDistance(a: Data.Trace, b: Data.Trace, config: Search.Searc
         return traceDistanceNew(a, b, p)
     }
 
+    var naiveDistance = config.metric == 1
+    if (naiveDistance) {
+        return traceDistanceNaive(a, b, p)
+    }
+
+    Util.assert(config.metric == 2)
+
     if (debug) {
         print(p)
     }
@@ -352,6 +359,55 @@ export function traceDistanceNew(a: Data.Trace, b: Data.Trace, p = null): number
 
     return badness
 }
+
+export function traceDistanceNaive(a: Data.Trace, b: Data.Trace, p = null): number {
+    var debug = false
+
+    if (debug) {
+        print(p)
+    }
+
+    var badness = 0
+
+    // exhausting computational budget is bad
+    Util.assert(!a.isExhaustedBudget, () => "a should not have exhausted it's budget")
+    if (b.isExhaustedBudget) {
+        return W_EXHAUSTED
+    }
+
+    var kinds = [Data.EventKind.EGet, Data.EventKind.ESet, Data.EventKind.EApply, Data.EventKind.EDeleteProperty]
+    var events = kinds.map((kind) => [a.eventsOfKind(kind), b.eventsOfKind(kind)])
+    for (var tmp in events) {
+        var aa = events[tmp][0]
+        var bb = events[tmp][1]
+        for (var i = 0; i < Math.min(aa.length, bb.length); i++) {
+            badness += (dist(aa[i], bb[i]) == 0 ? 0 : 1)
+        }
+        badness += Math.abs(aa.length - bb.length)
+    }
+
+    // normalize by the length of a
+    if (a.events.length > 0) {
+        //badness /= a.events.length
+    }
+
+    // compare the last statement (return or throw)
+    if (a.isNormalReturn === b.isNormalReturn) {
+        if (a.isNormalReturn) {
+            badness += W_EXIT * exprDistance(a.getResult(), b.getResult())/DISTANCE_NORM
+        } else {
+            badness += W_EXIT * exprDistance(a.getException(), b.getException())/DISTANCE_NORM
+        }
+    } else {
+        // different way to return
+        badness += W_ERROR_EXIT
+    }
+
+    if (debug) print("result: " + badness)
+
+    return badness
+}
+
 
 /** Returns a distance metric for two trace allocations */
 function allocDist(va: Data.TraceAlloc, vb: Data.TraceAlloc): number {
