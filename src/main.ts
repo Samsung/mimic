@@ -91,7 +91,8 @@ function howMany(f, a, n: number = 5, max: number[] = [4000, 0], verbose = false
             iterations: max[0],
             cleanupIterations: max[1],
             debug: 0,
-            loopIndex: 0
+            loopIndex: 0,
+            metric: 0
         })
         if (res.score === 0) {
             success += 1
@@ -309,11 +310,11 @@ if (debugFun) {
     print(JSON.parse(jsonstr))
     //log(inputs)
     line()
-    print(Metric.evaluate2(f2, inputs, traces))
+    print(Metric.evaluate2(f2, inputs, traces, config))
 
     line()
     for (var k = 0; k < inputs.length && true; k++) {
-        var m = Metric.traceDistance(traces[k], traces2[k]);
+        var m = Metric.traceDistance(traces[k], traces2[k], config);
         if (m > 0) {
             log(inputs[k])
             print(m)

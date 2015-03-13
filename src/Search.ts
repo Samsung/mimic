@@ -116,7 +116,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         if (config.debug) Ansi.Gray("  Record correct behavior on " + inputs.length + " inputs...")
         var realTraces = inputs.map((i) => Recorder.record(f, i))
 
-        inputs = InputGen.selectInputs(inputs, realTraces, (i, t) => Metric.evaluate(p, [i], [t]))
+        inputs = InputGen.selectInputs(inputs, realTraces, (i, t) => Metric.evaluate(p, [i], [t], config))
         realTraces = inputs.map((i) => Recorder.record(f, i)) // TODO: could be optimized
         if (config.debug) Ansi.Gray("  Selected a subset of " + inputs.length + " inputs.")
 
@@ -130,7 +130,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         if (config.debug) Ansi.Gray("  Starting search...")
 
         var result = core_search(p, {
-            metric: (pp) => Metric.evaluate(pp, inputs, realTraces),
+            metric: (pp) => Metric.evaluate(pp, inputs, realTraces, config),
             iterations: iterations,
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
             base: config
@@ -184,11 +184,11 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         var mutationInfo = new ProgramGen.RandomMutationInfo(constants, p.getVariables(), maxArgs)
 
         // shorten the program
-        p = shorten(p, cleanupInputs, cleanupTraces)
+        p = shorten(p, cleanupInputs, cleanupTraces, config)
 
         // switch to the finalizing metric
         secondarySearch = core_search(p, {
-            metric: (pp) => Metric.evaluate(pp, cleanupInputs, cleanupTraces, true),
+            metric: (pp) => Metric.evaluate(pp, cleanupInputs, cleanupTraces, config, true),
             iterations: config.cleanupIterations,
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
             base: config
@@ -197,7 +197,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         p = secondarySearch.result
 
         // shorten the program again
-        p = shorten(p, cleanupInputs, cleanupTraces)
+        p = shorten(p, cleanupInputs, cleanupTraces, config)
 
         if (config.debug) Ansi.Gray(Util.linereturn())
     } else {
@@ -206,7 +206,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
     var result = mainSearch.combine(secondarySearch)
     result.result = p
-    result.score = Metric.evaluate(p, inputs, traces)
+    result.score = Metric.evaluate(p, inputs, traces, config)
     return result
 }
 
@@ -354,21 +354,25 @@ export class SearchConfig {
         iterations: 50000,
         cleanupIterations: 0,
         debug: 1,
-        loopIndex: -1
+        loopIndex: -1,
+        metric: 0
     }
     constructor(o: SearchConfig = SearchConfig.DEFAULT) {
         this.iterations = o.iterations
         this.cleanupIterations = o.cleanupIterations
         this.debug = o.debug
         this.loopIndex = o.loopIndex
+        this.metric = o.metric
     }
     iterations: number
     cleanupIterations: number
     debug: number
     loopIndex: number
+    metric: number
 
     toString(): string {
-        return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup"
+        return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup, using loop " +
+                this.loopIndex + ", and metric " + this.metric
     }
 }
 
@@ -442,15 +446,15 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
     })
 }
 
-function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[]) {
+function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], config: SearchConfig) {
 
-    var badness = Metric.evaluate(p, inputs, realTraces)
+    var badness = Metric.evaluate(p, inputs, realTraces, config)
     for (var i = 0; i < 300; i++) {
         if (p.body.numberOfStmts() === 0) return p
 
         var j = randInt(p.body.numberOfStmts())
         var newp = new Data.Program(p.body.replace(j, Data.Seq.Empty))
-        var newbadness = Metric.evaluate(newp, inputs, realTraces)
+        var newbadness = Metric.evaluate(newp, inputs, realTraces, config)
         if (newbadness <= badness) {
             p = newp
             badness = newbadness

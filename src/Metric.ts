@@ -23,6 +23,7 @@ import Data = require('./Data')
 import Util = require('./util/Util')
 import Recorder = require('./Recorder')
 import Compile = require('./Compile')
+import Search = require('./Search')
 
 var print = Util.print
 var log = Util.log
@@ -58,10 +59,10 @@ var W_CALL_MISSING = 1
  * gold standard).  Returns a non-negative value, where 0 means the program behaves identically (w.r.t. to our
  * metric) and the higher the number, the less similar `p's behavior.
  */
-export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], finalizing: boolean = false): number {
-    return evaluate2(Compile.compile(p), inputs, realTraces, p.body.transitiveAnychildren().length, finalizing, p)
+export function evaluate(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], config: Search.SearchConfig, finalizing: boolean = false): number {
+    return evaluate2(Compile.compile(p), inputs, realTraces, config, p.body.transitiveAnychildren().length, finalizing, p)
 }
-export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: Data.Trace[], programLength: number = 10, finalizing: boolean = false, p = null): number {
+export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: Data.Trace[], config: Search.SearchConfig, programLength: number = 10, finalizing: boolean = false, p = null): number {
     var badness = 0
     for (var i = 0; i < inputs.length; i++) {
         var base = realTraces[i].events.length
@@ -69,7 +70,7 @@ export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: 
         // give at least 20 more, but don't exceed than 100 more
         var budget = base + Math.min(100, Math.max(20, 0.5 * base))
         var candidateTrace = Recorder.record(f, inputs[i], budget)
-        var td = traceDistance(realTraces[i], candidateTrace, p)
+        var td = traceDistance(realTraces[i], candidateTrace, config, p)
         Util.assert(td >= 0, () => "negative distance for " + realTraces[i] + " vs " + candidateTrace)
         badness += td
     }
@@ -85,10 +86,10 @@ export function evaluate2(f: (...a: any[]) => any, inputs: any[][], realTraces: 
  * Determine how 'close' two traces are, and return a number describing the closeness.  0 is identical,
  * and the higher, the less similar the traces are.  This is a metric.
  */
-export function traceDistance(a: Data.Trace, b: Data.Trace, p = null): number {
+export function traceDistance(a: Data.Trace, b: Data.Trace, config: Search.SearchConfig, p = null): number {
     var debug = false
 
-    var newDistance = true
+    var newDistance = config.metric == 0
     if (newDistance) {
         return traceDistanceNew(a, b, p)
     }

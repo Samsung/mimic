@@ -93,6 +93,9 @@ if (argc < 6) {
         if ("loop" in argv) {
             config.loopIndex = argv.loop
         }
+        if ("metric" in argv) {
+            config.metric = +argv.metric
+        }
         Ansi.Gray("Configuration: " + config.toString())
         var res = Search.search(f, args, config)
         Ansi.Gray("Found in " + res.iterations + " iterations:")

@@ -192,7 +192,8 @@ function search_test(f, a, a0, name, oracle, k) {
             iterations: 5000,
             cleanupIterations: 0,
             debug: 0,
-            loopIndex: 0
+            loopIndex: 0,
+            metric: 0
         })
         var res: Search.SearchResult
         var i
