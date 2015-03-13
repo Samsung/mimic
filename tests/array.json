@@ -131,7 +131,7 @@
   "loop": 1,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
-    "[1,2,3,2], 2"
+    "[1,2,3,2], 4"
   ]
 },
 
