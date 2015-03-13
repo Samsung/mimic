@@ -112,6 +112,30 @@
 },
 
 {
+  "name": "Array.prototype.indexOf",
+  "function": [
+    "return Array.prototype.indexOf.apply(self, Array.prototype.slice.call(arguments, 1))"
+  ],
+  "loop": 1,
+  "argnames": "self, arg0, arg1, arg2",
+  "arguments": [
+    "[1,2,3,2], 2"
+  ]
+},
+
+{
+  "name": "Array.prototype.lastIndexOf",
+  "function": [
+    "return Array.prototype.lastIndexOf.apply(self, Array.prototype.slice.call(arguments, 1))"
+  ],
+  "loop": 1,
+  "argnames": "self, arg0, arg1, arg2",
+  "arguments": [
+    "[1,2,3,2], 2"
+  ]
+},
+
+{
   "name": "Array.handwritten.sum",
   "function": [
     "var result = 0; for (var i = 0; i < a.length; i++) result += a[i]; return result;"
