@@ -35,7 +35,7 @@ var log = Util.log
 var line = Util.line
 
 export class RandomMutationInfo {
-    constructor(public constants: Data.Expr[], public variables: Data.VarDef[], public nArgs: number) {
+    constructor(public constants: Data.Expr[], public variables: Data.VarDef[], public nArgs: number, public useAlloc: boolean) {
     }
 }
 
@@ -340,6 +340,14 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
         new WeightedPair(info.variables.length > 0 ? 4 : 0, () => {
             // random variable from the program
             return randomVar()
+        }),
+        new WeightedPair(zeroD || !info.useAlloc ? 0 : 1/*3*/, () => {
+            // length field read of result
+            return <Data.Expr>Ast.makeField(new Data.Var("result", true), new Data.Const("length"))
+        }),
+        new WeightedPair(zeroD || !info.useAlloc ? 0 : 0/*3*/, () => {
+            // random field read of result
+            return <Data.Expr>Ast.makeField(new Data.Var("result", true), recurse({field: true}))
         }),
         new WeightedPair(zeroD ? 0 : 0/*3*/, () => {
             // random new field

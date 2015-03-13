@@ -248,7 +248,7 @@ if (Util.argvlength() > 4) {
 
 
 //howMany(f, a, 10, [8000, 0], true)
-Search.runSearch(f, a, config)
+//Search.runSearch(f, a, config)
 
 
 //InputGen.generateInputs(f, a).map((a) => log(a))
@@ -257,28 +257,31 @@ Search.runSearch(f, a, config)
 
 var debugFun = true
 function f2(arg0, arg1, arg2) {
-    var result = 15
-    if (this != null) this.budget = 1
+    var result = []
+    //if (this != null) this.budget = 1
     var n0 = arg0.length
-    var n1
-    var n2
-    for (var i0 = 0; i0 < 0; i0 += 1) {
-        if (this != null) this.budget = 1
-        n1 = arg0[0]
-        n2 = arg0.length
-        if (false) {
-            result = result
-        }
-        if (false) {
-            result = result
-            break
-        }
-    }
-    return i0
+    //var n1 = arg0-1
+    var n2 = arg0
+    //for (var i0 = 0; i0 < (n0); i0 += 1) {
+    //    if (this != null) this.budget = 1
+    //    n1 = arg1[0]
+    //    n2 = arg1.call(undefined, !arg0, 0, arguments.length)
+    //    if (arg1) {
+    //        result[arg1] = (result-n2)-1
+    //    }
+    //    if (arg1) {
+    //        result = n1[arg0-1]
+    //        break
+    //    }
+    //}
+    return result
 }
+print(Recorder.record(f2, [[1,2,3], (a) => a+1]))
+Util.assert(false)
+
 if (debugFun) {
     var k = 0
-    var inputs = InputGen.generateInputs(f, a).filter((i) => k++ < 1)
+    var inputs = InputGen.generateInputs(f, a).filter((i) => k++ < 1000)
 //var ff = (x) => x < 10
 //inputs = [
 //    [[ 1, 1, 0, 0, 1 ], ff,],
@@ -297,6 +300,7 @@ if (debugFun) {
     var traces = inputs.map((i) => Recorder.record(f, i))
     var traces2 = inputs.map((i) => Recorder.record(f2, i))
     a0 = inputs[0]
+    Util.log(a0)
     var t1 = Recorder.record(f, a0)
     print(t1)
     var t2 = Recorder.record(f2, a0)
@@ -313,7 +317,7 @@ if (debugFun) {
     print(Metric.evaluate2(f2, inputs, traces, config))
 
     line()
-    for (var k = 0; k < inputs.length && true; k++) {
+    for (var k = 0; k < inputs.length && false; k++) {
         var m = Metric.traceDistance(traces[k], traces2[k], config);
         if (m > 0) {
             log(inputs[k])

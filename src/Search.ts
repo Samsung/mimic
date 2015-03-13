@@ -122,7 +122,8 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
         var constants = InputGen.genConstants(realTraces)
         var maxArgs = Util.max(inputs.map((i) => i.length))
-        var mutationInfo = new ProgramGen.RandomMutationInfo(constants, p.getVariables(), maxArgs)
+        var useAlloc = realTraces[0].getResult() instanceof Data.TraceAlloc
+        var mutationInfo = new ProgramGen.RandomMutationInfo(constants, p.getVariables(), maxArgs, useAlloc)
 
         if (config.debug) Ansi.Gray("  Using the following inputs:")
         if (config.debug) Ansi.Gray("  " + inputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
@@ -181,7 +182,8 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
         var constants = InputGen.genConstants(cleanupTraces)
         var maxArgs = Util.max(inputs.map((i) => i.length))
-        var mutationInfo = new ProgramGen.RandomMutationInfo(constants, p.getVariables(), maxArgs)
+        var useAlloc = cleanupTraces[0].getResult() instanceof Data.TraceAlloc
+        var mutationInfo = new ProgramGen.RandomMutationInfo(constants, p.getVariables(), maxArgs, useAlloc)
 
         // shorten the program
         p = shorten(p, cleanupInputs, cleanupTraces, config)
