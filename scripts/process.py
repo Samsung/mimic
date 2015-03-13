@@ -46,16 +46,20 @@ def main():
 
   try:
     data = json.loads(open(folder + "/result.json").read())
-    header = ["Function","Success rate (normal)","Success rate (naive)","Time (normal)","Time (naive)"]
+    nummetric = 3
+    header = ["Function"] + [s + " (" + str(i) + ")" for s in ["Success rate", "Time"] for i in range(nummetric)]
     cols = map(lambda x: [], header)
     for ex in data:
       results = data[ex]['results']
       name = ex[ex.rfind(".")+1:]
       cols[0].append(name)
-      cols[1].append(success_rate_str(results, 0))
-      cols[2].append(success_rate_str(results, 1))
-      cols[3].append(succ_time_str(results, 0))
-      cols[4].append(succ_time_str(results, 1))
+      c = 1
+      for i in range(nummetric):
+        cols[c].append(success_rate_str(results, i))
+        c += 1
+      for i in range(nummetric):
+        cols[c].append(succ_time_str(results, i))
+        c += 1
     print_table(header, cols)
   except ValueError as ex:
     print "Failed to parse configuration: " + str(ex)
