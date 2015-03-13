@@ -157,7 +157,9 @@ def send_done(id):
   q.put((0, id, "done"))
 
 def run_experiment(data):
-  taskid, f, i, metric = data
+  taskid, ff, i, metric = data
+  f = ff
+  """:type : Function """
   filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
   t = time.time()
   command = '%s --colors 0 --metric %d --out "%s.js" %s' % (base_command, metric, filename, f.get_command_args())
@@ -187,6 +189,7 @@ def run_experiment(data):
     'time': elapsed_time,
     'exitstatus': exitstatus,
     'i': i,
+    'loop': f.loop,
     'metric': metric
   })
   send_done(taskid)
