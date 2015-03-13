@@ -23,7 +23,7 @@ from multiprocessing import Pool
 from multiprocessing import Queue
 
 line = "-" * 80
-base_command = './model-synth synth --iterations 100000000 --colors 0'
+base_command = './model-synth synth --iterations 100000000'
 q = None # the queue used for communication
 argv = None # the arguments
 out = None # the output folder
@@ -160,7 +160,7 @@ def run_experiment(data):
   taskid, f, i, metric = data
   filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
   t = time.time()
-  command = '%s --metric %d --out "%s.js" %s' % (base_command, metric, filename, f.get_command_args())
+  command = '%s --colors 0 --metric %d --out "%s.js" %s' % (base_command, metric, filename, f.get_command_args())
   exitstatus, output = execute(command, argv.timeout)
   log = "Experiment: " + f.title + "\n"
   log += command + "\n"
