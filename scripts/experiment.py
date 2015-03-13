@@ -21,6 +21,7 @@ import colors
 import multiprocessing
 from multiprocessing import Pool
 from multiprocessing import Queue
+from random import shuffle
 
 line = "-" * 80
 base_command = './model-synth synth --iterations 100000000'
@@ -88,6 +89,7 @@ def main():
   for f, i, m in [(f, i, m) for f in fncs for i in range(n) for m in metrics]:
     tasks.append((c, f, i, m))
     c += 1
+  shuffle(tasks) # shuffle tasks
   results = {}
   print "Running experiment..."
   print "  function(s):        %d" % len(fncs)
