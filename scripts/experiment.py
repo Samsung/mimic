@@ -38,6 +38,7 @@ def main():
   parser.add_argument('-t', '--threads', type=int, help='Number of threads (-1 = 1/2 of cores available)', default=-1)
   parser.add_argument('--timeout', type=int, help='Timeout in seconds', default=60)
   parser.add_argument('--filter', type=str, help='Filter which experiments to run', default="")
+  parser.add_argument('--metric', type=str, help='Which metric should be used during search?  Comma-separated list', default="0")
   parser.add_argument('-r', '--run', help='Only run the first experiment.  Usually used together with --filter', action='store_true')
   parser.add_argument('--verify', help='Verify that all experiments are successful at least some of the time', action='store_true')
 
@@ -46,6 +47,8 @@ def main():
 
   workdir = os.path.abspath(os.path.dirname(__file__) + "/../tests")
   n = argv.n
+
+  metrics = map(lambda x: int(x), argv.metric.split(","))
 
   only_run = argv.run
   verify = argv.verify
@@ -56,7 +59,7 @@ def main():
   fncs = parse_functions(workdir, argv.filter)
   if only_run:
     f = fncs[0]
-    command = base_command + ' --cleanup 1000 ' + f.get_command_args()
+    command = base_command + ' --cleanup 1000 --metric ' + str(metrics[0]) + ' ' + f.get_command_args()
     print "Running the example: " + f.title
     print command
     print line
@@ -82,8 +85,8 @@ def main():
   tasks = []
   c = 0
   print
-  for f, i in flatten(map(lambda f: map(lambda i: (f, i), range(n)), fncs)):
-    tasks.append((c, f, i))
+  for f, i, m in [(f, i, m) for f in fncs for i in range(n) for m in metrics]:
+    tasks.append((c, f, i, m))
     c += 1
   results = {}
   print "Running experiment..."
@@ -154,10 +157,10 @@ def send_done(id):
   q.put((0, id, "done"))
 
 def run_experiment(data):
-  taskid, f, i = data
+  taskid, f, i, metric = data
   filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
   t = time.time()
-  command = '%s --out "%s.js" %s' % (base_command, filename, f.get_command_args())
+  command = '%s --metric %d --out "%s.js" %s' % (base_command, metric, filename, f.get_command_args())
   exitstatus, output = execute(command, argv.timeout)
   log = "Experiment: " + f.title + "\n"
   log += command + "\n"
@@ -182,7 +185,9 @@ def run_experiment(data):
   send_result(id, f, {
     'iterations': iters,
     'time': elapsed_time,
-    'exitstatus': exitstatus
+    'exitstatus': exitstatus,
+    'i': i,
+    'metric': metric
   })
   send_done(taskid)
 
