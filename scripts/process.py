@@ -124,6 +124,7 @@ def print_table(header, cols):
     print
 
   maxwidth = map(lambda i: max(map(lambda s: len(s), cols[i] + [header[i]])), range(n))
+  line = (sum(maxwidth) + (len(maxwidth) -1)*3) * "-"
   print line
   print_row(header)
   print line
