@@ -265,7 +265,7 @@ if (Util.argvlength() > 4) {
 
 var x = [1,2,3]
 x[5]=0
-print(Recorder.record((a, b) => a.map(b), [x, (x) => x+1]))
+print(Compile.compileTrace(Recorder.record((a, b) => a.map(b), [x, (x) => x+1])))
 Util.assert(false)
 
 config.metric = 0

@@ -271,6 +271,14 @@ export class Has extends Expr {
     }
     toString(config = {}) {
         config = reset(config)
+        if (this.f.type === ExprType.Const) {
+            var c = <Const>this.f
+            if (typeof c.val === "string") {
+                if (/^[0-9]+$/.test(c.val)) {
+                    return c.val + " in " + this.o.toString(config)
+                }
+            }
+        }
         return this.f.toString(config) + " in " + this.o.toString(config) + ""
     }
     eval(args: any[]): any {
