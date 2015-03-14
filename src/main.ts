@@ -263,7 +263,7 @@ if (Util.argvlength() > 4) {
 //Recorder.proxifyWithLogger(x).map((a) => true)
 //Util.assert(false)
 
-var trace = "ghsahgahgahhhga"
+var trace = "ghgahgahgahhhga"
 var candidates: string[] = []
 var tlen = trace.length
 var minIterations = 3
@@ -284,8 +284,9 @@ for (var start = 0; start < tlen - 1; start++) {
 
             // try to match as many then branches as possible
             var thenBranch = trace.substr(start, thenLen)
-            var thenLeadingIters = 0
-            while (trace.substr(start + (thenLeadingIters+1)*thenLen, thenLen) == thenBranch) {
+            Util.assert(thenBranch.length == thenLen, () => "invalid then branch")
+            var thenLeadingIters = 1
+            while (trace.substr(start + thenLeadingIters*thenLen, thenLen) == thenBranch) {
                 thenLeadingIters += 1
             }
 
@@ -302,19 +303,26 @@ for (var start = 0; start < tlen - 1; start++) {
 
                 var elseFirstStart = start + thenLeadingIters * thenLen;
                 var elseBranch = trace.substr(elseFirstStart, elseLen);
+                Util.assert(elseBranch.length == elseLen, () => "invalid else branch")
 
                 var regexStart = trace.substr(0, start)
-                var loopBodyPrefix = ""
-                candidates.push(regexStart + "(" + thenBranch + "|" + elseBranch + ")*")
+                var regexEnd = trace.substr(start + unrolledLen)
+                var regex = regexStart + "(" + thenBranch + "|" + elseBranch + ")*" + regexEnd;
+                var res = new RegExp("^" + regex + "$").test(trace)
+                if (!res) {
+                    break
+                }
+                candidates.push(regex)
 
                 // find common prefix for then and else branch
                 var prefixLen = 1
                 while (true) {
                     if (prefixLen > thenBranch.length || prefixLen > elseBranch.length) break;
+                    if (prefixLen == thenBranch.length && prefixLen == elseBranch.length) break;
                     var prefix = thenBranch.substr(0, prefixLen);
                     if (prefix != elseBranch.substr(0, prefixLen)) break;
-                    var regex = regexStart + "(" + prefix + "(" + thenBranch.substr(prefixLen) +
-                        "|" + elseBranch.substr(prefixLen) + "))*";
+                    regex = regexStart + "(" + prefix + "(" + thenBranch.substr(prefixLen) +
+                        "|" + elseBranch.substr(prefixLen) + "))*" + regexEnd;
                     candidates.push(regex)
                     prefixLen += 1
                 }
