@@ -149,52 +149,67 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
         return compileEvents(events)
     }
 
-    var stmts: Data.Stmt[] = []
-
     // build loop body
+    var body: Data.Stmt
     {
+        // helper statements
+        var resvar = new Data.Var("result", true)
+        var resAssignment: Data.Stmt
+        if (!alloc) {
+            resAssignment = new Data.If(new Data.Const(true), new Data.Assign(resvar, resvar), Data.Seq.Empty)
+        } else {
+            resAssignment = new Data.If(new Data.Const(false),
+                new Data.Assign(new Data.Field(resvar, new Data.Const(0)), new Data.Const(0)), Data.Seq.Empty)
+        }
+
         var trace = loop.trace
-        var body: Data.Stmt[] = []
+        var bodyStmts: Data.Stmt[] = []
         // add a fake statement to make sure we get can catch infinite loops
-        body.push(new Data.Marker())
+        bodyStmts.push(new Data.Marker())
 
         // prefix
-        body = body.concat(compileEvents(trace.subEvents(loop.prefixStart, loop.prefixLen)))
+        bodyStmts = bodyStmts.concat(compileEvents(trace.subEvents(loop.prefixStart, loop.prefixLen)))
 
         // conditional
         if (loop.thenLen != 0 || loop.elseLen != 0) {
-            var thenBranch = new Data.Seq(compileEvents(trace.subEvents(loop.thenStart, loop.thenLen)))
-            var elseBranch = new Data.Seq(compileEvents(trace.subEvents(loop.elseStart, loop.elseLen)))
-            body.push(new Data.If(new Data.Const(true), thenBranch, elseBranch))
+            var thenBranch = compileEvents(trace.subEvents(loop.thenStart, loop.thenLen))
+            var elseBranch = compileEvents(trace.subEvents(loop.elseStart, loop.elseLen))
+            if (thenBranch.length != 0) {
+                thenBranch.push(resAssignment)
+            }
+            if (elseBranch.length != 0) {
+                elseBranch.push(resAssignment)
+            }
+            bodyStmts.push(new Data.If(new Data.Const(true), new Data.Seq(thenBranch), new Data.Seq(elseBranch)))
         }
+        body = new Data.Seq(bodyStmts)
     }
 
     // move variable declarations out of loop body
+    var stmts: Data.Stmt[] = []
     {
-        var vars: Data.Var[] = []
-        body.forEach((n) => {
+        body.allStmts().forEach((n) => {
             if (n.type === Data.StmtType.Assign) {
                 var ass = <Data.Assign>n
                 if (ass.isDecl) {
                     // note that we can only modify the assignments because they have not been shared yet
                     ass.isDecl = false
-                    vars.push(<Data.Var>ass.lhs)
+                    stmts.push(new Data.Assign(<Data.Var>ass.lhs, null, true))
                 }
             } else if (n.type === Data.StmtType.FuncCall) {
                 var fcall = <Data.FuncCall>n
                 if (fcall.isDecl) {
                     // note that we can only modify the assignments because they have not been shared yet
                     fcall.isDecl = false
-                    vars.push(fcall.v)
+                    stmts.push(new Data.Assign(<Data.Var>fcall.v, null, true))
                 }
             }
         })
-        stmts = vars.map((v) => new Data.Assign(v, null, true))
     }
 
     // add everything
     stmts.concat(compileEvents(trace.subEvents(0, loop.prefixStart)))
-    stmts.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), new Data.Seq(body)))
+    stmts.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), new Data.Seq(bodyStmts)))
     stmts.concat(compileEvents(trace.subEvents(loop.unrolledLen)))
 
     return stmts;
