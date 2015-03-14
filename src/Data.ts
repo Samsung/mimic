@@ -1209,6 +1209,7 @@ export enum EventKind {
     ESet,
     EApply,
     EDeleteProperty,
+    EHas,
 }
 
 /**
@@ -1217,7 +1218,7 @@ export enum EventKind {
 export class Event {
     public variable: Var = null
     constructor(public kind: EventKind, public target: TraceExpr, public otherArgs: TraceExpr[]) {
-        if (kind === EventKind.EApply || kind === EventKind.EGet) {
+        if (kind === EventKind.EApply || kind === EventKind.EGet || kind === EventKind.EHas) {
             this.variable = new Var()
         }
     }
@@ -1254,6 +1255,26 @@ export class EGet extends Event {
         var s = ""
         s += super.toString(config)
         s += "get property "
+        s += this.name.toString(config)
+        s += " of "
+        s += this.target.toString(config)
+        return s
+    }
+}
+export class EHas extends Event {
+    constructor(public target: TraceExpr, public name: TraceExpr) {
+        super(EventKind.EHas, target, [name])
+    }
+    getSkeleton(): string {
+        return "has;"
+    }
+    getSkeletonShort(): string {
+        return "h"
+    }
+    toString(config = {}): string {
+        var s = ""
+        s += super.toString(config)
+        s += "has property "
         s += this.name.toString(config)
         s += " of "
         s += this.target.toString(config)
@@ -1329,6 +1350,7 @@ export class EDeleteProperty extends Event {
         return s
     }
 }
+
 
 /**
  * An enum for trace expressions.
