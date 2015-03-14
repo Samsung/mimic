@@ -30,7 +30,31 @@ var line = Util.line
 
 export class Proposal {
     worksFor: number[]
-    constructor(public regex: string, public loopStart: number, public loopLength: number) {
+    constructor(public regex: string, public trace: Data.Trace) {
+        this.numStmts = 0
+        this.long = ""
+        for (var i = 0; i < regex.length; i++) {
+            this.numStmts += 1
+            switch (regex[i]) {
+                case 'g':
+                    this.long += "get;"
+                    break
+                case 's':
+                    this.long += "set;"
+                    break
+                case 'h':
+                    this.long += "has;"
+                    break
+                case 'd':
+                    this.long += "delete;"
+                    break
+                case 'a':
+                    this.long += "apply;"
+                    break;
+                default:
+                    this.numStmts -= 1
+            }
+        }
     }
     equals(o) {
         if (!(o instanceof Proposal)) {
@@ -39,15 +63,10 @@ export class Proposal {
         return this.regex === o.regex
     }
     toString(): string {
-        return this.regex
+        return this.long
     }
-    getNumIterations(trace: Data.Trace) {
-        var res = /^([^(]*)(\([^)]+\)\*)(.*)$/g.exec(this.regex)
-        var pre = res[1].split(";").length - 1
-        var body = res[2].split(";").length - 1
-        var post = res[3].split(";").length - 1
-        var total = trace.events.length
-        return (total - pre - post) / body
+    matches(trace: Data.Trace): boolean {
+        return new RegExp("^" + this.regex + "$").test(t.getSkeletonShort())
     }
 }
 
@@ -58,7 +77,7 @@ export class Proposal {
 export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLength: number = 1, maxBodyLength: number = 100000) {
     function find_candidates(trace0: Data.Trace) {
         var trace = trace0.getSkeletonShort()
-        var candidates: string[] = []
+        var candidates: Proposal[] = []
         var tlen = trace.length
         var minIterations = 3
         var minBodyLength = 1
@@ -80,8 +99,17 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                     var thenBranch = trace.substr(start, thenLen)
                     Util.assert(thenBranch.length == thenLen, () => "invalid then branch")
                     var thenLeadingIters = 1
-                    while (trace.substr(start + thenLeadingIters*thenLen, thenLen) == thenBranch) {
+                    while (trace.substr(start + thenLeadingIters*thenLen, thenLen) == thenBranch &&
+                            (thenLeadingIters+1)*thenLen <= unrolledLen) {
                         thenLeadingIters += 1
+                    }
+
+                    // special case for no conditional in loop
+                    var regex
+                    var regexEnd = trace.substr(start + unrolledLen)
+                    if (unrolledLen == thenLeadingIters*thenLen) {
+                        regex = regexStart + "(" + thenBranch + ")*" + regexEnd;
+                        candidates.push(new Proposal(regex, trace0))
                     }
 
                     for (var elseLen = minBranchLengh; elseLen < maxBranchLength; elseLen++) {
@@ -100,13 +128,12 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                         Util.assert(elseBranch.length == elseLen, () => "invalid else branch")
 
                         var regexStart = trace.substr(0, start)
-                        var regexEnd = trace.substr(start + unrolledLen)
-                        var regex = regexStart + "(" + thenBranch + "|" + elseBranch + ")*" + regexEnd;
+                        regex = regexStart + "(" + thenBranch + "|" + elseBranch + ")*" + regexEnd;
                         var res = new RegExp("^" + regex + "$").test(trace)
                         if (!res) {
                             break
                         }
-                        candidates.push(regex)
+                        candidates.push(new Proposal(regex, trace0))
 
                         // find common prefix for then and else branch
                         var prefixLen = 1
@@ -117,7 +144,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                             if (prefix != elseBranch.substr(0, prefixLen)) break;
                             regex = regexStart + "(" + prefix + "(" + thenBranch.substr(prefixLen) +
                             "|" + elseBranch.substr(prefixLen) + "))*" + regexEnd;
-                            candidates.push(regex)
+                            candidates.push(new Proposal(regex, trace0))
                             prefixLen += 1
                         }
                     }
@@ -132,15 +159,14 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
         candidates = candidates.concat(find_candidates(traces[k]))
     }
     candidates = Util.dedup2(candidates)
-    var howMany = (a) => {
+    var howMany = (a: Proposal) => {
         if (a.worksFor !== undefined) {
             return a.worksFor.length
         }
         var i = 0
         a.worksFor = []
         var res = traces.filter((t) => {
-            var res = new RegExp("^" + a.regex + "$").test(t.getSkeleton())
-            if (res) {
+            if (a.matches(t)) {
                 a.worksFor.push(i)
             }
             i++
@@ -150,6 +176,6 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
     }
     candidates.map((c) => howMany(c)) // initialize c.worksFor
     // sort by number of traces it matches, and then by the length of the regular expression, and then by having the loop as late as possible
-    Util.sortBy(candidates, [(a) => -howMany(a), (a) => a.regex.length, (a) => -a.regex.indexOf("(")])
+    Util.sortBy(candidates, [(a) => -howMany(a), (a) => a.numStmts, (a) => -a.regex.indexOf("(")])
     return candidates
 }
