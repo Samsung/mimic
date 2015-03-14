@@ -113,6 +113,7 @@ export enum ExprType {
     Binary,
     Unary,
     Alloc,
+    Has,
 }
 
 /**
@@ -258,6 +259,50 @@ export class Field extends Prestate {
             return "number"
         }
         return undefined
+    }
+}
+
+/**
+ * A 'has' expression
+ */
+export class Has extends Expr {
+    constructor(public o: Expr, public f: Expr) {
+        super(ExprType.Has, 1+Math.max(o.depth, f.depth))
+    }
+    toString(config = {}) {
+        config = reset(config)
+        return this.f.toString(config) + " in " + this.o.toString(config) + ""
+    }
+    eval(args: any[]): any {
+        return this.f.eval(args) in this.o.eval(args)
+    }
+    update(args: any[], val: any): any {
+        Util.assert(false)
+    }
+    equals(o) {
+        return o instanceof Has && o.f.equals(this.f) && o.o.equals(this.o)
+    }
+    children(): Node[] {
+        return [this.o, this.f]
+    }
+    anychildren(): any[] {
+        return this.children()
+    }
+    toSkeleton(): string {
+        return this.f.toSkeleton() + " in " + this.o.toSkeleton()
+    }
+    canBeUpdated(args: any[]): boolean {
+        return false
+    }
+    isUpdateNop(args: any[], val: any): boolean {
+        Util.assert(false)
+        return false
+    }
+    isSafe(args: any[]): boolean {
+        return true
+    }
+    getType() {
+        return "boolean"
     }
 }
 

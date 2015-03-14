@@ -131,6 +131,10 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
                 ev = <Data.EGet>e
                 stmts.push(new Data.Assign(e.variable, new Data.Field(expr(ev.target), expr(ev.name)), true))
                 break
+            case Data.EventKind.EHas:
+                ev = <Data.EHas>e
+                stmts.push(new Data.Assign(e.variable, new Data.Has(expr(ev.target), expr(ev.name)), true))
+                break
             case Data.EventKind.ESet:
                 ev = <Data.ESet>e
                 // save old value in local variable
