@@ -50,6 +50,12 @@ export function generate(init: any, n: number): any[] {
                 oneless.pop()
                 res.push(oneless)
 
+                if (init.length > 1) {
+                    var sparse = Util.clone(init)
+                    delete sparse[1]
+                    res.push(sparse)
+                }
+
                 var onemore = Util.clone(init)
                 var c = generate(init[init.length - 1], 1)
                 if (c.length > 0) {
