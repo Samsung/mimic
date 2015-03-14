@@ -148,7 +148,9 @@ export function clone<T>(obj: T): T {
     if (obj instanceof Array) {
         var copy2 = [];
         for (var i = 0, len = (<any> obj).length; i < len; i++) {
-            copy2[i] = clone(obj[i]);
+            if (i in obj) {
+                copy2[i] = clone(obj[i]);
+            }
         }
         return <T> <any> copy2;
     }
