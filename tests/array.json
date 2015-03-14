@@ -37,6 +37,18 @@
 },
 
 {
+  "name": "Array.prototype.unshift",
+  "function": [
+    "return Array.prototype.unshift.apply(self, Array.prototype.slice.call(arguments, 1))"
+  ],
+  "loop": 0,
+  "argnames": "self, arg0, arg1, arg2",
+  "arguments": [
+    "[10,11,12,13,14], 0"
+  ]
+},
+
+{
   "name": "Array.prototype.filter",
   "function": [
     "return Array.prototype.filter.apply(self, Array.prototype.slice.call(arguments, 1))"
