@@ -232,6 +232,11 @@ var fs:any = [
         [[4,5,6]],
         [[1,2,3]],
     ],
+    [ // 20
+        "Array.prototype.reverse",
+        (a: any[]) => a.reverse(),
+        [[10,11,12,13,14]],
+    ],
 ]
 
 
@@ -248,36 +253,36 @@ if (Util.argvlength() > 4) {
 
 
 //howMany(f, a, 10, [8000, 0], true)
-//Search.runSearch(f, a, config)
+Search.runSearch(f, a, config)
 
 
 //InputGen.generateInputs(f, a).map((a) => log(a))
 
-
+//var x = [1,2,3]
+//x[5]=0
+//Recorder.proxifyWithLogger(x).map((a) => true)
+//Util.assert(false)
 
 var debugFun = true
 function f2(arg0, arg1, arg2) {
-    var result = []
-    //if (this != null) this.budget = 1
+    var result
+    if (this != null) this.budget = 1
     var n0 = arg0.length
-    //var n1 = arg0-1
-    var n2 = arg0
-    //for (var i0 = 0; i0 < (n0); i0 += 1) {
-    //    if (this != null) this.budget = 1
-    //    n1 = arg1[0]
-    //    n2 = arg1.call(undefined, !arg0, 0, arguments.length)
-    //    if (arg1) {
-    //        result[arg1] = (result-n2)-1
-    //    }
-    //    if (arg1) {
-    //        result = n1[arg0-1]
-    //        break
-    //    }
-    //}
-    return result
+    var n1
+    var n2
+    for (var i0 = 0; i0 < n0/2-0.8; i0 += 1) {
+        if (this != null) this.budget = 1
+        n1 = arg0[i0]
+        n2 = arg0[n0-i0-1]
+        arg0[i0] = n2
+        arg0[n0-i0-1] = n1
+        if (false) {
+            result = result
+            break
+        }
+    }
+    return arg0
 }
-print(Recorder.record(f2, [[1,2,3], (a) => a+1]))
-Util.assert(false)
 
 if (debugFun) {
     var k = 0
