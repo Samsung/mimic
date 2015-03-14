@@ -254,7 +254,7 @@ export class Field extends Prestate {
     }
     getType() {
         if (this.f instanceof Const && (<Const>this.f).val === "length" &&
-            this.o instanceof Var && (<Var>this.o).name === "arguments") {
+            this.o instanceof Var && ((<Var>this.o).name === "arguments" || (<Var>this.o).name === "result")) {
             return "number"
         }
         return undefined
