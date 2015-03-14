@@ -181,6 +181,8 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
                 elseBranch.push(resAssignment)
             }
             bodyStmts.push(new Data.If(new Data.Const(true), new Data.Seq(thenBranch), new Data.Seq(elseBranch)))
+        } else {
+            bodyStmts.push(resAssignment)
         }
         body = new Data.Seq(bodyStmts)
     }

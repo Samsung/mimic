@@ -263,21 +263,30 @@ if (Util.argvlength() > 4) {
 //Recorder.proxifyWithLogger(x).map((a) => true)
 //Util.assert(false)
 
-var x = [1,2,3]
-x[5]=0
-var trace = Recorder.record((a, b) => a.map(b), [x, (x) => x + 1])
-var loop = StructureInference.infer([trace])
-print(loop.slice(0, 10).join("\n"))
-var program = Compile.compileTrace(trace, loop[0]);
-print(program)
-Util.assert(false)
+//var x = [1,2,3]
+//x[5]=0
+//var trace = Recorder.record((a, b) => a.map(b), [x, (x) => x + 1])
+//var loop = StructureInference.infer([trace])
+//print(loop.slice(0, 10).join("\n"))
+//var program = Compile.compileTrace(trace, loop[0]);
+//print(program)
+//Util.assert(false)
 
 config.metric = 0
 var debugFun = true
 function f2(arg0, arg1, arg2) {
     var result = []
-    //var n0 = result[arg0]
-    arg0.toString()
+    var n0 = arg0.length
+    var n1 = n0.length
+    var n2 = -1
+    var n3 = n2[arguments[arguments[arg1]]]
+    for (var i0 = 0; i0 < n0; i0 += 1) {
+        if (this != null) this.budget = 1
+        n1 = i0 in arg0
+        n2 = arg0[i0]
+        n3 = arg1.call(undefined, n2, i0, arg0)
+    }
+    return result
 }
 
 if (debugFun) {
