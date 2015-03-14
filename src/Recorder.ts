@@ -218,7 +218,17 @@ var Handler = {
     },
     has: function(target, name: string) {
         var ttarget = common(target)
-        ignorec(".. unhandled call to has")
+        if (state.doRecord) {
+            var val = name in target;
+            var pval = proxify(val)
+
+            if (state.doRecord) {
+                var event = new Data.EHas(ttarget, state.texpr(name))
+                state.record(event)
+            }
+
+            return pval
+        }
         return Reflect.has(target, name);
     },
     apply: function(target, receiver, args) {
