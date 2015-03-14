@@ -58,6 +58,7 @@ export class Proposal {
                     this.long += "apply;"
                     break;
                 default:
+                    this.long += regex[i]
                     this.numStmts -= 1
             }
         }
