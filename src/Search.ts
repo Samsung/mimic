@@ -99,17 +99,8 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
     function straightLineSearch(f: (...a: any[]) => any, inputs: any[][], iterations: number, loop: StructureInference.Proposal, p?: Data.Program) {
         if (!p) {
-            var i = 0
-            while (true) {
-                var t = Recorder.record(f, inputs[i])
-                // make sure we pick an input that has more than 0 iterations
-                if (loop != null && loop.getNumIterations(t) == 0) {
-                    i++
-                    continue
-                }
-                p = Compile.compileTrace(t, loop)
-                break
-            }
+            var t = Recorder.record(f, inputs[0])
+            p = Compile.compileTrace(t, loop)
         }
         if (config.debug) print(p)
 

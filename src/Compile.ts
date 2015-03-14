@@ -68,8 +68,8 @@ function expr(e: Data.TraceExpr) {
 /**
  * Compile a list of events
  */
-function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureInference.Proposal = null, trace: Data.Trace = null) {
-    var stmts:Data.Stmt[] = []
+function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureInference.Proposal = null) {
+    var stmts: Data.Stmt[] = []
 
     // add a fake statement to make sure we get can catch infinite loops
     stmts.push(new Data.Marker())
@@ -113,51 +113,42 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
         return res
     }
 
-    for (var i = 0; i < events.length; i++) {
-        var e = events[i]
-        if (loop !== null && loop.loopStart === i) {
-            stmts = stmts.concat(buildForLoop(compileEventList(events.slice(i, i + loop.loopLength), alloc), alloc))
-            /*for (var k = 0; k < loop.numIterations; k++) {
-                line()
-                print(events.slice(i+k*loop.loopLength, i+k*loop.loopLength+loop.loopLength).join("\n"))
-                line()
-            }*/
-            i += (loop.loopLength * loop.getNumIterations(trace))-1
-            continue
-        }
+    function compileEvent(e: Data.Event): Data.Stmt {
         var ev
         switch (e.kind) {
             case Data.EventKind.EGet:
                 ev = <Data.EGet>e
-                stmts.push(new Data.Assign(e.variable, new Data.Field(expr(ev.target), expr(ev.name)), true))
+                return new Data.Assign(e.variable, new Data.Field(expr(ev.target), expr(ev.name)), true)
                 break
             case Data.EventKind.EHas:
                 ev = <Data.EHas>e
-                stmts.push(new Data.Assign(e.variable, new Data.Has(expr(ev.target), expr(ev.name)), true))
-                break
+                return new Data.Assign(e.variable, new Data.Has(expr(ev.target), expr(ev.name)), true)
             case Data.EventKind.ESet:
                 ev = <Data.ESet>e
                 // save old value in local variable
                 //stmts.push(new Data.Assign(new Data.Var(), new Data.Field(expr(ev.target), expr(ev.name)), true))
-                stmts.push(new Data.Assign(new Data.Field(expr(ev.target), expr(ev.name)), expr(ev.value)))
-                break
+                return new Data.Assign(new Data.Field(expr(ev.target), expr(ev.name)), expr(ev.value))
             case Data.EventKind.EApply:
                 ev = <Data.EApply>e
                 var recv = null
                 if (ev.receiver !== null) {
                     recv = expr(ev.receiver)
                 }
-                stmts.push(new Data.FuncCall(ev.variable, expr(ev.target), ev.args.map(expr), recv, true))
-                break
+                return new Data.FuncCall(ev.variable, expr(ev.target), ev.args.map(expr), recv, true)
             case Data.EventKind.EDeleteProperty:
                 ev = <Data.EDeleteProperty>e
                 // save old value in local variable
                 //stmts.push(new Data.Assign(new Data.Var(), new Data.Field(expr(ev.target), expr(ev.name)), true))
-                stmts.push(new Data.DeleteProp(expr(ev.target), expr(ev.name)))
-                break
+                return new Data.DeleteProp(expr(ev.target), expr(ev.name))
             default:
                 Util.assert(false, ((inner_e) => () => "unknown event kind: " + inner_e)(e))
+                return null
         }
+    }
+
+    for (var i = 0; i < events.length; i++) {
+        var e = events[i]
+        stmts.push(compileEvent(e))
     }
     return stmts;
 }
@@ -167,7 +158,7 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
 export function compileTrace(trace: Data.Trace, loop?: StructureInference.Proposal): Data.Program {
     var resvar = new Data.Assign(new Data.Var("result", true), null, true)
     var alloc = trace.getResult() instanceof Data.TraceAlloc
-    var stmts: Data.Stmt[] = compileEventList(trace.events, alloc, loop, trace)
+    var stmts: Data.Stmt[] = compileEventList(trace.events, alloc, loop)
     if (trace.isNormalReturn) {
         if (alloc) {
             var obj = <Data.TraceAlloc>trace.getResult()
