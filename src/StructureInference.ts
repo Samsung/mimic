@@ -32,7 +32,10 @@ export class Proposal {
     worksFor: number[]
     long: string
     numStmts: number
-    constructor(public regex: string, public trace: Data.Trace) {
+    constructor(public regex: string, public trace: Data.Trace,
+                prefixStart: number, prefixEnd: number,
+                thenStart: number, thenLen: number,
+                elseStart: number, elseLen: number) {
         this.numStmts = 0
         this.long = ""
         for (var i = 0; i < regex.length; i++) {
@@ -113,7 +116,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                     var regex
                     if (unrolledLen == thenLeadingIters*thenLen) {
                         regex = regexStart + "(" + thenBranch + ")*" + regexEnd;
-                        candidates.push(new Proposal(regex, trace0))
+                        candidates.push(new Proposal(regex, trace0, start, thenLen, 0, 0, 0, 0))
                     }
 
                     for (var elseLen = minBranchLengh; elseLen < maxBranchLength; elseLen++) {
@@ -136,7 +139,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                         if (!res) {
                             break
                         }
-                        candidates.push(new Proposal(regex, trace0))
+                        candidates.push(new Proposal(regex, trace0, 0, 0, start, thenLen, elseFirstStart, elseLen))
 
                         // find common prefix for then and else branch
                         var prefixLen = 1
@@ -147,7 +150,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                             if (prefix != elseBranch.substr(0, prefixLen)) break;
                             regex = regexStart + "(" + prefix + "(" + thenBranch.substr(prefixLen) +
                             "|" + elseBranch.substr(prefixLen) + "))*" + regexEnd;
-                            candidates.push(new Proposal(regex, trace0))
+                            candidates.push(new Proposal(regex, trace0, start, prefixLen, start+prefixLen, thenLen-prefixLen, elseFirstStart+prefixLen, elseLen-prefixLen))
                             prefixLen += 1
                         }
                     }

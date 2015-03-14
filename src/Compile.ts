@@ -69,11 +69,6 @@ function expr(e: Data.TraceExpr) {
  * Compile a list of events
  */
 function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureInference.Proposal = null) {
-    var stmts: Data.Stmt[] = []
-
-    // add a fake statement to make sure we get can catch infinite loops
-    stmts.push(new Data.Marker())
-
     /**
      * Given a body, this method assembles a for loop.
      */
@@ -146,9 +141,18 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
         }
     }
 
-    for (var i = 0; i < events.length; i++) {
-        var e = events[i]
-        stmts.push(compileEvent(e))
+    var stmts: Data.Stmt[] = []
+
+    // add a fake statement to make sure we get can catch infinite loops
+    stmts.push(new Data.Marker())
+
+    if (loop == null) {
+        for (var i = 0; i < events.length; i++) {
+            var e = events[i]
+            stmts.push(compileEvent(e))
+        }
+    } else {
+        // we have a loop
     }
     return stmts;
 }
