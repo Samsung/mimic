@@ -185,8 +185,10 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
         body = new Data.Seq(bodyStmts)
     }
 
-    // move variable declarations out of loop body
     var stmts: Data.Stmt[] = []
+    stmts = stmts.concat(compileEvents(trace.subEvents(0, loop.prefixStart)))
+    
+    // move variable declarations out of loop body
     {
         body.allStmts().forEach((n) => {
             if (n.type === Data.StmtType.Assign) {
@@ -208,9 +210,8 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
     }
 
     // add everything
-    stmts.concat(compileEvents(trace.subEvents(0, loop.prefixStart)))
     stmts.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), new Data.Seq(bodyStmts)))
-    stmts.concat(compileEvents(trace.subEvents(loop.unrolledLen)))
+    stmts = stmts.concat(compileEvents(trace.subEvents(loop.prefixStart + loop.unrolledLen)))
 
     return stmts;
 }
