@@ -23,6 +23,7 @@ import Data = require('./Data')
 import Util = require('./util/Util')
 import Recorder = require('./Recorder')
 import Compile = require('./Compile')
+import Random = require('./util/Random')
 
 var print = Util.print
 var log = Util.log
@@ -163,8 +164,9 @@ export function infer(traces: Data.Trace[]) {
     }
 
     var candidates: Proposal[] = []
-    for (var k = 0; k < traces.length; k++) {
-        candidates = candidates.concat(find_candidates(traces[k]))
+    var inferFrom = Random.pickN(traces, 100)
+    for (var k = 0; k < inferFrom.length; k++) {
+        candidates = candidates.concat(find_candidates(inferFrom[k]))
     }
     candidates = Util.dedup2(candidates)
     var howMany = (a: Proposal) => {
