@@ -56,37 +56,42 @@ export class Proposal {
  * confidence in them (best proposal first).
  */
 export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLength: number = 1, maxBodyLength: number = 100000) {
-    var candidates: Proposal[] = []
-    for (var k = 0; k < traces.length; k++) {
-        var trace = traces[k]
+    function find_candidates(trace: Data.Trace) {
+        var candidates = []
         var tlen = trace.getLength()
-        for (var start = 0; start < tlen-1; start++) {
+        for (var start = 0; start < tlen - 1; start++) {
             // not enough space for minIterations
             if (start + minIterations > tlen) break;
             length: for (var len = minBodyLength; len < maxBodyLength; len++) {
                 // not enough space for minIterations
-                if (start + len*minIterations > tlen) break;
+                if (start + len * minIterations > tlen) break;
                 // get a candidate body
                 var body = trace.getSubSkeleton(start, len)
                 var iterations = 0
                 // check that we have at least minIterations many times our candidate body
-                while (iterations < minIterations-1) {
+                while (iterations < minIterations - 1) {
                     iterations++
-                    if (body !== trace.getSubSkeleton(start + iterations*len, len)) {
+                    if (body !== trace.getSubSkeleton(start + iterations * len, len)) {
                         continue length
                     }
                 }
                 // output all possible iteration counts
-                while (start+(iterations+1)*len <= tlen) {
+                while (start + (iterations + 1) * len <= tlen) {
                     iterations++
-                    var regex = trace.getSubSkeleton(0, start) + "(" + body + ")*" + trace.getSubSkeleton(start+iterations*len)
+                    var regex = trace.getSubSkeleton(0, start) + "(" + body + ")*" + trace.getSubSkeleton(start + iterations * len)
                     candidates.push(new Proposal(regex, start, len))
-                    if (start+(iterations+1)*len > tlen || body !== trace.getSubSkeleton(start + iterations*len, len)) {
+                    if (start + (iterations + 1) * len > tlen || body !== trace.getSubSkeleton(start + iterations * len, len)) {
                         break
                     }
                 }
             }
         }
+        return candidates;
+    }
+
+    var candidates: Proposal[] = []
+    for (var k = 0; k < traces.length; k++) {
+        candidates = candidates.concat(find_candidates(traces[k]))
     }
     candidates = Util.dedup2(candidates)
     var howMany = (a) => {
