@@ -56,32 +56,70 @@ export class Proposal {
  * confidence in them (best proposal first).
  */
 export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLength: number = 1, maxBodyLength: number = 100000) {
-    function find_candidates(trace: Data.Trace) {
-        var candidates = []
-        var tlen = trace.getLength()
+    function find_candidates(trace0: Data.Trace) {
+        var trace = trace0.getSkeletonShort()
+        var candidates: string[] = []
+        var tlen = trace.length
+        var minIterations = 3
+        var minBodyLength = 1
+        var maxBranchLength = 1000000
+        var minBranchLengh = 1
         for (var start = 0; start < tlen - 1; start++) {
             // not enough space for minIterations
             if (start + minIterations > tlen) break;
-            length: for (var len = minBodyLength; len < maxBodyLength; len++) {
+
+            for (var unrolledLen = minBodyLength; unrolledLen < tlen - start + 1; unrolledLen++) {
                 // not enough space for minIterations
-                if (start + len * minIterations > tlen) break;
-                // get a candidate body
-                var body = trace.getSubSkeleton(start, len)
-                var iterations = 0
-                // check that we have at least minIterations many times our candidate body
-                while (iterations < minIterations - 1) {
-                    iterations++
-                    if (body !== trace.getSubSkeleton(start + iterations * len, len)) {
-                        continue length
+                if (minBodyLength * minIterations > unrolledLen) continue;
+
+                for (var thenLen = minBranchLengh; thenLen < maxBranchLength; thenLen++) {
+                    // not enough space for minIterations
+                    if (thenLen+minBranchLengh > unrolledLen) break;
+
+                    // try to match as many then branches as possible
+                    var thenBranch = trace.substr(start, thenLen)
+                    Util.assert(thenBranch.length == thenLen, () => "invalid then branch")
+                    var thenLeadingIters = 1
+                    while (trace.substr(start + thenLeadingIters*thenLen, thenLen) == thenBranch) {
+                        thenLeadingIters += 1
                     }
-                }
-                // output all possible iteration counts
-                while (start + (iterations + 1) * len <= tlen) {
-                    iterations++
-                    var regex = trace.getSubSkeleton(0, start) + "(" + body + ")*" + trace.getSubSkeleton(start + iterations * len)
-                    candidates.push(new Proposal(regex, start, len))
-                    if (start + (iterations + 1) * len > tlen || body !== trace.getSubSkeleton(start + iterations * len, len)) {
-                        break
+
+                    for (var elseLen = minBranchLengh; elseLen < maxBranchLength; elseLen++) {
+                        // need at least one of each
+                        if (thenLen+elseLen > unrolledLen) break;
+                        // not enough space for minIterations
+                        if (Math.min(thenLen, elseLen) * (minIterations-1) + Math.max(thenLen, elseLen) > unrolledLen) break;
+
+                        // TODO: special case: else branch is subset of then branch
+
+                        // not enough room for else branch
+                        if (thenLeadingIters*thenLen + elseLen > unrolledLen) break;
+
+                        var elseFirstStart = start + thenLeadingIters * thenLen;
+                        var elseBranch = trace.substr(elseFirstStart, elseLen);
+                        Util.assert(elseBranch.length == elseLen, () => "invalid else branch")
+
+                        var regexStart = trace.substr(0, start)
+                        var regexEnd = trace.substr(start + unrolledLen)
+                        var regex = regexStart + "(" + thenBranch + "|" + elseBranch + ")*" + regexEnd;
+                        var res = new RegExp("^" + regex + "$").test(trace)
+                        if (!res) {
+                            break
+                        }
+                        candidates.push(regex)
+
+                        // find common prefix for then and else branch
+                        var prefixLen = 1
+                        while (true) {
+                            if (prefixLen > thenBranch.length || prefixLen > elseBranch.length) break;
+                            if (prefixLen == thenBranch.length && prefixLen == elseBranch.length) break;
+                            var prefix = thenBranch.substr(0, prefixLen);
+                            if (prefix != elseBranch.substr(0, prefixLen)) break;
+                            regex = regexStart + "(" + prefix + "(" + thenBranch.substr(prefixLen) +
+                            "|" + elseBranch.substr(prefixLen) + "))*" + regexEnd;
+                            candidates.push(regex)
+                            prefixLen += 1
+                        }
                     }
                 }
             }

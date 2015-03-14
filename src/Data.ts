@@ -1186,6 +1186,9 @@ export class Trace {
     getSkeleton(): string {
         return this.events.map((s) => s.getSkeleton()).join("")
     }
+    getSkeletonShort(): string {
+        return this.events.map((s) => s.getSkeletonShort()).join("")
+    }
     getSubSkeleton(start: number, length?: number): string {
         if (length === undefined) {
             length = this.events.length - start
@@ -1222,6 +1225,10 @@ export class Event {
         Util.assert(false)
         return ""
     }
+    getSkeletonShort(): string {
+        Util.assert(false)
+        return ""
+    }
     toString(config = {}): string {
         var s = ""
         s += this.variable.toString(config)
@@ -1240,6 +1247,9 @@ export class EGet extends Event {
     getSkeleton(): string {
         return "get;"
     }
+    getSkeletonShort(): string {
+        return "g"
+    }
     toString(config = {}): string {
         var s = ""
         s += super.toString(config)
@@ -1256,6 +1266,9 @@ export class ESet extends Event {
     }
     getSkeleton(): string {
         return "set;"
+    }
+    getSkeletonShort(): string {
+        return "s"
     }
     toString(config = {}): string {
         var s = ""
@@ -1275,6 +1288,9 @@ export class EApply extends Event {
     }
     getSkeleton(): string {
         return "apply;"
+    }
+    getSkeletonShort(): string {
+        return "a"
     }
     toString(config = {}): string {
         var s = ""
@@ -1299,6 +1315,9 @@ export class EDeleteProperty extends Event {
     }
     getSkeleton(): string {
         return "deleteProperty;"
+    }
+    getSkeletonShort(): string {
+        return "d"
     }
     toString(config = {}): string {
         var s = ""

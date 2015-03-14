@@ -263,75 +263,10 @@ if (Util.argvlength() > 4) {
 //Recorder.proxifyWithLogger(x).map((a) => true)
 //Util.assert(false)
 
-var trace = "ghgahgahgahhhga"
-var candidates: string[] = []
-var tlen = trace.length
-var minIterations = 3
-var minBodyLength = 1
-var maxBranchLength = 1000000
-var minBranchLengh = 1
-for (var start = 0; start < tlen - 1; start++) {
-    // not enough space for minIterations
-    if (start + minIterations > tlen) break;
-
-    for (var unrolledLen = minBodyLength; unrolledLen < tlen - start + 1; unrolledLen++) {
-        // not enough space for minIterations
-        if (minBodyLength * minIterations > unrolledLen) continue;
-
-        for (var thenLen = minBranchLengh; thenLen < maxBranchLength; thenLen++) {
-            // not enough space for minIterations
-            if (thenLen+minBranchLengh > unrolledLen) break;
-
-            // try to match as many then branches as possible
-            var thenBranch = trace.substr(start, thenLen)
-            Util.assert(thenBranch.length == thenLen, () => "invalid then branch")
-            var thenLeadingIters = 1
-            while (trace.substr(start + thenLeadingIters*thenLen, thenLen) == thenBranch) {
-                thenLeadingIters += 1
-            }
-
-            for (var elseLen = minBranchLengh; elseLen < maxBranchLength; elseLen++) {
-                // need at least one of each
-                if (thenLen+elseLen > unrolledLen) break;
-                // not enough space for minIterations
-                if (Math.min(thenLen, elseLen) * (minIterations-1) + Math.max(thenLen, elseLen) > unrolledLen) break;
-
-                // TODO: special case: else branch is subset of then branch
-
-                // not enough room for else branch
-                if (thenLeadingIters*thenLen + elseLen > unrolledLen) break;
-
-                var elseFirstStart = start + thenLeadingIters * thenLen;
-                var elseBranch = trace.substr(elseFirstStart, elseLen);
-                Util.assert(elseBranch.length == elseLen, () => "invalid else branch")
-
-                var regexStart = trace.substr(0, start)
-                var regexEnd = trace.substr(start + unrolledLen)
-                var regex = regexStart + "(" + thenBranch + "|" + elseBranch + ")*" + regexEnd;
-                var res = new RegExp("^" + regex + "$").test(trace)
-                if (!res) {
-                    break
-                }
-                candidates.push(regex)
-
-                // find common prefix for then and else branch
-                var prefixLen = 1
-                while (true) {
-                    if (prefixLen > thenBranch.length || prefixLen > elseBranch.length) break;
-                    if (prefixLen == thenBranch.length && prefixLen == elseBranch.length) break;
-                    var prefix = thenBranch.substr(0, prefixLen);
-                    if (prefix != elseBranch.substr(0, prefixLen)) break;
-                    regex = regexStart + "(" + prefix + "(" + thenBranch.substr(prefixLen) +
-                        "|" + elseBranch.substr(prefixLen) + "))*" + regexEnd;
-                    candidates.push(regex)
-                    prefixLen += 1
-                }
-            }
-        }
-    }
-}
-print(candidates.join("\n"))
-Util.assert(false, () => "foo")
+var x = [1,2,3]
+x[5]=0
+print(Recorder.record((a, b) => a.map(b), [x, (x) => x+1]))
+Util.assert(false)
 
 config.metric = 0
 var debugFun = true
