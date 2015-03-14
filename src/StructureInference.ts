@@ -30,6 +30,8 @@ var line = Util.line
 
 export class Proposal {
     worksFor: number[]
+    long: string
+    numStmts: number
     constructor(public regex: string, public trace: Data.Trace) {
         this.numStmts = 0
         this.long = ""
@@ -66,7 +68,7 @@ export class Proposal {
         return this.long
     }
     matches(trace: Data.Trace): boolean {
-        return new RegExp("^" + this.regex + "$").test(t.getSkeletonShort())
+        return new RegExp("^" + this.regex + "$").test(trace.getSkeletonShort())
     }
 }
 
@@ -91,6 +93,9 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                 // not enough space for minIterations
                 if (minBodyLength * minIterations > unrolledLen) continue;
 
+                var regexStart = trace.substr(0, start)
+                var regexEnd = trace.substr(start + unrolledLen)
+
                 for (var thenLen = minBranchLengh; thenLen < maxBranchLength; thenLen++) {
                     // not enough space for minIterations
                     if (thenLen+minBranchLengh > unrolledLen) break;
@@ -106,7 +111,6 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
 
                     // special case for no conditional in loop
                     var regex
-                    var regexEnd = trace.substr(start + unrolledLen)
                     if (unrolledLen == thenLeadingIters*thenLen) {
                         regex = regexStart + "(" + thenBranch + ")*" + regexEnd;
                         candidates.push(new Proposal(regex, trace0))
@@ -127,7 +131,6 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                         var elseBranch = trace.substr(elseFirstStart, elseLen);
                         Util.assert(elseBranch.length == elseLen, () => "invalid else branch")
 
-                        var regexStart = trace.substr(0, start)
                         regex = regexStart + "(" + thenBranch + "|" + elseBranch + ")*" + regexEnd;
                         var res = new RegExp("^" + regex + "$").test(trace)
                         if (!res) {
