@@ -1182,6 +1182,12 @@ export class Trace {
     getLength(): number {
         return this.events.length
     }
+    subEvents(start: number, length: number = undefined): Event[] {
+        if (length === undefined) {
+            return this.events.slice(start)
+        }
+        return this.events.slice(start, start+length)
+    }
     extend(e: Event) {
         this.events.push(e)
     }

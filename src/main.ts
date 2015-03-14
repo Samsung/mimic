@@ -265,7 +265,11 @@ if (Util.argvlength() > 4) {
 
 var x = [1,2,3]
 x[5]=0
-print(Compile.compileTrace(Recorder.record((a, b) => a.map(b), [x, (x) => x+1])))
+var trace = Recorder.record((a, b) => a.map(b), [x, (x) => x + 1])
+var loop = StructureInference.infer([trace])
+print(loop)
+var program = Compile.compileTrace(trace, loop);
+print(program)
 Util.assert(false)
 
 config.metric = 0

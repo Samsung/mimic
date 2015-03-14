@@ -33,9 +33,10 @@ export class Proposal {
     long: string
     numStmts: number
     constructor(public regex: string, public trace: Data.Trace,
-                prefixStart: number, prefixEnd: number,
-                thenStart: number, thenLen: number,
-                elseStart: number, elseLen: number) {
+                public unrolledLen: number,
+                public prefixStart: number, public prefixLen: number,
+                public thenStart: number, public thenLen: number,
+                public elseStart: number, public elseLen: number) {
         this.numStmts = 0
         this.long = ""
         for (var i = 0; i < regex.length; i++) {
@@ -79,7 +80,7 @@ export class Proposal {
  * Tries to infer a loop structure of the given traces.  Returns a set of proposals, ordered by
  * confidence in them (best proposal first).
  */
-export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLength: number = 1, maxBodyLength: number = 100000) {
+export function infer(traces: Data.Trace[]) {
     function find_candidates(trace0: Data.Trace) {
         var trace = trace0.getSkeletonShort()
         var candidates: Proposal[] = []
@@ -116,7 +117,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                     var regex
                     if (unrolledLen == thenLeadingIters*thenLen) {
                         regex = regexStart + "(" + thenBranch + ")*" + regexEnd;
-                        candidates.push(new Proposal(regex, trace0, start, thenLen, 0, 0, 0, 0))
+                        candidates.push(new Proposal(regex, trace0, unrolledLen, start, thenLen, 0, 0, 0, 0))
                     }
 
                     for (var elseLen = minBranchLengh; elseLen < maxBranchLength; elseLen++) {
@@ -139,7 +140,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                         if (!res) {
                             break
                         }
-                        candidates.push(new Proposal(regex, trace0, 0, 0, start, thenLen, elseFirstStart, elseLen))
+                        candidates.push(new Proposal(regex, trace0, unrolledLen, 0, 0, start, thenLen, elseFirstStart, elseLen))
 
                         // find common prefix for then and else branch
                         var prefixLen = 1
@@ -150,7 +151,7 @@ export function infer(traces: Data.Trace[], minIterations: number = 3, minBodyLe
                             if (prefix != elseBranch.substr(0, prefixLen)) break;
                             regex = regexStart + "(" + prefix + "(" + thenBranch.substr(prefixLen) +
                             "|" + elseBranch.substr(prefixLen) + "))*" + regexEnd;
-                            candidates.push(new Proposal(regex, trace0, start, prefixLen, start+prefixLen, thenLen-prefixLen, elseFirstStart+prefixLen, elseLen-prefixLen))
+                            candidates.push(new Proposal(regex, trace0, unrolledLen, start, prefixLen, start+prefixLen, thenLen-prefixLen, elseFirstStart+prefixLen, elseLen-prefixLen))
                             prefixLen += 1
                         }
                     }

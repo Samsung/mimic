@@ -141,19 +141,62 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
         }
     }
 
-    var stmts: Data.Stmt[] = []
-
-    // add a fake statement to make sure we get can catch infinite loops
-    stmts.push(new Data.Marker())
+    function compileEvents(events: Data.Event[]): Data.Stmt[] {
+        return events.map(compileEvent)
+    }
 
     if (loop == null) {
-        for (var i = 0; i < events.length; i++) {
-            var e = events[i]
-            stmts.push(compileEvent(e))
-        }
-    } else {
-        // we have a loop
+        return compileEvents(events)
     }
+
+    var stmts: Data.Stmt[] = []
+
+    // build loop body
+    {
+        var trace = loop.trace
+        var body: Data.Stmt[] = []
+        // add a fake statement to make sure we get can catch infinite loops
+        body.push(new Data.Marker())
+
+        // prefix
+        body = body.concat(compileEvents(trace.subEvents(loop.prefixStart, loop.prefixLen)))
+
+        // conditional
+        if (loop.thenLen != 0 || loop.elseLen != 0) {
+            var thenBranch = new Data.Seq(compileEvents(trace.subEvents(loop.thenStart, loop.thenLen)))
+            var elseBranch = new Data.Seq(compileEvents(trace.subEvents(loop.elseStart, loop.elseLen)))
+            body.push(new Data.If(new Data.Const(true), thenBranch, elseBranch))
+        }
+    }
+
+    // move variable declarations out of loop body
+    {
+        var vars: Data.Var[] = []
+        body.forEach((n) => {
+            if (n.type === Data.StmtType.Assign) {
+                var ass = <Data.Assign>n
+                if (ass.isDecl) {
+                    // note that we can only modify the assignments because they have not been shared yet
+                    ass.isDecl = false
+                    vars.push(<Data.Var>ass.lhs)
+                }
+            } else if (n.type === Data.StmtType.FuncCall) {
+                var fcall = <Data.FuncCall>n
+                if (fcall.isDecl) {
+                    // note that we can only modify the assignments because they have not been shared yet
+                    fcall.isDecl = false
+                    vars.push(fcall.v)
+                }
+            }
+        })
+        stmts = vars.map((v) => new Data.Assign(v, null, true))
+    }
+
+    // add everything
+    stmts.concat(compileEvents(trace.subEvents(0, loop.prefixStart)))
+    stmts.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), new Data.Seq(body)))
+    stmts.concat(compileEvents(trace.subEvents(loop.unrolledLen)))
+
     return stmts;
 }
 /**
