@@ -337,7 +337,7 @@ export function getReceiver() {
  * Proxify the object `o', and log all behavior (in addition to actually performing the actions).
  */
 export function proxifyWithLogger<T>(o: T, tag: string = " ", level: number = 0, cache: WeakMap<any, any> = new WeakMap<any, any>()): T {
-    var debug = false
+    var debug = true
     if (Util.isPrimitive(o)) return o
     if (cache.has(o)) {
         return cache.get(o)
