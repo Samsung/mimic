@@ -160,6 +160,15 @@ export function randomChange(info: RandomMutationInfo, p: Data.Program): Data.Pr
                         if (s.rhs === null) {
                             // only a variable declaration -> add an initializer
                             news = Ast.makeAssign(s.lhs, randExp(), s.isDecl)
+                        } else if (s.rhs.type === Data.ExprType.Has) {
+                            var has = <Data.Has>s.rhs
+                            var newhas
+                            if (maybe()) {
+                                newhas = new Data.Has(has.o, randExp({field: true}))
+                            } else {
+                                newhas = new Data.Has(randExp({obj: true}), has.f)
+                            }
+                            news = Ast.makeAssign(s.lhs, newhas)
                         } else if (s.rhs.type === Data.ExprType.Alloc) {
                             // leave allocations
                             return null

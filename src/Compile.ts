@@ -187,7 +187,7 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
 
     var stmts: Data.Stmt[] = []
     stmts = stmts.concat(compileEvents(trace.subEvents(0, loop.prefixStart)))
-    
+
     // move variable declarations out of loop body
     {
         body.allStmts().forEach((n) => {
