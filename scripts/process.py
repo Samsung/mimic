@@ -46,7 +46,7 @@ def main():
 
   try:
     data = json.loads(open(folder + "/result.json").read())
-    nummetric = 3
+    nummetric = 1
     header = ["Function"] + [s + " (" + str(i) + ")" for s in ["Success rate", "Time"] for i in range(nummetric)]
     cols = map(lambda x: [], header)
     for ex in data:
