@@ -146,7 +146,7 @@ export function infer(traces: Data.Trace[]) {
                         regex = regexStart + "(" + thenBranch + "|" + elseBranch + ")*" + regexEnd;
                         var res = new RegExp("^" + regex + "$").test(trace)
                         if (!res) {
-                            break
+                            continue
                         }
                         candidates.push(new Proposal(regex, trace0, unrolledLen, 0, 0, start, thenLen, elseFirstStart, elseLen))
 
