@@ -60,7 +60,9 @@ export class Proposal {
                     break;
                 default:
                     this.long += regex[i]
-                    this.numStmts -= 1
+                    if (regex[i] != "|") {
+                        this.numStmts -= 1
+                    }
             }
         }
     }
