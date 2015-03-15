@@ -373,6 +373,10 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
             // random new addition
             return <Data.Expr>Ast.makeBinary(recurse({num: true, noconst: true}), "+", new Data.Const(maybe() ? 1 : -1))
         }),
+        new WeightedPair(nonPrimitive || zeroD ? 0 : 0, () => {
+            // random new division
+            return <Data.Expr>Ast.makeBinary(recurse({num: true, noconst: true}), "/", recurse({num: true}))
+        }),
         new WeightedPair(nonPrimitive || zeroD || info.variables.length  == 0 ? 0 : 1, () => {
             // random new addition of two variables
             return <Data.Expr>Ast.makeBinary(randomVar(), "+", randomVar())
@@ -407,7 +411,7 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
         }),
         new WeightedPair(nonPrimitive || noconst ? 0 : 1, () => {
             // random new integer
-            return <Data.Expr>new Data.Const(randInt(20)-10)
+            return <Data.Expr>new Data.Const(randInt(10)-5)
         }),
     ]
     // filter out bad expressions

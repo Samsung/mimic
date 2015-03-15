@@ -320,7 +320,7 @@ export class Has extends Expr {
 export class Binary extends Expr {
     constructor(public a: Expr, public op: string, public b: Expr) {
         super(ExprType.Binary, 1+Math.max(a.depth, b.depth))
-        Util.assert(op === "+" || op === "-" || op === "==" || op === "<")
+        Util.assert(op === "+" || op === "-" || op === "==" || op === "<" || op === "/")
     }
     toString(config = {}) {
         var pre = "("
@@ -344,6 +344,8 @@ export class Binary extends Expr {
                 return this.a.eval(args)+this.b.eval(args)
             case "-":
                 return this.a.eval(args)-this.b.eval(args)
+            case "/":
+                return this.a.eval(args)/this.b.eval(args)
             case "==":
                 return this.a.eval(args) == this.b.eval(args)
             default:
@@ -372,7 +374,7 @@ export class Binary extends Expr {
         return this.a.isSafe(args) && this.b.isSafe(args)
     }
     getType(): string {
-        if (this.op === "+" || this.op === "-") {
+        if (this.op === "+" || this.op === "-" || this.op === "/") {
             return "number"
         }
         if (this.op === "==") {

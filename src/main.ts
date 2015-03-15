@@ -275,18 +275,21 @@ if (Util.argvlength() > 4) {
 config.metric = 0
 var debugFun = true
 function f2(arg0, arg1, arg2) {
-    var result = []
+    var result = arguments.length
     var n0 = arg0.length
-    var n1 = n0.length
-    var n2 = -1
-    var n3 = n2[arguments[arguments[arg1]]]
-    for (var i0 = 0; i0 < n0; i0 += 1) {
+    var n1
+    var n2
+    for (var i0 = 0; i0 < (n0-1)/2; i0 += 1) {
         if (this != null) this.budget = 1
-        n1 = i0 in arg0
-        n2 = arg0[i0]
-        n3 = arg1.call(undefined, n2, i0, arg0)
+        n1 = arg0[i0]
+        n2 = arg0[(n0-i0)-1]
+        arg0[i0] = n2
+        arg0[(n0-i0)-1] = n1
+        if (i0) {
+            result = (i0+n0)/(n1+1)
+        }
     }
-    return result
+    return arg0
 }
 
 if (debugFun) {
@@ -327,7 +330,7 @@ if (debugFun) {
     print(Metric.evaluate2(f2, inputs, traces, config))
 
     line()
-    for (var k = 0; k < inputs.length && false; k++) {
+    for (var k = 0; k < inputs.length && true; k++) {
         var m = Metric.traceDistance(traces[k], traces2[k], config);
         if (m > 0) {
             log(inputs[k])
