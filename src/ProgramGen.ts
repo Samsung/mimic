@@ -35,7 +35,14 @@ var log = Util.log
 var line = Util.line
 
 export class RandomMutationInfo {
-    constructor(public constants: Data.Expr[], public variables: Data.VarDef[], public nArgs: number, public useAlloc: boolean) {
+    types: string[][]
+    nArgs: number
+    constructor(public constants: Data.Expr[], public variables: Data.VarDef[], public inputs: any[][], public useAlloc: boolean) {
+        this.types = []
+        this.nArgs = Util.max(inputs.map((i) => i.length))
+        for (var i = 0; i < this.nArgs; i++) {
+            this.types[i] = Util.dedup(inputs.map((inp) => typeof inp[i]))
+        }
     }
 }
 
@@ -407,6 +414,9 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
     var filter: (e: Data.Expr) => Data.Expr = (e: Data.Expr) => {
         if (e === null) return e
 
+        // filter by depth
+        if (e.depth > depth) return null
+
         // filter by requirement
         var type = e.getType()
         if (hasRequirement && type !== undefined) {
@@ -434,8 +444,40 @@ function randomExpr(info: RandomMutationInfo, stmtIdx: number, args: any = {}, d
             }
             return null // no match
         }
-        // filter by depth
-        if (e.depth > depth) return null
+        if (hasRequirement && e.type === Data.ExprType.Arg) {
+            var arg = <Data.Argument>e
+            var types: string[] = []
+            if (arg.i.type === Data.ExprType.Const) {
+                types = info.types[(<Data.Const>arg.i).val]
+            } else {
+                for (var i = 0; i < info.types.length; i++) {
+                    types = types.concat(info.types[i])
+                }
+                types = Util.dedup(types)
+            }
+            var required: string[] = []
+            if (str || field) {
+                required.push("string")
+            }
+            if (lhs || arr || obj) {
+                required.push("object")
+            }
+            if (bool) {
+                required.push("boolean")
+            }
+            if (num || field) {
+                required.push("number")
+            }
+            if (required.length > 0) {
+                // make sure there is at least the possibility to have the correct type
+                for (var i = 0; i < required.length; i++) {
+                    if (types.indexOf(required[i]) != -1) {
+                        return e
+                    }
+                }
+                return null
+            }
+        }
         return e
     }
     var res
