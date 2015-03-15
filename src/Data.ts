@@ -260,6 +260,15 @@ export class Field extends Prestate {
         }
         return undefined
     }
+    isTraceableFieldRead(): boolean {
+        if (this.o.type === ExprType.Var) {
+            var o = <Var>this.o
+            if (o.name === "arguments" || o.name === "result") {
+                return false
+            }
+        }
+        return true
+    }
 }
 
 /**

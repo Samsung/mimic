@@ -275,21 +275,24 @@ if (Util.argvlength() > 4) {
 config.metric = 0
 var debugFun = true
 function f2(arg0, arg1, arg2) {
-    var result = arguments.length
+    var result
     var n0 = arg0.length
-    var n1
-    var n2
-    for (var i0 = 0; i0 < (n0-1)/2; i0 += 1) {
+    for (var i0 = 0; i0 < arguments.length-1; i0 += 1) {
         if (this != null) this.budget = 1
-        n1 = arg0[i0]
-        n2 = arg0[(n0-i0)-1]
-        arg0[i0] = n2
-        arg0[(n0-i0)-1] = n1
-        if (i0) {
-            result = (i0+n0)/(n1+1)
+        arg0[i0+n0] = arguments[i0+1]
+        if (arguments.length) {
+            result = i0+n0
+        }
+        if (false) {
+            if (3) {
+                result = result
+            }
+            break
         }
     }
-    return arg0
+    result[(i0-result)-1] = 0
+    var n1 = arg0.length
+    return result
 }
 
 if (debugFun) {
