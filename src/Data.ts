@@ -502,6 +502,9 @@ export class Var extends Expr {
                 Var._count[prefix] = 0
             }
             this.name = prefix + Var._count[prefix]
+            if (Var._count[prefix] == 0 && prefix == "i") {
+                this.name = prefix
+            }
             Var._count[prefix]++
         }
     }
@@ -816,7 +819,7 @@ export class Seq extends Stmt {
     numberOfStmts(): number {
         return Util.sum(this.stmts.map((x) => x.numberOfStmts()))
     }
-    replace(i: number, news: Stmt) {
+    replace(i: number, news: Stmt): Stmt {
         Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
         var stmts = this.stmts
         var cur = 0
@@ -891,8 +894,12 @@ export class Marker extends Stmt {
  * An assignment statement.
  */
 export class Assign extends Stmt {
+    v: Var
     constructor(public lhs: Expr, public rhs: Expr, public isDecl: boolean = false) {
         super(StmtType.Assign)
+        if (lhs.type === ExprType.Var) {
+            this.v = <Var>lhs
+        }
     }
     toString() {
         var prefix = ""
