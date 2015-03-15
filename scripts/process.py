@@ -77,8 +77,14 @@ def success_rate_str(results, metric=0):
   total = len(results)
   if total == 0:
     return "n/a"
+  loop = results[0]['loop']
   succ = len(filter_succ(results))
-  return "% 4d / %d (%.2f%%)" % (succ, total, percent(succ, total))
+  # adjust success rate
+  aloop = 0.9
+  a = 0.7
+  correction = aloop * a * pow(1 - a, loop)
+  p = correction * percent(succ, total)
+  return "% 4d / %d (%.2f%%)" % (succ, total, p)
 
 def succ_time_str(results, metric):
   succ = filter_metric(filter_succ(results), metric)
