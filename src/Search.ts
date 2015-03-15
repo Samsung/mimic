@@ -452,6 +452,20 @@ function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], con
             badness = newbadness
         }
     }
+    for (var i = 0; i < p.body.numberOfStmts(); i++) {
+        var s: Data.Stmt = p.body.allStmts()[i]
+        if (s.type === Data.StmtType.If) {
+            var ss = <Data.If>s
+            if (ss.c.type == Data.ExprType.Const) {
+                var ee = <Data.Const>ss.c
+                if (ee.val == true) {
+                    p = new Data.Program(p.body.replace(i, ss.thn))
+                } else if (ee.val == false) {
+                    p = new Data.Program(p.body.replace(i, ss.els))
+                }
+            }
+        }
+    }
     return p
 }
 

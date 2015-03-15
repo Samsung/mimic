@@ -258,16 +258,15 @@ if (Util.argvlength() > 4) {
 
 //InputGen.generateInputs(f, a).map((a) => log(a))
 
-//var x = [1,2,3]
-//x[5]=0
-//Recorder.proxifyWithLogger(x).map((a) => true)
+//var x = [1,2,3,,5]
+//Recorder.proxifyWithLogger(x).shift()
 //Util.assert(false)
 
-//var x = [1,2,3]
-//x[5]=0
-//var trace = Recorder.record((a, b) => a.map(b), [x, (x) => x + 1])
-//var loop = StructureInference.infer([trace])
-//print(loop.slice(0, 10).join("\n"))
+var x = [1,2,3,,5,6]
+var trace = Recorder.record((a, b) => a.shift(b), [x, (x) => x + 1])
+print(trace)
+var loop = StructureInference.infer([trace])
+print(loop.slice(0, 10).join("\n"))
 //var program = Compile.compileTrace(trace, loop[0]);
 //print(program)
 //Util.assert(false)
