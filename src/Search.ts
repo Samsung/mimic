@@ -81,7 +81,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     if (loops.length > 0) {
         var i = 0
         if (config.debug) print(loops.filter((x) => i++ < 6).join("\n"))
-        return
+        
         // randomly choose a loop
         while (Random.maybe(0.3) && loopindex < loops.length-1) {
             loopindex += 1
