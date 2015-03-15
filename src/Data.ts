@@ -531,6 +531,12 @@ export class Var extends Expr {
     isSafe(args: any[]): boolean {
         return false
     }
+    getType(): string {
+        if (this.name[0] === "i") {
+            return "number"
+        }
+        return undefined
+    }
 }
 /** A small helper class that holds a variable, as well as an index where it was defined (which statement). */
 export class VarDef {
