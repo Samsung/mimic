@@ -87,7 +87,7 @@ export function infer(traces: Data.Trace[]) {
         var trace = trace0.getSkeletonShort()
         var candidates: Proposal[] = []
         var tlen = trace.length
-        var minIterations = 3
+        var minIterations = 4
         var minBodyLength = 1
         var maxBranchLength = 1000000
         var minBranchLengh = 1
