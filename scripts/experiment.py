@@ -39,6 +39,7 @@ def main():
   parser.add_argument('-t', '--threads', type=int, help='Number of threads (-1 = 1/2 of cores available)', default=-1)
   parser.add_argument('--timeout', type=int, help='Timeout in seconds', default=60)
   parser.add_argument('--filter', type=str, help='Filter which experiments to run', default="")
+  parser.add_argument('--exclude', type=str, help='Exclude some experiments', default="")
   parser.add_argument('--metric', type=str, help='Which metric should be used during search?  Comma-separated list', default="0")
   parser.add_argument('-r', '--run', help='Only run the first experiment.  Usually used together with --filter', action='store_true')
   parser.add_argument('--verify', help='Verify that all experiments are successful at least some of the time', action='store_true')
@@ -57,7 +58,7 @@ def main():
     print "Cannot both --run and --verify"
     sys.exit(1)
 
-  fncs = parse_functions(workdir, argv.filter)
+  fncs = parse_functions(workdir, argv.filter, argv.exclude)
   if only_run:
     f = fncs[0]
     command = base_command + ' --cleanup 1000 --metric ' + str(metrics[0]) + ' ' + f.get_command_args()
@@ -238,7 +239,7 @@ class Function(object):
   def __repr__(self):
     return self.title
 
-def parse_functions(workdir, filter = None):
+def parse_functions(workdir, filter, exclude):
   """
   :rtype : list[Function]
   """
@@ -256,7 +257,9 @@ def parse_functions(workdir, filter = None):
       print "Failed to parse configuration: " + str(ex)
       sys.exit(1)
     for example in examples:
-      if filter != None and filter != "" and re.search(filter, example['name'], re.UNICODE) is None:
+      if filter != "" and re.search(filter, example['name'], re.UNICODE) is None:
+        continue
+      if exclude != "" and re.search(exclude, example['name'], re.UNICODE) is not None:
         continue
       result.append(Function(example, category))
   return result
