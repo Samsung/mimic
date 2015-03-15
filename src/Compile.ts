@@ -69,44 +69,6 @@ function expr(e: Data.TraceExpr) {
  * Compile a list of events
  */
 function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureInference.Proposal = null) {
-    /**
-     * Given a body, this method assembles a for loop.
-     */
-    function buildForLoop(bodystmt: Data.Stmt[], alloc: boolean): Data.Stmt[] {
-        // extract all variables, so that they can be declared outside of the loop
-        var vars: Data.Var[] = []
-        bodystmt.forEach((n) => {
-            if (n.type === Data.StmtType.Assign) {
-                var ass = <Data.Assign>n
-                if (ass.isDecl) {
-                    // note that we can only modify the assignments because they have not been shared yet
-                    ass.isDecl = false
-                    vars.push(<Data.Var>ass.lhs)
-                }
-            } else if (n.type === Data.StmtType.FuncCall) {
-                var fcall = <Data.FuncCall>n
-                if (fcall.isDecl) {
-                    // note that we can only modify the assignments because they have not been shared yet
-                    fcall.isDecl = false
-                    vars.push(fcall.v)
-                }
-            }
-        })
-        var resvar = new Data.Var("result", true)
-        var resres: Data.Stmt = new Data.Assign(resvar, resvar);
-        if (!alloc) {
-            bodystmt.push(new Data.If(new Data.Const(true), resres, Data.Seq.Empty))
-        } else {
-            var resassign: Data.Stmt = new Data.Assign(new Data.Field(resvar, new Data.Const(0)), new Data.Const(0));
-            bodystmt.push(new Data.If(new Data.Const(false), resassign, Data.Seq.Empty))
-        }
-        bodystmt.push(new Data.If(new Data.Const(false), new Data.Seq([resres, <Data.Stmt>new Data.Break()]), Data.Seq.Empty))
-        var body = new Data.Seq(bodystmt)
-
-        var res: Data.Stmt[] = vars.map((v) => new Data.Assign(v, null, true))
-        res.push(new Data.For(new Data.Const(0), new Data.Const(0), new Data.Const(1), body))
-        return res
-    }
 
     function compileEvent(e: Data.Event): Data.Stmt {
         var ev
@@ -161,6 +123,7 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
             resAssignment = new Data.If(new Data.Const(false),
                 new Data.Assign(new Data.Field(resvar, new Data.Const(0)), new Data.Const(0)), Data.Seq.Empty)
         }
+        var breakStmt = new Data.If(new Data.Const(false), new Data.Seq([resAssignment, <Data.Stmt>new Data.Break()]), Data.Seq.Empty)
 
         var trace = loop.trace
         var bodyStmts: Data.Stmt[] = []
@@ -176,13 +139,16 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
             var elseBranch = compileEvents(trace.subEvents(loop.elseStart, loop.elseLen))
             if (thenBranch.length != 0) {
                 thenBranch.push(resAssignment)
+                thenBranch.push(breakStmt)
             }
             if (elseBranch.length != 0) {
                 elseBranch.push(resAssignment)
+                elseBranch.push(breakStmt)
             }
             bodyStmts.push(new Data.If(new Data.Const(true), new Data.Seq(thenBranch), new Data.Seq(elseBranch)))
         } else {
             bodyStmts.push(resAssignment)
+            bodyStmts.push(breakStmt)
         }
         body = new Data.Seq(bodyStmts)
     }
