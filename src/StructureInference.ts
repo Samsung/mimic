@@ -76,6 +76,9 @@ export class Proposal {
     matches(trace: Data.Trace): boolean {
         return new RegExp("^" + this.regex + "$").test(trace.getSkeletonShort())
     }
+    hasConditional(): boolean {
+        return this.regex.indexOf("|") != -1
+    }
 }
 
 /**
@@ -123,6 +126,7 @@ export function infer(traces: Data.Trace[]) {
                     }
 
                     for (var elseLen = minBranchLengh; elseLen < maxBranchLength; elseLen++) {
+                        if (elseLen == 1 && thenLen == 1) break;
                         // need at least one of each
                         if (thenLen+elseLen > unrolledLen) break;
                         // not enough space for minIterations
@@ -185,7 +189,14 @@ export function infer(traces: Data.Trace[]) {
         return res
     }
     candidates.map((c) => howMany(c)) // initialize c.worksFor
-    // sort by number of traces it matches, and then by the length of the regular expression, and then by having the loop as late as possible
-    Util.sortBy(candidates, [(a) => -howMany(a), (a) => a.numStmts, (a) => -a.regex.indexOf("(")])
+    Util.sortBy(candidates, [
+        // sort by number of traces it matches
+        (a: Proposal) => -howMany(a),
+        // then by the length of the regular expression
+        (a: Proposal) => a.numStmts,
+        // then by not having a conditional in the loop
+        (a: Proposal) => a.hasConditional() ? 1 : 0,
+        // then by having the loop as late as possible
+        (a: Proposal) => -a.regex.indexOf("(")])
     return candidates
 }
