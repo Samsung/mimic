@@ -188,13 +188,11 @@ function compile_test(f, a, a0, name, oracle) {
 function search_test(f, a, a0, name, oracle, k) {
     if (k >= 8) return // skip loop tests for now
     it("search should succeed for " + name, () => {
-        var config = new Search.SearchConfig({
-            iterations: 5000,
-            cleanupIterations: 0,
-            debug: 0,
-            loopIndex: 0,
-            metric: 0
-        })
+        var config = new Search.SearchConfig()
+        config.iterations = 5000
+        config.cleanupIterations = 0
+        config.debug = 0
+        config.loopIndex = 0
         var res: Search.SearchResult
         var i
         // allow for 5 tries
