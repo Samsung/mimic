@@ -41,30 +41,34 @@ function shift(arg0) {
 
 function every(arg0, arg1, arg2) {
   var n0 = arg0.length
-  var n1
-  var n2 = true
-  for (var i0 = 0; i0 < n0; i0 += 1) {
-    n1 = arg0[i0]
-    n2 = arg1.call(arg2, n1, i0, arg0)
-    if (!n2) {
-      break
+  var n3 = true
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = i in arg0
+    if (n1) {
+      var n2 = arg0[i]
+      n3 = arg1.call(arg2, n2, i, arg0)
+      if (!n3) {
+        break
+      }
     }
   }
-  return n2
+  return n3
 }
 
 function some(arg0, arg1, arg2) {
   var n0 = arg0.length
-  var n1
-  var n2 = false
-  for (var i0 = 0; i0 < n0; i0 += 1) {
-    n1 = arg0[i0]
-    n2 = arg1.call(arg2, n1, i0, arg0)
-    if (n2) {
-      break
+  var n3 = false
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = i in arg0
+    if (n1) {
+      var n2 = arg0[i]
+      n3 = arg1.call(arg2, n2, i, arg0)
+      if (n3) {
+        break
+      }
     }
   }
-  return n2
+  return n3
 }
 
 // loopIndex: 1
@@ -83,12 +87,15 @@ function forEach(arg0, arg1) {
 }
 
 function reduce(arg0, arg1, arg2) {
+  var result = arg2
   var n0 = arg0.length
-  var n1
-  var n2 = arg2
-  for (var i0 = 0; i0 < n0; i0 += 1) {
-    n1 = arg0[i0]
-    n2 = arg1.call(undefined, n2, n1, i0, arg0)
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = i in arg0
+    if (n1) {
+      var n2 = arg0[i]
+      var n3 = arg1.call(undefined, result, n2, i, arg0)
+      result = n3
+    }
   }
-  return n2
+  return result
 }
