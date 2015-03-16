@@ -452,18 +452,54 @@ function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], con
             badness = newbadness
         }
     }
+    // remove branches
     for (var i = 0; i < p.body.numberOfStmts(); i++) {
-        var s: Data.Stmt = p.body.allStmts()[i]
+        var s:Data.Stmt = p.body.allStmts()[i]
         if (s.type === Data.StmtType.If) {
             var ss = <Data.If>s
-            if (ss.c.type == Data.ExprType.Const) {
-                var ee = <Data.Const>ss.c
-                if (ee.val == true) {
-                    p = new Data.Program(p.body.replace(i, ss.thn))
-                } else if (ee.val == false) {
-                    p = new Data.Program(p.body.replace(i, ss.els))
+            newp = new Data.Program(p.body.replace(i, ss.thn))
+            var newbadness = Metric.evaluate(newp, inputs, realTraces, config)
+            if (newbadness <= badness) {
+                p = newp
+                badness = newbadness
+            } else {
+                newp = new Data.Program(p.body.replace(i, ss.els))
+                var newbadness = Metric.evaluate(newp, inputs, realTraces, config)
+                if (newbadness <= badness) {
+                    p = newp
+                    badness = newbadness
                 }
             }
+        }
+    }
+    // move variable declarations
+    end: while (true) {
+        var body = p.body
+        var change = false
+        for (var ii = 0; ii < body.numberOfStmts(); ii++) {
+            var s1 = body.allStmts()[ii]
+            if ("isDecl" in s1 && s1.isDecl) {
+                for (var jj = ii + 1; jj < body.numberOfStmts(); jj++) {
+                    var s2 = body.allStmts()[jj]
+                    if ("isDecl" in s2 && !s2.isDecl) {
+                        if (s1.v.equals(s2.v)) {
+                            var t = s2.clone()
+                            t.isDecl = true
+                            newp = new Data.Program(body.replace(jj, t).replace(ii, Data.Seq.Empty))
+                            var newbadness = Metric.evaluate(newp, inputs, realTraces, config)
+                            if (newbadness <= badness) {
+                                p = newp
+                                badness = newbadness
+                                change = true
+                                continue end
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (change == false) {
+            break
         }
     }
     return p
