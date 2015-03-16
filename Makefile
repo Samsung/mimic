@@ -8,10 +8,10 @@ bin/src/run.js: src/*.ts src/util/*.ts test/*.ts
 compile: bin/src/run.js
 
 exp_never: compile
-	./scripts/experiment.py --exp_name "never" -n 200 --args " --neverAcceptEqualCost" --exclude $(EXCLUDE)
+	./scripts/experiment.py --exp_name "never" -n 200 --args " --neverAcceptEqualCost --beta 0" --exclude $(EXCLUDE)
 
 exp_always: compile
-	./scripts/experiment.py --exp_name "always" -n 200 --args " --alwaysAcceptEqualCost" --exclude $(EXCLUDE)
+	./scripts/experiment.py --exp_name "always" -n 200 --args " --alwaysAcceptEqualCost --beta 0" --exclude $(EXCLUDE)
 
 exp_metric: compile
 	./scripts/experiment.py --exp_name "metric" -n 200 --metric "0,1" --exclude $(EXCLUDE)
