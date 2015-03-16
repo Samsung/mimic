@@ -477,10 +477,10 @@ function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], con
         var body = p.body
         var change = false
         for (var ii = 0; ii < body.numberOfStmts(); ii++) {
-            var s1 = body.allStmts()[ii]
+            var s1: any = body.allStmts()[ii]
             if ("isDecl" in s1 && s1.isDecl) {
                 for (var jj = ii + 1; jj < body.numberOfStmts(); jj++) {
-                    var s2 = body.allStmts()[jj]
+                    var s2: any = body.allStmts()[jj]
                     if ("isDecl" in s2 && !s2.isDecl) {
                         if (s1.v.equals(s2.v)) {
                             var t = s2.clone()
