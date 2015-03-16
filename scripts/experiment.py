@@ -24,10 +24,10 @@ from multiprocessing import Queue
 from random import shuffle
 
 line = "-" * 80
-base_command = './model-synth synth --iterations 100000000'
 q = None # the queue used for communication
 argv = None # the arguments
 out = None # the output folder
+base_command = './model-synth synth --iterations 100000000'
 
 # ------------------------------------------
 # main entry point
@@ -40,6 +40,7 @@ def main():
   parser.add_argument('--timeout', type=int, help='Timeout in seconds', default=60)
   parser.add_argument('--filter', type=str, help='Filter which experiments to run', default="")
   parser.add_argument('--exclude', type=str, help='Exclude some experiments', default="")
+  parser.add_argument('--args', type=str, help='Arguments to be passed to mimic', default="")
   parser.add_argument('--metric', type=str, help='Which metric should be used during search?  Comma-separated list', default="0")
   parser.add_argument('-r', '--run', help='Only run the first experiment.  Usually used together with --filter', action='store_true')
   parser.add_argument('--verify', help='Verify that all experiments are successful at least some of the time', action='store_true')
@@ -51,6 +52,10 @@ def main():
   n = argv.n
 
   metrics = map(lambda x: int(x), argv.metric.split(","))
+
+  global base_command
+  if argv.args != "":
+    base_command = base_command + " " + argv.args
 
   only_run = argv.run
   verify = argv.verify
