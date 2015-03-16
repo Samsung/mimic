@@ -215,7 +215,7 @@
 {
   "name": "Array.handwritten.sum",
   "function": [
-    "var result = 0; for (var i = 0; i < a.length; i++) result += a[i]; return result;"
+    "var result = 0; var l = a.length; for (var i = 0; i < l; i++) result += a[i]; return result;"
   ],
   "loop": 1,
   "argnames": "a",
@@ -228,26 +228,24 @@
 {
   "name": "Array.handwritten.max",
   "function": [
-    "var result = -Infinity; for (var i = 0; i < a.length; i++) if (a[i] > result) result = a[i]; return result;"
+    "var result = -Infinity; var l = a.length; for (var i = 0; i < l; i++) { var ai = a[i]; if (ai > result) result = ai; } return result;"
   ],
   "loop": 1,
   "argnames": "a",
   "arguments": [
-    "[4,5,6]",
-    "[1,2,3]"
+    "[0,2,0]"
   ]
 },
 
 {
   "name": "Array.handwritten.min",
   "function": [
-    "var result = Infinity; for (var i = 0; i < a.length; i++) if (a[i] < result) result = a[i]; return result;"
+    "var result = Infinity; var l = a.length; for (var i = 0; i < l; i++) { var ai = a[i]; if (ai < result) result = ai; } return result;"
   ],
   "loop": 1,
   "argnames": "a",
   "arguments": [
-    "[4,5,6]",
-    "[1,2,3]"
+    "[1,2,1]"
   ]
 }
 
