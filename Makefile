@@ -25,4 +25,7 @@ exp_short_1: compile
 exp_short_2: compile
 	./scripts/experiment.py --exp_name "short_2" -n 200 --timeout 30 --exclude $(EXCLUDE)
 
+exp_metric_long: compile
+	./scripts/experiment.py --exp_name "metric" -n 100 --metric "0,1" --filter "(forEach|shift)" --timeout 1200
+
 .PHONY: exp_never compile

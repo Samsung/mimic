@@ -5,6 +5,6 @@
 # scp pinkman02:/scratch/sheule/dev/model-synthesis/tests/out/2015-03-16_10-37-20_short_1/result.json out/result2.json
 # scp pinkman02:/scratch/sheule/dev/model-synthesis/tests/out/2015-03-16_11-30-49_short_1/result.json out/result3.json
 
-# scp pinkman01:/scratch/sheule/dev/mimic/tests/out/2015-03-16_02-35-43_longrunning/result.json out/result4.json
+# scp pinkman01:/scratch/sheule/dev/mimic/tests/out/2015-03-16_02-35-43_longrunning/result.json out/result.json
 
 ./scripts/process.py --exp_backoff out

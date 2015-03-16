@@ -142,7 +142,7 @@ def main():
     header = ["Function"] + [s + " (" + str(i) + ")" for s in ["Success rate", "Time"] for i in range(nummetric)]
     cols = map(lambda x: [], header)
     for ex in data:
-      results = data[ex]['results']
+      results = filter_bug(data[ex]['results'])
       name = ex[ex.rfind(".")+1:]
       cols[0].append(name)
       c = 1
@@ -160,6 +160,9 @@ def main():
 
 def filter_succ(results):
   return filter(lambda x: x['exitstatus'] == 0, results)
+
+def filter_bug(results):
+  return filter(lambda x: x['exitstatus'] == 0 or x['exitstatus'] == 124, results)
 
 def filter_metric(results, metric):
   return filter(lambda x: x['metric'] == metric, results)
