@@ -8,9 +8,9 @@ bin/src/run.js: src/*.ts src/util/*.ts test/*.ts
 compile: bin/src/run.js
 
 exp_never: compile
-	./scripts/experiment.py -n 50 --args " --neverAcceptEqualCost" --exclude $(EXCLUDE)
+	./scripts/experiment.py --exp_name "never" -n 50 --args " --neverAcceptEqualCost" --exclude $(EXCLUDE)
 
 exp_always: compile
-	./scripts/experiment.py -n 50 --args " --alwaysAcceptEqualCost" --exclude $(EXCLUDE)
+	./scripts/experiment.py --exp_name "always" -n 50 --args " --alwaysAcceptEqualCost" --exclude $(EXCLUDE)
 
 .PHONY: exp_never compile

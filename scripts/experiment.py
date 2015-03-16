@@ -40,6 +40,7 @@ def main():
   parser.add_argument('--timeout', type=int, help='Timeout in seconds', default=60)
   parser.add_argument('--filter', type=str, help='Filter which experiments to run', default="")
   parser.add_argument('--exclude', type=str, help='Exclude some experiments', default="")
+  parser.add_argument('--exp_name', type=str, help='Name of this experiment', default="")
   parser.add_argument('--args', type=str, help='Arguments to be passed to mimic', default="")
   parser.add_argument('--metric', type=str, help='Which metric should be used during search?  Comma-separated list', default="0")
   parser.add_argument('-r', '--run', help='Only run the first experiment.  Usually used together with --filter', action='store_true')
@@ -77,12 +78,15 @@ def main():
   out = workdir + "/out"
   if not os.path.exists(out):
     os.mkdir(out)
-  timefordir = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
+  timefordir = get_time(True)
   out = out + "/" + timefordir
+  if argv.exp_name != "":
+    out = out + "_" + argv.exp_name
   if os.path.exists(out):
     print "ERROR, out directory exists already: " + out
     sys.exit(1)
   os.mkdir(out)
+  logfile = out + "/readme.txt"
 
   threads = argv.threads
   if threads < 0:
@@ -98,13 +102,18 @@ def main():
   shuffle(tasks) # shuffle tasks
   results = {}
   print "Running experiment..."
-  def print_details():
-    print "  function(s):        %d" % len(fncs)
-    print "  repetitions:        %d" % n
-    print "  timeout:            %s seconds" % argv.timeout
-    print "  number of threads:  %d" % threads
-    print "  output directory:   tests/out/%s" % timefordir
-  print_details()
+  def get_details():
+    s = ""
+    s += "  function(s):        %d" % len(fncs)
+    s += "\n  repetitions:        %d" % n
+    s += "\n  timeout:            %s seconds" % argv.timeout
+    s += "\n  number of threads:  %d" % threads
+    s += "\n  output directory:   %s" % out[out.find("/tests/")+1:]
+    return s
+  print get_details()
+  fprint(logfile, "Arguments: " + " ".join(sys.argv) + "\n")
+  fprinta(logfile, "Time: " + get_time() + "\n")
+  fprinta(logfile, get_details() + "\n" + line + "\n")
   print line
   success = 0
   nosuccess = 0
@@ -157,8 +166,10 @@ def main():
   stat.end_progress()
   print line
   print "Finished experiment:"
-  print_details()
+  print get_details()
   print status_msg(nosuccess, success)
+  fprinta(logfile, status_msg(nosuccess, success) + "\n")
+  fprinta(logfile, "Time: " + get_time() + "\n")
 
 
 def send_msg(id, msg, color=False):
@@ -223,6 +234,11 @@ def fprinta(f, s):
   f = open(f, 'a')
   f.write(s)
   f.close()
+
+def get_time(no_space = False):
+  if no_space:
+    return time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
+  return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
 def flatten(l):
   return [item for sublist in l for item in sublist]
