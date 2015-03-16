@@ -79,36 +79,6 @@ run(f2, [{g: {}}])
 */
 
 
-
-
-
-function howMany(f, a, n: number = 5, max: number[] = [4000, 0], verbose = false) {
-    var nit = []
-    var success = 0
-    for (var i = 0; i < n; i++) {
-        if (verbose) Gray("Iteration " + (i+1) + " of " + n + "...")
-        var res = Search.search(f, a, {
-            iterations: max[0],
-            cleanupIterations: max[1],
-            debug: 0,
-            loopIndex: 0,
-            metric: 0
-        })
-        if (res.score === 0) {
-            success += 1
-            nit.push(res.iterations)
-            if (verbose) print(Ansi.green("✓ ") + Ansi.lightgrey("successful in " + res.iterations + " iterations"))
-        } else {
-            if (verbose) Gray(Ansi.red("x ") + Ansi.lightgrey("no success in " + res.iterations + " iterations"))
-        }
-        if (verbose) Gray(Util.indent(res.getStats()))
-    }
-
-    print("Tried " + n + " searches, with " + success + " successful ones. Average number of iterations (for sucessful ones): " + (Util.sum(nit)/success).toFixed(1) +
-        " (max: " + max[0] + "/" + max[1] + ")")
-}
-
-
 var fs:any = [
     [ // 0
         "random heap modifications",
