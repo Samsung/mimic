@@ -258,40 +258,6 @@ if (Util.argvlength() > 4) {
 
 
 
-// ---
-if (true) {
-    var _n0 = new Data.Var("n")
-    var _n1 = new Data.Var("n")
-    var _tt = new Data.Const(true)
-    var _ff = new Data.Const(false)
-    var _s0 = new Data.Assign(_n0, _tt, true)
-    var _s1 = new Data.Assign(_n0, _ff)
-    var _ss = new Data.Seq([_s0, _s1])
-    var _p = new Data.Program(_ss)
-    print(_p)
-    print("---")
-    for (var ii = 0; ii < _ss.numberOfStmts(); ii++) {
-        var s1 = _ss.allStmts()[ii]
-        if (s1.isDecl) {
-            for (var jj = ii+1; jj < _ss.numberOfStmts(); jj++) {
-                var s2 = _ss.allStmts()[jj]
-                if (!s2.isDecl) {
-                    if (s1.v.equals(s2.v)) {
-                        var t = s2.clone()
-                        s2.isDecl = true
-                        var nss = _ss.replace(jj, t).replace(ii, Data.Seq.Empty)
-                        print(new Data.Program(nss))
-                    }
-                }
-            }
-        }
-    }
-    Util.exit(0)
-}
-// ---
-
-
-
 //InputGen.generateInputs(f, a).map((a) => log(a))
 
 //var x = [1,2,3,,5]
