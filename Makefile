@@ -13,4 +13,7 @@ exp_never: compile
 exp_always: compile
 	./scripts/experiment.py --exp_name "always" -n 50 --args " --alwaysAcceptEqualCost" --exclude $(EXCLUDE)
 
+exp_metric: compile
+	./scripts/experiment.py --exp_name "metric" -n 50 --metric "0,1" --exclude $(EXCLUDE)
+
 .PHONY: exp_never compile
