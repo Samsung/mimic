@@ -98,17 +98,22 @@ def main():
   shuffle(tasks) # shuffle tasks
   results = {}
   print "Running experiment..."
-  print "  function(s):        %d" % len(fncs)
-  print "  repetitions:        %d" % n
-  print "  timeout:            %s seconds" % argv.timeout
-  print "  number of threads:  %d" % threads
-  print "  output directory:   tests/out/%s" % timefordir
+  def print_details():
+    print "  function(s):        %d" % len(fncs)
+    print "  repetitions:        %d" % n
+    print "  timeout:            %s seconds" % argv.timeout
+    print "  number of threads:  %d" % threads
+    print "  output directory:   tests/out/%s" % timefordir
+  print_details()
   print line
   success = 0
   nosuccess = 0
   stat = status.get_status()
   stat.set_message("Working...")
   stat.init_progress(len(tasks))
+  def status_msg(nosuccess, success):
+    return "Overall statistics: success for %d out of %d (%.2f%%)" % (
+      success, nosuccess + success, 100.0 * float(success) / float(nosuccess + success))
   global q
   q = Queue()
   pool = Pool(processes=threads, maxtasksperchild=1)
@@ -140,7 +145,7 @@ def main():
         success += 1
       else:
         nosuccess += 1
-      stat.set_message("Overall statistics: success for %d out of %d (%.2f%%)" % (success, nosuccess + success, 100.0*float(success)/float(nosuccess + success)))
+      stat.set_message(status_msg(nosuccess, success))
       # update file on disk
       jn = json.dumps(results, sort_keys=True, indent=2, separators=(',', ': '))
       fprint(out + "/result.json", jn)
@@ -150,6 +155,10 @@ def main():
   pool.close()
   pool.join()
   stat.end_progress()
+  print line
+  print "Finished experiment:"
+  print_details()
+  print status_msg(nosuccess, success)
 
 
 def send_msg(id, msg, color=False):
