@@ -1,5 +1,5 @@
 
-EXCLUDE="(sum|max|min|slice|unshift|reverse|shift)"
+EXCLUDE="(slice|unshift|reverse)"
 
 bin/src/run.js: src/*.ts src/util/*.ts test/*.ts
 	grunt
