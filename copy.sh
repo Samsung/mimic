@@ -8,3 +8,5 @@
 # scp pinkman01:/scratch/sheule/dev/mimic/tests/out/2015-03-16_02-35-43_longrunning/result.json out/result.json
 
 ./scripts/process.py --exp_backoff out
+./scripts/process.py --folder out
+./scripts/process.py --all out

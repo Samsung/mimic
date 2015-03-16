@@ -31,7 +31,7 @@ out = None # the output folder
 # main entry point
 # ------------------------------------------
 
-def simulate(all):
+def simulate(all, full_table = None):
   threads = 28
   backoff = 2
   initial_timeout = 3.0
@@ -46,6 +46,9 @@ def simulate(all):
     cols[0].append(ex)
     cols[3].append(str(loop+1))
     cols[4].append("%.1f%%" % (100.0*loop_correction(loop)))
+    if full_table is not None:
+      full_table[ex]['correction'] = (100.0*loop_correction(loop))
+      full_table[ex]['loop'] = str(loop+1)
 
     total_rounds = 0.0
     total_time = 0.0
@@ -78,12 +81,15 @@ def simulate(all):
     avgtime = float(total_time) / float(total_reps)
     avgtimes.append(avgtime)
     cols[1].append(all_times)
+    if full_table is not None:
+      full_table[ex]['time'] = avg_stats(all_times)
     cols[2].append(float(total_rounds) / float(total_reps))
   avg = avg_stats(avgtimes)
   cols[1] = map(lambda x: avg_stats(x), cols[1])
   cols[2] = map(lambda x: "%.1f" % x, cols[2])
-  print_table(header, cols)
-  print "Overall average: %s" % avg
+  if full_table is None:
+    print_table(header, cols)
+    print "Overall average: %s" % avg
 
 # chooses k samples (and adds timeouts to adjust for loop probabilities)
 def choose_k(arr, k, loop):
@@ -99,6 +105,7 @@ def choose_k(arr, k, loop):
 def main():
   parser = argparse.ArgumentParser(description='Process the data from the synthesize experiment.')
   parser.add_argument('--folder', type=str, help='The folder to process', default="<latest>")
+  parser.add_argument('--all', type=str, help='Create the full table', default="")
   parser.add_argument('--metrics', type=int, help='The number of metrics', default=1)
   parser.add_argument('--exp_backoff', type=str, help='The folder with all the data for the exponential backoff strategy', default="")
 
@@ -106,6 +113,23 @@ def main():
   argv = parser.parse_args()
 
   workdir = os.path.abspath(os.path.dirname(__file__) + "/../tests/out")
+
+  fulltable = False
+  if argv.all != "":
+    fulltable = True
+    argv.folder = argv.all
+    argv.exp_backoff = argv.all
+
+  full = None
+  if fulltable:
+    full = {}
+    for ex in json.loads(open(argv.folder + "/result.json").read()):
+      name = ex
+      if "handwritten" in ex:
+        name = ex[len("Array.handwritten."):]
+      full[ex] = {
+        'name': name
+      }
 
   all = {}
   if argv.exp_backoff != "":
@@ -128,8 +152,9 @@ def main():
             'loop': data[ex]['results'][0]['loop'],
           }
         all[ex][timeout]['times'] += times
-    simulate(all)
-    sys.exit(0)
+    simulate(all, full)
+    if not fulltable:
+      sys.exit(0)
 
   folder = argv.folder
   if folder == "<latest>":
@@ -146,17 +171,47 @@ def main():
       name = ex[ex.rfind(".")+1:]
       cols[0].append(name)
       c = 1
+      if fulltable:
+        full[ex]['succprob'] = success_rate(results)
       for i in range(nummetric):
         cols[c].append(success_rate_str(results, i))
         c += 1
       for i in range(nummetric):
         cols[c].append(succ_time_str(results, i))
         c += 1
-    print_table(header, cols)
+    if not fulltable:
+      print_table(header, cols)
   except ValueError as ex:
     print "Failed to parse configuration: " + str(ex)
     sys.exit(1)
 
+
+  if fulltable:
+    print "% this is automatically generated content, do not modify"
+    keys = sorted(full.keys())
+    keys = keys[3:] + keys[0:3]
+    header = ["Function", "Time to synthesize (seconds)",
+              "Success (20min timeout; seconds)", "Loop rank",
+              "Probability of guessing loop"]
+    print "\\begin{tabular}{lllll}"
+    space = " & "
+    for h in header[:-1]:
+      print h + " & "
+    endline = "\\\\"
+    print header[-1] + endline
+    for k in keys:
+      print full[k]['name']
+      print space
+      print full[k]['time']
+      print space
+      print "%.2f \\%%" % (full[k]['succprob'])
+      print space
+      print full[k]['loop']
+      print space
+      print "%.1f \\%%" % (full[k]['correction'])
+      if k != keys[-1]:
+        print endline
+    print "\\end{tabular}"
 
 def filter_succ(results):
   return filter(lambda x: x['exitstatus'] == 0, results)
@@ -184,6 +239,18 @@ def success_rate_str(results, metric=0):
   correction = loop_correction(loop)
   p = correction * percent(succ, total)
   return "% 4d / %d (%.2f%%)" % (succ, total, p)
+
+def success_rate(results, metric=0):
+  results = filter_metric(results, metric)
+  total = len(results)
+  if total == 0:
+    return "n/a"
+  loop = results[0]['loop']
+  succ = len(filter_succ(results))
+  # adjust success rate
+  correction = loop_correction(loop)
+  p = correction * percent(succ, total)
+  return p
 
 def succ_time_str(results, metric):
   succ = filter_metric(filter_succ(results), metric)
