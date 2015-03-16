@@ -376,7 +376,7 @@ export class SearchConfig {
         return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup, using loop " +
                 this.loopIndex + ", and metric " + this.metric + ", and beta " +
                 this.beta + (this.alwaysAcceptEqualCost ? ", and always accept equal cost" : "") +
-                this.beta + (this.neverAcceptEqualCost ? ", and never accept equal cost" : "")
+                (this.neverAcceptEqualCost ? ", and never accept equal cost" : "")
     }
 }
 
