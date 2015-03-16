@@ -33,6 +33,7 @@ out = None # the output folder
 def main():
   parser = argparse.ArgumentParser(description='Process the data from the synthesize experiment.')
   parser.add_argument('--folder', type=str, help='The folder to process', default="<latest>")
+  parser.add_argument('--metrics', type=int, help='The number of metrics', default=1)
 
   global argv
   argv = parser.parse_args()
@@ -46,7 +47,7 @@ def main():
 
   try:
     data = json.loads(open(folder + "/result.json").read())
-    nummetric = 1
+    nummetric = argv.metrics
     header = ["Function"] + [s + " (" + str(i) + ")" for s in ["Success rate", "Time"] for i in range(nummetric)]
     cols = map(lambda x: [], header)
     for ex in data:
