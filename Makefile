@@ -17,7 +17,7 @@ exp_metric: compile
 	./scripts/experiment.py --exp_name "metric" -n 200 --metric "0,1" --exclude $(EXCLUDE)
 
 exp_max: compile
-	./scripts/experiment.py --exp_name "max" -n 28 --timeout 3600 --exclude $(EXCLUDE)
+	./scripts/experiment.py --exp_name "max" -n 28 --timeout 3600 --filter max
 
 exp_longrunning: compile
 	./scripts/experiment.py --exp_name "longrunning" -n 50 --timeout 1200 --exclude $(EXCLUDE)
