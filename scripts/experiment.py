@@ -183,7 +183,7 @@ def run_experiment(data):
   iters = -1
   if exitstatus == 0:
     iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
-    msg = "%s: success after %.2f seconds and %d iterations" % (f.shortname, elapsed_time, iters)
+    msg = "%s: success after %.2f seconds and %d iterations [%.1f iterations/second]" % (f.shortname, elapsed_time, iters, float(iters)/elapsed_time)
     icon = colors.green(u"✓")
   elif exitstatus == 124:
     msg = "%s: timed out" % (f.shortname)
