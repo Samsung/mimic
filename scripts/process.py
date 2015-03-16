@@ -21,6 +21,7 @@ import colors
 import multiprocessing
 from multiprocessing import Pool
 from multiprocessing import Queue
+import random
 
 line = "-" * 80
 argv = None # the arguments
@@ -30,15 +31,105 @@ out = None # the output folder
 # main entry point
 # ------------------------------------------
 
+def simulate(all):
+  threads = 28
+  backoff = 2
+  initial_timeout = 3.0
+  maxround = 40
+  repetitions = 100
+  header = ["Function", "Time", "Rounds", "nth loop", "Loop Probability"]
+  cols = map(lambda x: [], header)
+  avgtimes = []
+  for ex in all:
+    data = all[ex]
+    loop = all[ex][5]['loop']
+    cols[0].append(ex)
+    cols[3].append(str(loop+1))
+    cols[4].append("%.1f%%" % (100.0*loop_correction(loop)))
+
+    total_rounds = 0.0
+    total_time = 0.0
+    total_reps = 0
+    all_times = []
+    for rep in range(repetitions):
+      timeout = initial_timeout
+      time = 0.0
+      for r in range(maxround):
+        if timeout < 5.0:
+          d = data[5]['times']
+        elif timeout < 30.0:
+          d = data[30]['times']
+        elif timeout < 1200:
+          d = data[1200]['times']
+        else:
+          # not enough data
+          print "Did not have enough data for simulation"
+          sys.exit(1)
+        times = filter(lambda x: x >= 0, choose_k(d, threads, loop))
+        if len(times) > 0:
+          time += min(times)
+          total_rounds += r+1
+          total_time += time
+          total_reps += 1
+          all_times.append(time)
+          break
+        time += timeout
+        timeout *= backoff
+    avgtime = float(total_time) / float(total_reps)
+    avgtimes.append(avgtime)
+    cols[1].append(all_times)
+    cols[2].append(float(total_rounds) / float(total_reps))
+  avg = avg_stats(avgtimes)
+  cols[1] = map(lambda x: avg_stats(x), cols[1])
+  cols[2] = map(lambda x: "%.1f" % x, cols[2])
+  print_table(header, cols)
+  print "Overall average: %s" % avg
+
+# chooses k samples (and adds timeouts to adjust for loop probabilities)
+def choose_k(arr, k, loop):
+  res = []
+  for i in range(k):
+    if random.random() < loop_correction(loop):
+      rand = -1
+    else:
+      rand = random.randint(0, len(arr)-1)
+    res.append(arr[rand])
+  return res
+
 def main():
   parser = argparse.ArgumentParser(description='Process the data from the synthesize experiment.')
   parser.add_argument('--folder', type=str, help='The folder to process', default="<latest>")
   parser.add_argument('--metrics', type=int, help='The number of metrics', default=1)
+  parser.add_argument('--exp_backoff', type=str, help='The folder with all the data for the exponential backoff strategy', default="")
 
   global argv
   argv = parser.parse_args()
 
   workdir = os.path.abspath(os.path.dirname(__file__) + "/../tests/out")
+
+  all = {}
+  if argv.exp_backoff != "":
+    for f in [argv.exp_backoff + "/" +f for f in os.listdir(argv.exp_backoff) if os.path.isfile(argv.exp_backoff + "/" + f)]:
+      data = json.loads(open(f).read())
+      timeout = None
+      for ex in data:
+        if timeout is None:
+          timeouts = filter(lambda x: x['exitstatus'] == 124, data[ex]['results'])
+          if len(timeouts) == 0:
+            continue
+          timeout = int(round(timeouts[0]['time']))
+        assert(timeout == 30 or timeout == 5 or timeout == 1200)
+        times = map(lambda x: x['time'] if x['exitstatus'] == 0 else -1, filter(lambda x: x['exitstatus'] == 0 or x['exitstatus'] == 124, data[ex]['results']))
+        if (ex not in all):
+          all[ex] = {}
+        if (timeout not in all[ex]):
+          all[ex][timeout] = {
+            'times': [],
+            'loop': data[ex]['results'][0]['loop'],
+          }
+        all[ex][timeout]['times'] += times
+    simulate(all)
+    sys.exit(0)
 
   folder = argv.folder
   if folder == "<latest>":
@@ -73,6 +164,12 @@ def filter_succ(results):
 def filter_metric(results, metric):
   return filter(lambda x: x['metric'] == metric, results)
 
+def loop_correction(loop):
+  aloop = 0.9
+  a = 0.7
+  correction = aloop * a * pow(1 - a, loop)
+  return correction
+
 def success_rate_str(results, metric=0):
   results = filter_metric(results, metric)
   total = len(results)
@@ -81,9 +178,7 @@ def success_rate_str(results, metric=0):
   loop = results[0]['loop']
   succ = len(filter_succ(results))
   # adjust success rate
-  aloop = 0.9
-  a = 0.7
-  correction = aloop * a * pow(1 - a, loop)
+  correction = loop_correction(loop)
   p = correction * percent(succ, total)
   return "% 4d / %d (%.2f%%)" % (succ, total, p)
 
