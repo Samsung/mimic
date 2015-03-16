@@ -27,10 +27,27 @@
 {
   "name": "Array.prototype.shift",
   "function": [
-    "return Array.prototype.shift.apply(self, Array.prototype.slice.call(arguments, 1))"
+    "var l = arg0.length;",
+    "if (l == 0) {",
+    "  arg0.length = 0",
+    "  return undefined",
+    "} else {",
+    "  var first = arg0[0]",
+    "  for (var i = 1; i < l; i++) {",
+    "    if (i in arg0) {",
+    "      var n = arg0[i]",
+    "      arg0[i-1] = n",
+    "    } else {",
+    "      delete arg0[i-1]",
+    "    }",
+    "  }",
+    "  delete arg0[l-1]",
+    "  arg0.length = l-1",
+    "  return first",
+    "}"
   ],
   "loop": 0,
-  "argnames": "self, arg0, arg1, arg2",
+  "argnames": "arg0, arg1, arg2",
   "arguments": [
     "[1,2,3,,5]"
   ]
