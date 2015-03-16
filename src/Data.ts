@@ -675,6 +675,11 @@ export class Stmt extends Node {
             }
         }
     }*/
+    /** Returns a shallow clone (i.e., *this* object is not shared yet, but anything referenced might still be shared) */
+    clone(): Stmt {
+        Util.assert(false)
+        return null
+    }
     allStmts(): Stmt[] {
         return [this]
     }
@@ -724,6 +729,9 @@ export class If extends Stmt {
     numberOfStmts(): number {
         return 1 + this.thn.numberOfStmts() + this.els.numberOfStmts()
     }
+    clone(): Stmt {
+        return new If(this.c, this.thn, this.els)
+    }
     replace(i: number, news: Stmt): Stmt {
         Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
         if (i === 0) {
@@ -746,7 +754,7 @@ export class If extends Stmt {
     }
 }
 /**
- * Conditional statement.
+ * For loop statement.
  */
 export class For extends Stmt {
     constructor(public start: Expr, public end: Expr, public inc: Expr, public body: Stmt, public variable: Var = new Var("i")) {
@@ -779,6 +787,9 @@ export class For extends Stmt {
     }
     numberOfStmts(): number {
         return 1 + this.body.numberOfStmts()
+    }
+    clone(): Stmt {
+        return new For(this.start, this.end, this.inc, this.body, this.variable)
     }
     replace(i: number, news: Stmt): Stmt {
         Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
@@ -818,6 +829,9 @@ export class Seq extends Stmt {
     }
     numberOfStmts(): number {
         return Util.sum(this.stmts.map((x) => x.numberOfStmts()))
+    }
+    clone(): Stmt {
+        return new Seq(this.stmts)
     }
     replace(i: number, news: Stmt): Stmt {
         Util.assert(i >= 0 && i < this.numberOfStmts(), () => "out of bound replacement")
@@ -878,6 +892,9 @@ export class Marker extends Stmt {
     children(): Node[] {
         return []
     }
+    clone(): Stmt {
+        return new Marker()
+    }
     anychildren(): any[] {
         var res: any[] = this.children()
         return res
@@ -915,6 +932,9 @@ export class Assign extends Stmt {
         return o instanceof Assign && o.lhs.equals(this.lhs) &&
                 ((o.rhs === null) === (this.rhs === null)) &&
                 (o.rhs === null || o.rhs.equals(this.rhs))
+    }
+    clone(): Stmt {
+        return new Assign(this.lhs, this.rhs, this.isDecl)
     }
     children(): Node[] {
         if (this.rhs === null) {
@@ -975,6 +995,9 @@ export class FuncCall extends Stmt {
         }
         return true
     }
+    clone(): Stmt {
+        return new FuncCall(this.v, this.f, this.args.slice(0), this.recv, this.isDecl)
+    }
     children(): Node[] {
         var res = [this.v, this.f].concat(this.args);
         if (this.recv !== null) {
@@ -1018,6 +1041,9 @@ export class Return extends Stmt {
     equals(o) {
         return o instanceof Return && o.rhs.equals(this.rhs)
     }
+    clone(): Stmt {
+        return new Return(this.rhs)
+    }
     children(): Node[] {
         return [this.rhs]
     }
@@ -1040,6 +1066,9 @@ export class Throw extends Stmt {
     }
     equals(o) {
         return o instanceof Throw && o.rhs.equals(this.rhs)
+    }
+    clone(): Stmt {
+        return new Throw(this.rhs)
     }
     children(): Node[] {
         return [this.rhs]
@@ -1067,6 +1096,9 @@ export class Break extends Stmt {
     }
     equals(o) {
         return o instanceof Break
+    }
+    clone(): Stmt {
+        return new Break()
     }
     children(): Node[] {
         return []
@@ -1107,6 +1139,9 @@ export class DeleteProp extends Stmt {
     equals(o) {
         return o instanceof DeleteProp && o.o.equals(this.o) && o.f.equals(this.f)
     }
+    clone(): Stmt {
+        return new DeleteProp(this.o, this.f)
+    }
     children(): Node[] {
         return [this.o, this.f]
     }
@@ -1134,6 +1169,9 @@ export class DefineProp extends Stmt {
     }
     equals(o) {
         return o instanceof DefineProp && o.o.equals(this.o) && o.f.equals(this.f) && o.v.equals(this.v)
+    }
+    clone(): Stmt {
+        return new DefineProp(this.o, this.f, this.v)
     }
     children(): Node[] {
         return [this.o, this.f, this.v]

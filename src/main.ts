@@ -169,7 +169,7 @@ var fs:any = [
     [ // 8
         "Array.prototype.shift",
         (a) => a.shift(),
-        [['a','b','c','d','e']]
+        [[1,2,3,,5]]
     ],
     [ // 9
         "Array.prototype.every",
@@ -259,10 +259,10 @@ if (Util.argvlength() > 4) {
 
 
 // ---
-if (false) {
+if (true) {
     var _n0 = new Data.Var("n")
     var _n1 = new Data.Var("n")
-    var _tt = new Data.Const(false)
+    var _tt = new Data.Const(true)
     var _ff = new Data.Const(false)
     var _s0 = new Data.Assign(_n0, _tt, true)
     var _s1 = new Data.Assign(_n0, _ff)
@@ -277,7 +277,9 @@ if (false) {
                 var s2 = _ss.allStmts()[jj]
                 if (!s2.isDecl) {
                     if (s1.v.equals(s2.v)) {
-                        var nss = _ss.replace(jj, new Data.Assign(s2.lhs, s2.rhs, true)).replace(ii, Data.Seq.Empty)
+                        var t = s2.clone()
+                        s2.isDecl = true
+                        var nss = _ss.replace(jj, t).replace(ii, Data.Seq.Empty)
                         print(new Data.Program(nss))
                     }
                 }
@@ -308,6 +310,24 @@ print(loop.slice(0, 10).join("\n"))
 config.metric = 0
 var debugFun = true
 function f2(arg0, arg1, arg2) {
+    var result = 3
+    var n0 = arg0.length
+    var n1 = arg0[0]
+    var n2
+    var n5 = arg0
+    for (var i = 0; i < (n0-1); i += 1) {
+        if (this != null) this.budget = 1
+        n2 = arg0[i+1]
+        if (n2 != undefined) {
+            arg0[i] = n2
+        } else {
+            n5 = 1 in arg0
+            delete arg0[2]
+        }
+    }
+    delete arg0[i]
+    arg0[arguments.length] = n0-1
+    return result
 }
 
 if (debugFun) {
