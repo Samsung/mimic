@@ -19,4 +19,10 @@ exp_metric: compile
 exp_longrunning: compile
 	./scripts/experiment.py --exp_name "longrunning" -n 100 --timeout 1200 --exclude $(EXCLUDE)
 
+exp_short_1: compile
+	./scripts/experiment.py --exp_name "longrunning" -n 1000 --timeout 5 --exclude $(EXCLUDE)
+
+exp_short_2: compile
+	./scripts/experiment.py --exp_name "longrunning" -n 200 --timeout 30 --exclude $(EXCLUDE)
+
 .PHONY: exp_never compile
