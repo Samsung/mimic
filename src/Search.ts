@@ -347,7 +347,10 @@ export class SearchConfig {
         cleanupIterations: 0,
         debug: 1,
         loopIndex: -1,
-        metric: 0
+        metric: 0,
+        alwaysAcceptEqualCost: false,
+        neverAcceptEqualCost: false,
+        beta: 6
     }
     constructor(o: SearchConfig = SearchConfig.DEFAULT) {
         this.iterations = o.iterations
@@ -355,16 +358,25 @@ export class SearchConfig {
         this.debug = o.debug
         this.loopIndex = o.loopIndex
         this.metric = o.metric
+        this.alwaysAcceptEqualCost = o.alwaysAcceptEqualCost
+        this.neverAcceptEqualCost = o.neverAcceptEqualCost
+        this.beta = o.beta
+        Util.assert(!(this.alwaysAcceptEqualCost && this.neverAcceptEqualCost))
     }
     iterations: number
     cleanupIterations: number
     debug: number
     loopIndex: number
     metric: number
+    alwaysAcceptEqualCost: boolean
+    neverAcceptEqualCost: boolean
+    beta: number
 
     toString(): string {
         return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup, using loop " +
-                this.loopIndex + ", and metric " + this.metric
+                this.loopIndex + ", and metric " + this.metric + ", and beta " +
+                this.beta + (this.alwaysAcceptEqualCost ? ", and always accept equal cost" : "") +
+                this.beta + (this.neverAcceptEqualCost ? ", and never accept equal cost" : "")
     }
 }
 
@@ -393,8 +405,9 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             Ansi.Red(newp.toString())
             print(badness + " => " + newbadness)
         }
+        var base = config.base;
         if (newbadness < badness) {
-            if (config.base.debug > 0) {
+            if (base.debug > 0) {
                 Ansi.Gray("   improvement at iteration "+Util.pad(i, 5, ' ')+": " +
                     Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
                 print(newp)
@@ -403,10 +416,9 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             p = newp
             badness = newbadness
         } else {
-            var W_BETA = 6
-            var alpha = Math.min(1, Math.exp(-W_BETA * newbadness / badness))
-            if (maybe(alpha)) {
-                if (config.base.debug > 0) {
+            var alpha = Math.min(1, Math.exp(-base.beta * newbadness / badness))
+            if (base.alwaysAcceptEqualCost || (!base.neverAcceptEqualCost && maybe(alpha))) {
+                if (base.debug > 0) {
                     Ansi.Gray(" ! improvement at iteration "+Util.pad(i, 5, ' ')+": " +
                         Util.pad(badness.toFixed(3), 7, ' ') + " -> " + Util.pad(newbadness.toFixed(3), 7, ' '))
                     Ansi.Green(newp.toString())
@@ -415,15 +427,10 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
                 p = newp
                 badness = newbadness
             }
-            if (newbadness < 1) {
-                //print(badness)
-                //print(newbadness)
-                //print(newp)
-            }
         }
 
         if (i % 1000 === 0) {
-            if (config.base.debug) print("Time: " + Util.stop(start) + ", iteration: " + i)
+            if (base.debug) print("Time: " + Util.stop(start) + ", iteration: " + i)
         }
     }
 

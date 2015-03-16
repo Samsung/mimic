@@ -96,6 +96,15 @@ if (argc < 6) {
         if ("metric" in argv) {
             config.metric = +argv.metric
         }
+        if ("alwaysAcceptEqualCost" in argv) {
+            config.alwaysAcceptEqualCost = true
+        }
+        if ("neverAcceptEqualCost" in argv) {
+            config.neverAcceptEqualCost = true
+        }
+        if ("beta" in argv) {
+            config.beta = +argv.beta
+        }
         Ansi.Gray("Configuration: " + config.toString())
         var res = Search.search(f, args, config)
         Ansi.Gray("Found in " + res.iterations + " iterations:")
