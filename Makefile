@@ -28,4 +28,7 @@ exp_short_2: compile
 exp_metric_long: compile
 	./scripts/experiment.py --exp_name "metric" -n 100 --metric "0,1" --filter "(forEach|shift)" --timeout 1200
 
+table:
+	./scripts/process.py --all out | tee ../paper/table.tex 
+
 .PHONY: exp_never compile

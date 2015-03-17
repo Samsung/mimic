@@ -165,7 +165,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         if (config.debug) Ansi.Gray("Starting secondary cleanup search...")
 
         var cleanupTraces = inputs.map((i) => Recorder.record(f, i))
-        var cleanupInputs = Random.pickN(inputs, 100) // TODO better strategy
+        var cleanupInputs = Random.pickN(inputs, 199) // TODO better strategy
         cleanupTraces = cleanupInputs.map((i) => Recorder.record(f, i))
 
         if (config.debug) Ansi.Gray("  Using the following inputs:")
@@ -509,6 +509,7 @@ function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], con
             break
         }
     }
+    print(p)
     return p
 }
 

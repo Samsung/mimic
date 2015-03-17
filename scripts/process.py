@@ -122,6 +122,7 @@ def main():
 
   full = None
   if fulltable:
+    random.seed(10)
     full = {}
     for ex in json.loads(open(argv.folder + "/result.json").read()):
       name = ex
@@ -192,9 +193,9 @@ def main():
     keys = keys[3:] + keys[0:3]
     header = [
       ["Function", "Time to synthesize",
-       "Success (20min", "Loop"],
+       "Success", "Loop"],
       ["", "(in seconds)",
-       "timeout; in seconds)", "rank"]
+       "rate", "rank"]
     ]
     print "\\begin{tabular}{llll}"
     space = " & "
@@ -206,7 +207,10 @@ def main():
       print "\\textbf{%s} %s" % (hr[-1], endline)
     print "\\midrule"
     for k in keys:
-      print full[k]['name']
+      nm = full[k]['name']
+      if nm in ["max", "min", "sum"]:
+        nm += "$^*$"
+      print nm[nm.rfind(".")+1:]
       print space
       print full[k]['time']
       print space
