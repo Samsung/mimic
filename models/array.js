@@ -1,24 +1,25 @@
 
 function push(arg0) {
-    var n0 = arg0.length
-    for (var i2 = 0; i2 < (arguments.length-1); i2 += 1) {
-        arg0[i2+n0] = arguments[i2+1]
-    }
-    arg0.length = n0+i2
-    var n1 = arg0.length
-    return i2+n0
+  var n0 = arg0.length
+  for (var i = 0; i < (arguments.length-1); i += 1) {
+    arg0[n0+i] = arguments[i+1]
+  }
+  arg0.length = n0+i
+  var n1 = arg0.length
+  return n1
 }
 
 function pop(arg0) {
-    var n0 = arg0.length
-    if (n0) {
-        var n1 = arg0[n0-1]
-        arg0.length = n0-1
-        delete arg0[n0-1]
-        return n1
-    } else {
-        arg0.length = 0
-    }
+  var n0 = arg0.length
+  if (n0) {
+    var n1 = arg0[n0-1]
+    arg0.length = n0-1
+    delete arg0[n0-1]
+    return n1
+  } else {
+    arg0.length = 0
+  }
+
 }
 
 function shift(arg0) {
@@ -74,18 +75,39 @@ function some(arg0, arg1, arg2) {
   return n3
 }
 
-function indexOf() {
-
+function indexOf(arg0, arg1) {
+  var result = -1
+  var n0 = arg0.length
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = arg0[i]
+    if (n1==arg1) {
+      result = i
+      break
+    }
+  }
+  return result
 }
 
-function forEach(arg0, arg1) {
-    var n0 = arg0.length
-    var n1
-    var n2 = n1
-    for (var i7 = 0; i7 < n0; i7 += 1) {
-        n1 = arg0[i7]
-        n2 = arg1.apply(undefined, [ n1, i7, arg0 ])
+function lastIndexOf(arg0, arg1) {
+  var n0 = arg0.length
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = arg0[(n0-i)-1]
+    if (n1==arg1) {
+      break
     }
+  }
+  return (n0-i)-1
+}
+
+function forEach(arg0, arg1, arg2) {
+  var n0 = arg0.length
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = i in arg0
+    if (n1) {
+      var n2 = arg0[i]
+      var n3 = arg1.call(arg2, n2, i, arg0)
+    }
+  }
 }
 
 function reduce(arg0, arg1, arg2) {
