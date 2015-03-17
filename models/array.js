@@ -19,7 +19,6 @@ function pop(arg0) {
   } else {
     arg0.length = 0
   }
-
 }
 
 function shift(arg0) {
@@ -119,6 +118,84 @@ function reduce(arg0, arg1, arg2) {
       var n2 = arg0[i]
       var n3 = arg1.call(undefined, result, n2, i, arg0)
       result = n3
+    }
+  }
+  return result
+}
+
+function reduceRight(arg0, arg1, arg2) {
+  var result = arg2
+  var n0 = arg0.length
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = ((n0-i)-1) in arg0
+    if (n1) {
+      var n2 = arg0[(n0-i)-1]
+      var n3 = arg1.call(undefined, result, n2, (n0-i)-1, arg0)
+      result = n3
+    }
+  }
+  return result
+}
+
+function filter(arg0, arg1, arg2) {
+  var result = []
+  var n0 = arg0.length
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = i in arg0
+    if (n1) {
+      var n2 = arg0[i]
+      var n3 = arg1.call(arg2, n2, i, arg0)
+      if (n3) {
+        result[result.length] = n2
+      }
+    }
+  }
+  return result
+}
+
+function map(arg0, arg1, arg2) {
+  var result = []
+  var n0 = arg0.length
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = i in arg0
+    if (n1) {
+      var n2 = arg0[i]
+      var n3 = arg1.call(arg2, n2, i, arg0)
+      result[i] = n3
+    }
+  }
+  return result
+}
+
+function sum(arg0) {
+  var result = 0
+  var n0 = arg0.length
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = arg0[i]
+    result = result+n1
+  }
+  return result
+}
+
+function min(arg0) {
+  var result = Infinity
+  var n0 = arg0.length
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = arg0[i]
+    if (n1<result) {
+      result = n1
+    }
+  }
+  return result
+}
+
+function max(arg0) {
+  var result = -Infinity
+  var n0 = arg0.length
+  for (var i = 0; i < n0; i += 1) {
+    var n1 = arg0[i]
+    if (result<n1) {
+      result = n1
     }
   }
   return result

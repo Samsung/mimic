@@ -8,7 +8,7 @@
   "loop": 0,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
-    "[1,2,3,4,5], function f(a) { return a % 2 == 0 }"
+    "[1,2,3,4,5], function f(a) { return a % 2 == 0 }, {}"
   ]
 },
 
@@ -73,7 +73,7 @@
   "loop": 0,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
-    "[1,2,3,4], function f(e) { return e + 1; }"
+    "[1,2,3,4], function f(e) { return e + 1; }, {}"
   ]
 },
 

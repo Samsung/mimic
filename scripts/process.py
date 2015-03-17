@@ -166,6 +166,9 @@ def main():
     data = json.loads(open(folder + "/result.json").read())
     nummetric = argv.metrics
     header = ["Function"] + [s + " (" + str(i) + ")" for s in ["Success rate", "Time"] for i in range(nummetric)]
+    if nummetric == 2:
+      diff = []
+      header.append("Succ Prob Lower By")
     cols = map(lambda x: [], header)
     for ex in data:
       results = filter_bug(data[ex]['results'])
@@ -180,8 +183,16 @@ def main():
       for i in range(nummetric):
         cols[c].append(succ_time_str(results, i))
         c += 1
+      if nummetric == 2:
+        # calculate difference
+        a = success_rate(results, 0)
+        b = success_rate(results, 1)
+        diff.append(100.0*(a-b)/b)
+        cols[c].append("%.2f" % (100.0*(a-b)/b))
     if not fulltable:
       print_table(header, cols)
+    if nummetric == 2:
+      print "Average increase of success probability: %s" % avg_stats(diff)
   except ValueError as ex:
     print "Failed to parse configuration: " + str(ex)
     sys.exit(1)
@@ -209,8 +220,8 @@ def main():
     for k in keys:
       nm = full[k]['name']
       nm = nm[nm.rfind(".")+1:]
-      if nm in ["max", "min", "sum", "shift"]:
-        nm += "$^*$"
+      # if nm in ["max", "min", "sum", "shift"]:
+      #   nm += "$^*$"
       print nm
       print space
       print full[k]['time']
