@@ -24,7 +24,7 @@ function pop(arg0) {
 function shift(arg0) {
   var n0 = arg0.length
   if (n0) {
-    var n1 = arg0[0] /*@ \label{li:non-empty-start} @*/
+    var n1 = arg0[0]
     for (var i = 0; i < (n0-1); i += 1) {
       var n2 = (i+1) in arg0
       if (n2) {
@@ -36,7 +36,7 @@ function shift(arg0) {
     }
     delete arg0[i]
     arg0.length = i
-    return n1 /*@ \label{li:non-empty-end} @*/
+    return n1
   } else {
     arg0.length = 0
   }
