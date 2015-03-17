@@ -1,5 +1,4 @@
 
-// loopIndex: 3
 function push(arg0) {
     var n0 = arg0.length
     for (var i2 = 0; i2 < (arguments.length-1); i2 += 1) {
@@ -23,20 +22,24 @@ function pop(arg0) {
 }
 
 function shift(arg0) {
-    var n0 = arg0.length
-    if (n0) {
-        var n1 = arg0[0]
-        var n2 = arguments[3]
-        for (var i6 = 0; i6 < (n0-1); i6 += 1) {
-            n2 = arg0[i6+1]
-            arg0[i6] = n2
-        }
-        delete arg0[i6]
-        arg0.length = i6
-        return n1
-    } else {
-        arg0.length = 0
+  var n0 = arg0.length
+  if (n0) {
+    var n1 = arg0[0] /*@ \label{li:non-empty-start} @*/
+    for (var i = 0; i < (n0-1); i += 1) {
+      var n2 = (i+1) in arg0
+      if (n2) {
+        var n3 = arg0[i+1]
+        arg0[i] = n3
+      } else {
+        delete arg0[i]
+      }
     }
+    delete arg0[i]
+    arg0.length = i
+    return n1 /*@ \label{li:non-empty-end} @*/
+  } else {
+    arg0.length = 0
+  }
 }
 
 function every(arg0, arg1, arg2) {
@@ -71,7 +74,6 @@ function some(arg0, arg1, arg2) {
   return n3
 }
 
-// loopIndex: 1
 function indexOf() {
 
 }

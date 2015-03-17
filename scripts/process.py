@@ -208,9 +208,10 @@ def main():
     print "\\midrule"
     for k in keys:
       nm = full[k]['name']
-      if nm in ["max", "min", "sum"]:
+      nm = nm[nm.rfind(".")+1:]
+      if nm in ["max", "min", "sum", "shift"]:
         nm += "$^*$"
-      print nm[nm.rfind(".")+1:]
+      print nm
       print space
       print full[k]['time']
       print space
