@@ -190,15 +190,21 @@ def main():
     print "% this is automatically generated content, do not modify"
     keys = sorted(full.keys())
     keys = keys[3:] + keys[0:3]
-    header = ["Function", "Time to synthesize (seconds)",
-              "Success (20min timeout; seconds)", "Loop rank",
-              "Probability of guessing loop"]
-    print "\\begin{tabular}{lllll}"
+    header = [
+      ["Function", "Time to synthesize",
+       "Success (20min", "Loop"],
+      ["", "(in seconds)",
+       "timeout; in seconds)", "rank"]
+    ]
+    print "\\begin{tabular}{llll}"
     space = " & "
-    for h in header[:-1]:
-      print h + " & "
     endline = "\\\\"
-    print header[-1] + endline
+    print "\\toprule"
+    for hr in header:
+      for h in hr[:-1]:
+        print "\\textbf{%s} & " % h
+      print "\\textbf{%s} %s" % (hr[-1], endline)
+    print "\\midrule"
     for k in keys:
       print full[k]['name']
       print space
@@ -207,10 +213,10 @@ def main():
       print "%.2f \\%%" % (full[k]['succprob'])
       print space
       print full[k]['loop']
-      print space
-      print "%.1f \\%%" % (full[k]['correction'])
-      if k != keys[-1]:
-        print endline
+      # print space
+      # print "%.1f \\%%" % (full[k]['correction'])
+      print endline
+    print "\\bottomrule"
     print "\\end{tabular}"
 
 def filter_succ(results):
