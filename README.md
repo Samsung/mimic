@@ -1,4 +1,4 @@
-# Model Synthesis for Library Function in JavaScript
+# Mimic: Model Synthesis for JavaScript Functions
 
 ## Installation
 
@@ -21,7 +21,7 @@ You may want to make sure that all tests pass to verify the build by running `np
 
 To run the model synthesis, the script `mimic` can be used.  For instance:
 
-    ./model-synth synth "x,y" "return x+1" "1"
+    ./mimic synth "x,y" "return x+1" "1"
 
 There are a number of scripts to run experiments and process data.  They are all located in `scripts`, most notably `scripts/experiment.py` (to run one or more experiments) and `scripts/process.py` to process the collected data.  Pass `--help` to them to get more information.
 
