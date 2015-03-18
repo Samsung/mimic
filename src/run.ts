@@ -44,8 +44,8 @@ function error(message) {
 
 var argc = Util.argvlength();
 if (argc < 6) {
-    print("Usage: model-synth (" + commands.join("|") + ") arg-names function-body args0 [args1 [args2 ...]]")
-    print('Example: model-synth synth "x,y" "return x+1" "1"')
+    print("Usage: mimic (" + commands.join("|") + ") arg-names function-body args0 [args1 [args2 ...]]")
+    print('Example: mimic synth "x,y" "return x+1" "1"')
     print("")
     print("  synth   synthesize a model for a given function")
     print("  record  record a trace for a given function")

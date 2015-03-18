@@ -27,7 +27,7 @@ line = "-" * 80
 q = None # the queue used for communication
 argv = None # the arguments
 out = None # the output folder
-base_command = './model-synth synth --iterations 100000000'
+base_command = './mimic synth --iterations 100000000'
 
 # ------------------------------------------
 # main entry point

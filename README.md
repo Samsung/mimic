@@ -15,15 +15,17 @@ Finally build the project:
 
     grunt
 
-Note that some type warnings;  these can safely be ignored.  You may want to make sure that all tests pass to verify the build by running `npm test`.
+You may want to make sure that all tests pass to verify the build by running `npm test`.
 
 ## Usage
 
-To run the model synthesis, the script `model-synth` can be used.  For instance:
+To run the model synthesis, the script `mimic` can be used.  For instance:
 
     ./model-synth synth "x,y" "return x+1" "1"
 
-There is also the file `src/main.ts`, that contains various ways to run things.  Invoke it (after compilation) as follows:
+There are a number of scripts to run experiments and process data.  They are all located in `scripts`, most notably `scripts/experiment.py` (to run one or more experiments) and `scripts/process.py` to process the collected data.  Pass `--help` to them to get more information.
+
+There is also the file `src/main.ts`, that contains various ways to run things (mostly used for debugging).  Invoke it (after compilation) as follows:
 
     node --harmony --harmony-proxies bin/src/main.js 0 0
 

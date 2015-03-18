@@ -1,5 +1,5 @@
 {
-  "name": "model-synthesis",
+  "name": "mimic",
   "version": "1.0.0",
   "description": "Model Synthesis for JavaScript Functions",
   "main": "run.js",
