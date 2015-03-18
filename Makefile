@@ -7,6 +7,11 @@ bin/src/run.js: src/*.ts src/util/*.ts test/*.ts
 # just use a single file as dependency here, they all get refreshed at the same time
 compile: bin/src/run.js
 
+
+# ------------------------------------
+# some experiments
+# ------------------------------------
+
 exp_never: compile
 	./scripts/experiment.py --exp_name "never" -n 200 --args " --neverAcceptEqualCost --beta 0" --exclude $(EXCLUDE)
 
@@ -28,7 +33,4 @@ exp_short_2: compile
 exp_metric_long: compile
 	./scripts/experiment.py --exp_name "metric" -n 100 --metric "0,1" --filter "(forEach|shift)" --timeout 1200
 
-table:
-	./scripts/process.py --all out | tee ../paper/table.tex 
-
-.PHONY: exp_never compile
+.PHONY: exp_metric_long exp_short_2 exp_short_1 exp_longrunning exp_metric exp_always exp_never compile
