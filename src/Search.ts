@@ -416,7 +416,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             p = newp
             badness = newbadness
         } else {
-            var alpha = Math.min(1, Math.exp(-base.beta * newbadness / badness))
+            var alpha = Math.min(1, Math.exp(-base.beta * (newbadness - badness + 1)))
             if (base.alwaysAcceptEqualCost || (!base.neverAcceptEqualCost && maybe(alpha))) {
                 if (base.debug > 0) {
                     Ansi.Gray(" ! improvement at iteration "+Util.pad(i, 5, ' ')+": " +
