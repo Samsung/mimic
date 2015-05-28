@@ -160,13 +160,14 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         if (config.debug) Ansi.Gray(Util.linereturn())
     }
 
+    // shorten the program
+    if (config.debug) Ansi.Gray("Starting secondary cleanup search...")
+    var cleanupInputs = InputGen.selectInputs(inputs, traces, (i, t) => Metric.evaluate(p, [i], [t], config))
+    var cleanupTraces = cleanupInputs.map((i) => Recorder.record(f, i))
+    p = shorten(p, inputs, traces, config)
+
     var secondarySearch: SearchResult
     if (config.cleanupIterations > 0) {
-        if (config.debug) Ansi.Gray("Starting secondary cleanup search...")
-
-        var cleanupTraces = inputs.map((i) => Recorder.record(f, i))
-        var cleanupInputs = Random.pickN(inputs, 199) // TODO better strategy
-        cleanupTraces = cleanupInputs.map((i) => Recorder.record(f, i))
 
         if (config.debug) Ansi.Gray("  Using the following inputs:")
         if (config.debug) Ansi.Gray("  " + cleanupInputs.map((i) => i.map((j) => Util.inspect(j, false)).join(", ")).join("\n  "))
@@ -174,9 +175,6 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         var constants = InputGen.genConstants(cleanupTraces)
         var useAlloc = cleanupTraces[0].getResult() instanceof Data.TraceAlloc
         var mutationInfo = new ProgramGen.RandomMutationInfo(constants, p.getVariables(), inputs, useAlloc)
-
-        // shorten the program
-        p = shorten(p, cleanupInputs, cleanupTraces, config)
 
         // switch to the finalizing metric
         secondarySearch = core_search(p, {
@@ -191,10 +189,10 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         // shorten the program again
         p = shorten(p, cleanupInputs, cleanupTraces, config)
 
-        if (config.debug) Ansi.Gray(Util.linereturn())
     } else {
         secondarySearch = SearchResult.Empty
     }
+    if (config.debug) Ansi.Gray(Util.linereturn())
 
     var result = mainSearch.combine(secondarySearch)
     result.result = p
@@ -448,7 +446,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
 function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], config: SearchConfig) {
 
     var badness = Metric.evaluate(p, inputs, realTraces, config)
-    for (var i = 0; i < 300; i++) {
+    for (var i = 0; i < 100; i++) {
         if (p.body.numberOfStmts() === 0) return p
 
         var j = randInt(p.body.numberOfStmts())
@@ -509,7 +507,6 @@ function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], con
             break
         }
     }
-    print(p)
     return p
 }
 
