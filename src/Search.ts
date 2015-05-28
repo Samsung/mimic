@@ -446,17 +446,24 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
 function shorten(p: Data.Program, inputs: any[][], realTraces: Data.Trace[], config: SearchConfig) {
 
     var badness = Metric.evaluate(p, inputs, realTraces, config)
-    for (var i = 0; i < 100; i++) {
-        if (p.body.numberOfStmts() === 0) return p
 
-        var j = randInt(p.body.numberOfStmts())
-        var newp = new Data.Program(p.body.replace(j, Data.Seq.Empty))
-        var newbadness = Metric.evaluate(newp, inputs, realTraces, config)
-        if (newbadness <= badness) {
-            p = newp
-            badness = newbadness
+    // remove whole statements
+    var changed = true
+    while (changed) {
+        changed = false
+        if (p.body.numberOfStmts() === 0) return p
+        for (var i = 0; i < p.body.numberOfStmts(); i++) {
+            var newp = new Data.Program(p.body.replace(i, Data.Seq.Empty))
+            var newbadness = Metric.evaluate(newp, inputs, realTraces, config)
+            if (newbadness <= badness) {
+                p = newp
+                badness = newbadness
+                changed = true
+                break
+            }
         }
     }
+
     // remove branches
     for (var i = 0; i < p.body.numberOfStmts(); i++) {
         var s:Data.Stmt = p.body.allStmts()[i]
