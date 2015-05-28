@@ -96,6 +96,9 @@ if (argc < 6) {
         if ("metric" in argv) {
             config.metric = +argv.metric
         }
+        if ("verbose" in argv) {
+            config.debug = 1
+        }
         if ("alwaysAcceptEqualCost" in argv) {
             config.alwaysAcceptEqualCost = true
         }

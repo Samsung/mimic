@@ -343,7 +343,7 @@ export class SearchConfig {
     static DEFAULT = {
         iterations: 50000,
         cleanupIterations: 0,
-        debug: 1,
+        debug: 0,
         loopIndex: -1,
         metric: 0,
         alwaysAcceptEqualCost: false,

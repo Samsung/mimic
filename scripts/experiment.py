@@ -67,7 +67,7 @@ def main():
   fncs = parse_functions(workdir, argv.filter, argv.exclude)
   if only_run:
     f = fncs[0]
-    command = base_command + ' --cleanup 1000 --metric ' + str(metrics[0]) + ' ' + f.get_command_args()
+    command = base_command + ' --cleanup 1000 --verbose --metric ' + str(metrics[0]) + ' ' + f.get_command_args()
     print "Running the example: " + f.title
     print command
     print line
