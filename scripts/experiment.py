@@ -14,7 +14,6 @@ import os
 import time
 import argparse
 import json
-import subprocess
 import re
 import status
 import colors
@@ -22,6 +21,7 @@ import multiprocessing
 from multiprocessing import Pool
 from multiprocessing import Queue
 from random import shuffle
+import common
 
 line = "-" * 80
 q = None # the queue used for communication
@@ -78,7 +78,7 @@ def main():
   out = workdir + "/out"
   if not os.path.exists(out):
     os.mkdir(out)
-  timefordir = get_time(True)
+  timefordir = common.get_time(True)
   out = out + "/" + timefordir
   if argv.exp_name != "":
     out = out + "_" + argv.exp_name
@@ -111,9 +111,9 @@ def main():
     s += "\n  output directory:   %s" % out[out.find("/tests/")+1:]
     return s
   print get_details()
-  fprint(logfile, "Arguments: " + " ".join(sys.argv) + "\n")
-  fprinta(logfile, "Time: " + get_time() + "\n")
-  fprinta(logfile, get_details() + "\n" + line + "\n")
+  common.fprint(logfile, "Arguments: " + " ".join(sys.argv) + "\n")
+  common.fprinta(logfile, "Time: " + common.get_time() + "\n")
+  common.fprinta(logfile, get_details() + "\n" + line + "\n")
   print line
   success = 0
   nosuccess = 0
@@ -157,7 +157,7 @@ def main():
       stat.set_message(status_msg(nosuccess, success))
       # update file on disk
       jn = json.dumps(results, sort_keys=True, indent=2, separators=(',', ': '))
-      fprint(out + "/result.json", jn)
+      common.fprint(out + "/result.json", jn)
     else:
       print data
       assert False # unexpected message format
@@ -168,8 +168,8 @@ def main():
   print "Finished experiment:"
   print get_details()
   print status_msg(nosuccess, success)
-  fprinta(logfile, status_msg(nosuccess, success) + "\n")
-  fprinta(logfile, "Time: " + get_time() + "\n")
+  common.fprinta(logfile, status_msg(nosuccess, success) + "\n")
+  common.fprinta(logfile, "Time: " + common.get_time() + "\n")
 
 
 def send_msg(id, msg, color=False):
@@ -187,11 +187,11 @@ def send_done(id):
 def run_experiment(data):
   taskid, ff, i, metric = data
   f = ff
-  """:type : Function """
+  """:type : common.Function """
   filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
   t = time.time()
   command = '%s --colors 0 --metric %d --out "%s.js" %s' % (base_command, metric, filename, f.get_command_args())
-  exitstatus, output = execute(command, argv.timeout)
+  exitstatus, output = common.execute(command, argv.timeout)
   log = "Experiment: " + f.title + "\n"
   log += command + "\n"
   log += line + "\n"
@@ -199,7 +199,7 @@ def run_experiment(data):
   log += line + "\n"
   elapsed_time = time.time() - t
   log += ". Exit status %d after %.2f seconds.\n" % (exitstatus, elapsed_time)
-  fprint(filename + ".log.txt", log)
+  common.fprint(filename + ".log.txt", log)
   iters = -1
   if exitstatus == 0:
     iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
@@ -222,56 +222,9 @@ def run_experiment(data):
   })
   send_done(taskid)
 
-
-# print a string to a file
-def fprint(f, s):
-  f = open(f, 'w')
-  f.write(s)
-  f.close()
-
-# print a string to a file
-def fprinta(f, s):
-  f = open(f, 'a')
-  f.write(s)
-  f.close()
-
-def get_time(no_space = False):
-  if no_space:
-    return time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
-  return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-
-def flatten(l):
-  return [item for sublist in l for item in sublist]
-
-# a function that we might want to synthesize
-class Function(object):
-  def __init__(self, data, category):
-    self.category = category
-    self.title = data['name']
-    self.shortname = self.title[self.title.rfind(".")+1:]
-    self.code = "\n".join(data['function'])
-    self.argnames = data['argnames']
-    self.arguments = data['arguments']
-    if "loop" in data:
-      self.loop = data['loop']
-    else:
-      self.loop = None
-
-  def get_command_args(self):
-    args = '"' + ('" "'.join(self.arguments)) + '"'
-    res = '"%s" "%s" %s' % (self.argnames, self.code, args)
-    if self.loop is None:
-      return res
-    else:
-      return "--loop " + str(self.loop) + " " + res
-
-  # simple string representation
-  def __repr__(self):
-    return self.title
-
 def parse_functions(workdir, filter, exclude):
   """
-  :rtype : list[Function]
+  :rtype : list[common.Function]
   """
   result = []
   categories = []
@@ -291,15 +244,9 @@ def parse_functions(workdir, filter, exclude):
         continue
       if exclude != "" and re.search(exclude, example['name'], re.UNICODE) is not None:
         continue
-      result.append(Function(example, category))
+      result.append(common.Function(example, category))
   return result
 
-def execute(cmd, timeout=100000000):
-  try:
-    out = subprocess.check_output("timeout " + str(timeout) + "s " + cmd, shell=True, stderr=subprocess.STDOUT)
-    return (0, out)
-  except subprocess.CalledProcessError as ex:
-    return (ex.returncode, ex.output)
 
 if __name__ == '__main__':
   main()
