@@ -206,7 +206,7 @@ export class Field extends Prestate {
                 if (/^[a-zA-Z_][_a-zA-Z0-9]*$/.test(c.val)) {
                     return this.o.toString(noparen(config)) + "." + c.val
                 }
-                if (/^[0-9]+$/.test(c.val)) {
+                if (/^[1-9][0-9]*$/.test(c.val) || c.val === "0") {
                     return this.o.toString(noparen(config)) + "[" + c.val + "]"
                 }
             }
