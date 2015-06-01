@@ -1339,6 +1339,7 @@ export enum EventKind {
 export class Event {
     public variable: Var = null
     constructor(public kind: EventKind, public target: TraceExpr, public otherArgs: TraceExpr[]) {
+        this.otherArgs = otherArgs.filter((i) => i != null)
         if (kind === EventKind.EApply || kind === EventKind.EGet || kind === EventKind.EHas) {
             this.variable = new Var()
         }
