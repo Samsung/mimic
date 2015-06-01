@@ -26,7 +26,7 @@ line = colors.grey("-" * 80)
 q = None # the queue used for communication
 argv = None # the arguments
 out = None # the output folder
-base_command = os.path.abspath(os.path.dirname(__file__) + '/../mimic') + ' synth --iterations 100000000'
+base_command = 'node --harmony --harmony-proxies ' + os.path.abspath(os.path.dirname(__file__) + '/../bin/src/run.js') + ' synth --iterations 100000000'
 
 f = None
 """:type : common.Function """
@@ -162,6 +162,7 @@ def run_mimic_core(data, debug=False):
   if debug:
     print colors.grey("Command to run")
     print command
+    print colors.grey("Handing control to a single instance of mimic-core, which may or may not succeed")
     print colors.grey(line)
     sys.exit(os.system(command))
   exitstatus, output = common.execute(command, timeout)
