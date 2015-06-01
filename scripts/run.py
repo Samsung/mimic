@@ -26,7 +26,7 @@ line = colors.grey("-" * 80)
 q = None # the queue used for communication
 argv = None # the arguments
 out = None # the output folder
-base_command = 'node --harmony --harmony-proxies ' + os.path.abspath(os.path.dirname(__file__) + '/../bin/src/run.js') + ' synth --iterations 100000000'
+base_command = os.path.abspath(os.path.dirname(__file__) + '/../mimic-core') + ' synth --iterations 100000000'
 
 f = None
 """:type : common.Function """
