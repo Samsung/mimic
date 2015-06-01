@@ -46,6 +46,15 @@ class Function(object):
     else:
       self.loop = None
 
+  @staticmethod
+  def make(argnames, args, body):
+    return Function({
+      'name': 'anon',
+      'function': [body],
+      'argnames': argnames,
+      'arguments': args,
+    }, "-")
+
   def get_command_args(self):
     args = '"' + ('" "'.join(self.arguments)) + '"'
     res = '"%s" "%s" %s' % (self.argnames, self.code, args)
