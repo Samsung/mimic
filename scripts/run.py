@@ -9,23 +9,20 @@
 #
 # ------------------------------------------------------------------------------
 
-import sys
 import os
 import time
 import argparse
-import json
-import subprocess
 import re
-import status
 import colors
 import multiprocessing
 from multiprocessing import Pool
 from multiprocessing import Queue
-from random import shuffle
 import tempfile
 import common
+import sys
+import shutil
 
-line = "-" * 80
+line = colors.grey("-" * 80)
 q = None # the queue used for communication
 argv = None # the arguments
 out = None # the output folder
@@ -42,10 +39,12 @@ def main():
   parser = argparse.ArgumentParser(description='Run Mimic.')
   parser.add_argument('-t', '--threads', type=int, help='Number of threads (-1 = 1/2 of cores available)', default=-1)
   parser.add_argument('--function', type=str, help='The function body of the opaque code', required=True)
-  parser.add_argument('--argnames', type=str, help='The name of the arguments', default="self, arg0, arg1, arg2, arg3, arg4, arg5, arg6")
+  parser.add_argument('--argnames', type=str, help='The name of the arguments', default="arg0, arg1, arg2, arg3, arg4, arg5, arg6")
   parser.add_argument('--arguments', nargs='+', type=str, help='A list of arguments (as an array of arrays)', required=True)
-  parser.add_argument('--args', type=str, help='Arguments to be passed to single-mimic', default="")
+  parser.add_argument('--args', type=str, help='Arguments to be passed to mimic-core', default="")
   parser.add_argument('--out', type=str, help='Location where the resulting function should be written to', default="result.js")
+  parser.add_argument('--nocolor', help='Don\'t use any color in the output', action='store_true')
+  parser.add_argument('--debug', help='Output debug information, and only do a single run of mimic-core', action='store_true')
 
   global argv
   argv = parser.parse_args()
@@ -53,6 +52,9 @@ def main():
   global base_command
   if argv.args != "":
     base_command = base_command + " " + argv.args
+
+  if argv.nocolor:
+    colors.no_color = True
 
   # create a directory to store information
   global out
@@ -66,48 +68,79 @@ def main():
   global f
   f = common.Function.make(argv.argnames, argv.arguments, argv.function)
 
-  # start the actual run
-  tasks = []
-  timeout = 2
-  for i in range(threads):
-    tasks.append((i, timeout))
-  results = {}
-  global q
-  q = Queue()
-  pool = Pool(processes=threads, maxtasksperchild=1)
-  pool.map_async(run_single_mimic, tasks)
-  done = 0
+  # header
+  print "mimic - computing modesl for opaque code"
+  print colors.grey(line)
+  print colors.grey("Configuration:")
+  print colors.grey("  Number of threads: %d" % (threads))
+  print line
+
+  if argv.debug:
+    print colors.grey("Running in debug mode")
+    print colors.grey(line)
+    run_mimic_core((0, 1200), debug=True)
+
+  # the main loop
   success = False
-  while True:
-    data = q.get()
-    if data[0] == 0 and data[2] == "done":
-      done += 1
-      if done == len(tasks):
-        break
-      continue
-    if data[0] == 1:
-      # process result
-      id = data[1]
-      result = data[2]
-      if result.success:
-        success = True
-        # kill all other tasks
-        pool.close()
-        pool.terminate()
-        pool.join()
-        # print result
-        with open(result.code) as f:
-          print "".join(f.readlines())
-        # done
-        break
+  results = {}
+  t0 = 3
+  factor = 2
+  rep = 0
+  total_attempts = 0
+  start = time.time()
+  while success == False:
+    timeout = t0 * pow(factor, rep)
+    print colors.grey("Starting phase %d with a timeout of %d seconds..." % (rep+1, timeout))
+    tasks = []
+    total_attempts += threads
+    for i in range(threads):
+      tasks.append((i, timeout))
+    global q
+    q = Queue()
+    pool = Pool(processes=threads, maxtasksperchild=1)
+    pool.map_async(run_mimic_core, tasks)
+    done = 0
+    while True:
+      data = q.get()
+      if data[0] == 0 and data[2] == "done":
+        done += 1
+        if done == len(tasks):
+          break
+        continue
+      if data[0] == 1:
+        # process result
+        id = data[1]
+        result = data[2]
+        if result.success:
+          success = True
+          # kill all other tasks
+          pool.close()
+          pool.terminate()
+          pool.join()
+          # print result
+          print colors.grey(line)
+          print colors.green(u"Successfully found a model")
+          print "  Time required:                              %.2f seconds" % (time.time() - start)
+          print "  Attempted searches:                         %d" % total_attempts
+          print "  Successful searches:                        1"
+          print "  Attempted searches that ended in a timeout: %d" % (total_attempts-1)
+          print "  Search iteration of the successful search:  %d" % result.iterations
+          print ""
+          print "Model (also stored in '%s'):" % argv.out
+          with open(result.code) as f:
+            print colors.yellow("".join(f.readlines()))
+          shutil.move(result.code, argv.out)
+          # done
+          break
+        else:
+          pass
       else:
-        pass
-    else:
-      print data
-      assert False # unexpected message format
-  if not success:
-    pool.close()
-    pool.join()
+        print data
+        assert False # unexpected message format
+    if not success:
+      pool.close()
+      pool.join()
+    rep += 1
 
 
 def send_result(id, result):
@@ -118,11 +151,19 @@ def send_done(id):
   global q
   q.put((0, id, "done"))
 
-def run_single_mimic(data):
+def run_mimic_core(data, debug=False):
   id, timeout = data
   filename = "%s/result-%d.js" % (out, id)
   t = time.time()
-  command = '%s --colors 0 --out "%s" %s' % (base_command, filename, f.get_command_args())
+  col = "--colors 0"
+  if debug and not argv.nocolor:
+    col = ""
+  command = '%s %s --out "%s" %s' % (base_command, col, filename, f.get_command_args())
+  if debug:
+    print colors.grey("Command to run")
+    print command
+    print colors.grey(line)
+    sys.exit(os.system(command))
   exitstatus, output = common.execute(command, timeout)
   elapsed_time = time.time() - t
   if exitstatus == 0:
