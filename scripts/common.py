@@ -58,7 +58,7 @@ class Function(object):
   def get_command_args(self):
     def escape(s):
       return s.replace("\"", "\\\"")
-    args = '"' + escape('" "'.join(self.arguments)) + '"'
+    args = '"' + '" "'.join(map(lambda x: escape(x), self.arguments)) + '"'
     res = '"%s" "%s" %s' % (self.argnames, escape(self.code), args)
     if self.loop is None:
       return res
