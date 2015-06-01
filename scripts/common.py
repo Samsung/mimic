@@ -56,8 +56,10 @@ class Function(object):
     }, "-")
 
   def get_command_args(self):
-    args = '"' + ('" "'.join(self.arguments)) + '"'
-    res = '"%s" "%s" %s' % (self.argnames, self.code, args)
+    def escape(s):
+      return s.replace("\"", "\\\"")
+    args = '"' + escape('" "'.join(self.arguments)) + '"'
+    res = '"%s" "%s" %s' % (self.argnames, escape(self.code), args)
     if self.loop is None:
       return res
     else:

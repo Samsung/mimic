@@ -218,7 +218,7 @@ var tests = [
     ["Recorder", recorder_test],
     ["InputGen.categorize", inputgen_test],
     ["Compile", compile_test],
-    //["Search", search_test],
+    ["Search", search_test],
 ]
 
 for (var k = 0; k < tests.length; k++) {

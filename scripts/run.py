@@ -174,7 +174,7 @@ def run_mimic_core(data, debug=False):
   t = time.time()
   col = "--colors 0"
   if debug and not argv.nocolor:
-    col = ""
+    col = "--verbose"
   command = '%s %s --out "%s" %s' % (base_command, col, filename, f.get_command_args())
   if debug:
     print colors.grey("Command to run")
