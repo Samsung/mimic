@@ -43,6 +43,8 @@ var line = Util.line
 var Gray = Ansi.Gray
 var proxify = Recorder.proxifyWithLogger
 
+// initialize randomness
+Random.resetRandomness(0)
 
 var fs:any = [
     [ // 0
@@ -216,7 +218,7 @@ var tests = [
     ["Recorder", recorder_test],
     ["InputGen.categorize", inputgen_test],
     ["Compile", compile_test],
-    ["Search", search_test],
+    //["Search", search_test],
 ]
 
 for (var k = 0; k < tests.length; k++) {

@@ -1,11 +1,15 @@
 
 EXCLUDE="(slice|unshift|reverse)"
 
+all: compile
+
+compile: bin/src/run.js
+
 bin/src/run.js: src/*.ts src/util/*.ts test/*.ts
 	grunt
 
-# just use a single file as dependency here, they all get refreshed at the same time
-compile: bin/src/run.js
+test:
+	npm test
 
 
 # ------------------------------------
@@ -33,4 +37,4 @@ exp_short_2: compile
 exp_metric_long: compile
 	./scripts/experiment.py --exp_name "metric" -n 100 --metric "0,1" --filter "(forEach|shift)" --timeout 1200
 
-.PHONY: exp_metric_long exp_short_2 exp_short_1 exp_longrunning exp_metric exp_always exp_never compile
+.PHONY: exp_metric_long exp_short_2 exp_short_1 exp_longrunning exp_metric exp_always exp_never compile test
