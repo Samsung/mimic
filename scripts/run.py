@@ -88,6 +88,8 @@ def main():
   rep = 0
   total_attempts = 0
   start = time.time()
+  error_count = 0
+  error_out = ""
   while success == False:
     timeout = t0 * pow(factor, rep)
     print colors.grey("Starting phase %d with a timeout of %d seconds..." % (rep+1, timeout))
@@ -99,12 +101,12 @@ def main():
     q = Queue()
     pool = Pool(processes=threads, maxtasksperchild=1)
     pool.map_async(run_mimic_core, tasks)
-    done = 0
+    done_count = 0
     while True:
       data = q.get()
       if data[0] == 0 and data[2] == "done":
-        done += 1
-        if done == len(tasks):
+        done_count += 1
+        if done_count == len(tasks):
           break
         continue
       if data[0] == 1:
@@ -133,10 +135,25 @@ def main():
           # done
           break
         else:
-          pass
+          if result.status == 2:
+            # definitely a user error
+            print colors.red("Error in mimic-core:")
+            print result.output
+            pool.close()
+            pool.terminate()
+            pool.join()
+            exit(1)
+          if not result.timeout:
+            error_count += 1
+            error_out = result.output
       else:
         print data
-        assert False # unexpected message format
+        print "unexpected message format"
+        assert False
+    if total_attempts > 5 and float(error_count) / float(total_attempts) >= 0.5:
+      print colors.red("Found too many errors recently.  Output from mimic-core:")
+      print error_out
+      sys.exit(1)
     if not success:
       pool.close()
       pool.join()
@@ -171,8 +188,6 @@ def run_mimic_core(data, debug=False):
     iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
     # res = "%s: success after %.2f seconds and %d iterations [%.1f iterations/second]" % (f.shortname, elapsed_time, iters, float(iters)/elapsed_time)
     res = Success(output, filename, iters)
-  elif exitstatus == 124:
-    res = Failure(output, 124)
   else:
     res = Failure(output, exitstatus)
   send_result(id, res)
@@ -195,6 +210,7 @@ class Success(Result):
 class Failure(Result):
   def __init__(self, output, status):
     self.status = status
+    self.timeout = status == 124
     Result.__init__(self, output, False)
 
   def __repr__(self):

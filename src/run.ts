@@ -39,7 +39,7 @@ var commands = ["synth", "record"]
 
 function error(message) {
     print(Ansi.red("Error: " + message))
-    Util.exit(1)
+    Util.exit(2)
 }
 
 var argc = Util.argvlength();
@@ -49,7 +49,7 @@ if (argc < 6) {
     print("")
     print("  synth   synthesize a model for a given function")
     print("  record  record a trace for a given function")
-    Util.exit(1)
+    Util.exit(2)
 } else {
     var subcommand = Util.argv(2)
     if (commands.indexOf(subcommand) == -1) {
@@ -113,7 +113,7 @@ if (argc < 6) {
         var res = Search.search(f, args, config)
         Ansi.Gray("Found in " + res.iterations + " iterations:")
         Ansi.Gray(Util.indent(res.getStats()))
-        var exit = 5
+        var exit = 1
         if (res.score > 0) {
             Ansi.Red("  Score: " + res.score)
         } else {
