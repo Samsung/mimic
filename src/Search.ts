@@ -113,7 +113,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
         if (config.debug) Ansi.Gray("  Selected a subset of " + inputs.length + " inputs.")
 
         var constants = InputGen.genConstants(realTraces)
-        var useAlloc = realTraces[0].getResult() instanceof Data.TraceAlloc
+        var useAlloc = realTraces[0].isNormalReturn && realTraces[0].getResult() instanceof Data.TraceAlloc
         var mutationInfo = new ProgramGen.RandomMutationInfo(constants, p.getVariables(), inputs, useAlloc)
 
         if (config.debug) Ansi.Gray("  Using the following inputs:")

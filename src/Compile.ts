@@ -188,7 +188,7 @@ function compileEventList(events: Data.Event[], alloc: boolean, loop: StructureI
  */
 export function compileTrace(trace: Data.Trace, loop?: StructureInference.Proposal): Data.Program {
     var resvar = new Data.Assign(new Data.Var("result", true), null, true)
-    var alloc = trace.getResult() instanceof Data.TraceAlloc
+    var alloc = trace.isNormalReturn && trace.getResult() instanceof Data.TraceAlloc
     var stmts: Data.Stmt[] = compileEventList(trace.events, alloc, loop)
     if (trace.isNormalReturn) {
         if (alloc) {
