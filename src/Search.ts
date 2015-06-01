@@ -78,18 +78,22 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     var loops = StructureInference.infer(traces)
     var loop = null
     var loopindex = 0
-    if (loops.length > 0) {
-        var i = 0
-        if (config.debug) print(loops.filter((x) => i++ < 6).join("\n"))
+    if (config.loopIndex != -1) {
+        loopindex = config.loopIndex
+        if (loopindex >= 0) {
+            loop = loops[loopindex]
+        }
+    } else {
+        if (loops.length > 0) {
+            var i = 0
+            if (config.debug) print(loops.filter((x) => i++ < 6).join("\n"))
 
-        // randomly choose a loop
-        while (Random.maybe(0.3) && loopindex < loops.length-1) {
-            loopindex += 1
+            // randomly choose a loop
+            while (Random.maybe(0.3) && loopindex < loops.length-1) {
+                loopindex += 1
+            }
+            loop = loops[loopindex]
         }
-        if (config.loopIndex != -1) {
-            loopindex = config.loopIndex
-        }
-        loop = loops[loopindex]
     }
     if (config.debug) Ansi.Gray("Found " + loops.length + " possible loops.")
     if (config.debug && loop != null) Ansi.Gray("Using this loop [" + loopindex + "]: " + loop)

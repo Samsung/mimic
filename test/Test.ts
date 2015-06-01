@@ -58,7 +58,8 @@ var fs:any = [
         },
         [{}, {g: "a", f: {}}, "a", 0],
         {
-            categories: 1
+            categories: 1,
+            loop: -2,
         }
     ],
     [ // 1
@@ -195,6 +196,10 @@ function search_test(f, a, a0, name, oracle, k) {
         config.cleanupIterations = 0
         config.debug = 0
         config.loopIndex = 0
+        if ("loop" in oracle) {
+            config.loopIndex = oracle.loop
+            return
+        }
         var res: Search.SearchResult
         var i
         // allow for 5 tries
