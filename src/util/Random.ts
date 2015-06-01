@@ -24,7 +24,7 @@
 import Util = require('./Util')
 
 // our source of randomness
-var randomness = Util.rrr()
+var randomness = null
 
 export function resetRandomness(val?: number) {
     randomness = Util.rrr(val)

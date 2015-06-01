@@ -68,10 +68,7 @@ export function argvlength() {
 }
 
 // for now we keep this here, as it creates various spurious errors
-export function rrr(v?: number) {
-    if (v === undefined) {
-        v = parseInt(process.argv[2])
-    }
+export function rrr(v: number) {
     if (v == -1) {
         v = Math.floor(Math.random() * 100000);
         print("Seed: " + v)
