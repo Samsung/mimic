@@ -22,6 +22,8 @@ from multiprocessing import Pool
 from multiprocessing import Queue
 from random import shuffle
 import common
+import run
+import cPickle
 
 line = "-" * 80
 q = None # the queue used for communication
@@ -74,19 +76,17 @@ def main():
   # run the experiment
   tasks = []
   c = 0
-  print
+  print ""
   for f, i, m in [(f, i, m) for f in fncs for i in range(n) for m in metrics]:
     tasks.append((c, f, i, m))
     c += 1
   shuffle(tasks) # shuffle tasks
-  results = {}
+  results = []
   print "Running experiment..."
   def get_details():
     s = ""
     s += "  function(s):        %d" % len(fncs)
     s += "\n  repetitions:        %d" % n
-    s += "\n  timeout:            %s seconds" % argv.timeout
-    s += "\n  number of threads:  %d" % threads
     s += "\n  output directory:   %s" % out[out.find("/tests/")+1:]
     return s
   print get_details()
@@ -94,60 +94,16 @@ def main():
   common.fprinta(logfile, "Time: " + common.get_time() + "\n")
   common.fprinta(logfile, get_details() + "\n" + line + "\n")
   print line
-  success = 0
-  nosuccess = 0
-  stat = status.get_status()
-  stat.set_message("Working...")
-  stat.init_progress(len(tasks))
-  def status_msg(nosuccess, success):
-    return "Overall statistics: success for %d out of %d (%.2f%%)" % (
-      success, nosuccess + success, 100.0 * float(success) / float(nosuccess + success))
-  global q
-  q = Queue()
-  pool = Pool(processes=threads, maxtasksperchild=1)
-  pool.map_async(run_experiment, tasks)
-  done = 0
-  while True:
-    data = q.get()
-    if data[0] == 0 and data[2] == "done":
-      done += 1
-      stat.inc_progress(force_update=True)
-      if done == len(tasks):
-        break
-      continue
-    if data[0] == 1: # print a message
-      stat.info(data[2])
-    elif data[0] == 2: # print a message
-      stat.writeln(data[2])
-    elif data[0] == 3:
-      # process result
-      f = data[2]
-      o = data[3]
-      if f.title not in results:
-        results[f.title] = {
-          'name': f.title,
-          'results': []
-        }
-      results[f.title]['results'].append(o)
-      if o['exitstatus'] == 0:
-        success += 1
-      else:
-        nosuccess += 1
-      stat.set_message(status_msg(nosuccess, success))
-      # update file on disk
-      jn = json.dumps(results, sort_keys=True, indent=2, separators=(',', ': '))
-      common.fprint(out + "/result.json", jn)
-    else:
-      print data
-      assert False # unexpected message format
-  pool.close()
-  pool.join()
-  stat.end_progress()
+  for c, f, i, m in tasks:
+    sys.stdout.write("Running mimic for %s..." % (f.shortname))
+    res = run.mimic(f)
+    print " done in %.2f seconds" % (res.total_time)
+    results.append(res)
+    jn = cPickle.dumps(results)
+    common.fprint(out + "/result.pickle", jn)
   print line
   print "Finished experiment:"
   print get_details()
-  print status_msg(nosuccess, success)
-  common.fprinta(logfile, status_msg(nosuccess, success) + "\n")
   common.fprinta(logfile, "Time: " + common.get_time() + "\n")
 
 

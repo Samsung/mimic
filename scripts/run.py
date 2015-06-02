@@ -60,10 +60,6 @@ def main():
   if argv.nocolor:
     colors.no_color = True
 
-  threads = argv.threads
-  if threads < 0:
-    threads = multiprocessing.cpu_count() / 2
-
   out_file = argv.out
 
   # the function to run
@@ -73,7 +69,7 @@ def main():
   print "mimic - computing models for opaque code"
   print colors.grey(line)
   print colors.grey("Configuration:")
-  print colors.grey("  Number of threads: %d" % (threads))
+  print colors.grey("  Number of threads: %d" % (argv.threads))
   print line
 
   if argv.debug:
@@ -81,11 +77,7 @@ def main():
     print colors.grey(line)
     run_mimic_core((0, 1200), debug=True)
 
-  # the main loop
-  t0 = argv.parallel_t0
-  factor = pow(argv.parallel_f, threads)
-
-  result = mimic(ff, threads, False, t0, factor)
+  result = mimic(ff, argv.threads, False, argv.parallel_t0, argv.parallel_f)
   print colors.grey(line)
   print "Successfully found a model"
   print result.get_status("  ")
@@ -94,7 +86,11 @@ def main():
   print colors.green(result.result_code)
   shutil.move(result.result_file, out_file)
 
-def mimic(ff, threads, silent=True, parallel_t0=parallel_t0_default, parallel_f=parallel_f_default):
+def mimic(ff, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel_f=parallel_f_default):
+  if threads < 0:
+    threads = multiprocessing.cpu_count() / 2
+  t0 = parallel_t0
+  factor = pow(parallel_f, threads)
   # create a directory to store information
   global out
   out = tempfile.mkdtemp()
@@ -108,7 +104,7 @@ def mimic(ff, threads, silent=True, parallel_t0=parallel_t0_default, parallel_f=
   error_count = 0
   error_out = ""
   while success == False:
-    timeout = round(parallel_t0 * pow(parallel_f, rep))
+    timeout = round(t0 * pow(factor, rep))
     if not silent:
       print colors.grey("Starting phase %d with a timeout of %d seconds..." % (rep + 1, timeout))
     tasks = []
