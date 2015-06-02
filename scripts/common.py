@@ -56,18 +56,24 @@ class Function(object):
     }, "-")
 
   def get_command_args(self):
-    def escape(s):
-      return s.replace("\"", "\\\"")
-    args = '"' + '" "'.join(map(lambda x: escape(x), self.arguments)) + '"'
-    res = '"%s" "%s" %s' % (self.argnames, escape(self.code), args)
+    args = '"' + '" "'.join(map(lambda x: escapeCommandArg(x), self.arguments)) + '"'
+    res = '"%s" "%s" %s' % (self.argnames, escapeCommandArg(self.code), args)
     if self.loop is None:
       return res
     else:
       return "--loop " + str(self.loop) + " " + res
 
+  def get_noncore_command_args(self):
+    args = '"' + '" "'.join(map(lambda x: escapeCommandArg(x), self.arguments)) + '"'
+    res = '--argnames "%s" --function "%s" --arguments %s' % (self.argnames, escapeCommandArg(self.code), args)
+    return res
+
   # simple string representation
   def __repr__(self):
     return self.title
+
+def escapeCommandArg(s):
+  return s.replace("\"", "\\\"")
 
 def execute(cmd, timeout=100000000):
   try:

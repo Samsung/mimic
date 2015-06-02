@@ -215,7 +215,7 @@ def run_experiment(data):
   })
   send_done(taskid)
 
-def parse_functions(workdir, filter, exclude):
+def parse_functions(workdir, filter="", exclude=""):
   """
   :rtype : list[common.Function]
   """
