@@ -71,7 +71,7 @@ def main():
   f = common.Function.make(argv.argnames, argv.arguments, argv.function)
 
   # header
-  print "mimic - computing modesl for opaque code"
+  print "mimic - computing models for opaque code"
   print colors.grey(line)
   print colors.grey("Configuration:")
   print colors.grey("  Number of threads: %d" % (threads))
