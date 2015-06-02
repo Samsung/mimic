@@ -103,6 +103,7 @@ def mimic(ff, threads, silent=True, parallel_t0=parallel_t0_default, parallel_f=
   success = False
   rep = 0
   total_attempts = 0
+  total_crashes = 0
   start = time.time()
   error_count = 0
   error_out = ""
@@ -141,9 +142,11 @@ def mimic(ff, threads, silent=True, parallel_t0=parallel_t0_default, parallel_f=
           with open(core_result.code) as f:
             code = "".join(f.readlines())
           result = common.MimicResult(time.time() - start, core_result.iterations, core_result.core_time,
-                                      total_attempts, core_result.loop_index, core_result.code, code)
+                                      total_attempts, total_crashes, core_result.loop_index, core_result.code, code)
           return result
         else:
+          if not core_result.timeout:
+            total_crashes += 1
           if core_result.status == 2:
             # definitely a user error
             print colors.red("Error in mimic-core:")

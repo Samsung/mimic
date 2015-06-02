@@ -41,7 +41,6 @@ def main():
   parser.add_argument('--exp_name', type=str, help='Name of this experiment', default="")
   parser.add_argument('--args', type=str, help='Arguments to be passed to mimic', default="")
   parser.add_argument('--metric', type=str, help='Which metric should be used during search?  Comma-separated list', default="0")
-  parser.add_argument('-r', '--run', help='Only run the first experiment.  Usually used together with --filter', action='store_true')
 
   global argv
   argv = parser.parse_args()
@@ -55,16 +54,7 @@ def main():
   if argv.args != "":
     base_command = base_command + " " + argv.args
 
-  only_run = argv.run
-
   fncs = parse_functions(workdir, argv.filter, argv.exclude)
-  if only_run:
-    f = fncs[0]
-    command = base_command + ' --cleanup 1000 --verbose --metric ' + str(metrics[0]) + ' ' + f.get_command_args()
-    print "Running the example: " + f.title
-    print command
-    print line
-    sys.exit(os.system(command))
 
   # create a directory to store information
   global out
@@ -80,10 +70,6 @@ def main():
     sys.exit(1)
   os.mkdir(out)
   logfile = out + "/readme.txt"
-
-  threads = argv.threads
-  if threads < 0:
-    threads = multiprocessing.cpu_count() / 2
 
   # run the experiment
   tasks = []
