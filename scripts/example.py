@@ -54,6 +54,7 @@ def main():
 
   f = matches[0]
   command = os.path.abspath(os.path.dirname(__file__) + '/../mimic') + " "
+  command += (" ".join(sys.argv[2:])) + " "
   command += f.get_noncore_command_args()
   sys.exit(os.system(command))
 

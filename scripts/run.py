@@ -30,9 +30,6 @@ base_command = os.path.abspath(os.path.dirname(__file__) + '/../mimic-core') + '
 parallel_t0_default = 3
 parallel_f_default = 1.025
 
-f = None
-""":type : common.Function """
-
 # ------------------------------------------
 # main entry point
 # ------------------------------------------
@@ -44,6 +41,7 @@ def main():
   parser.add_argument('--argnames', type=str, help='The name of the arguments', default="arg0, arg1, arg2, arg3, arg4, arg5, arg6")
   parser.add_argument('--arguments', nargs='+', type=str, help='A list of arguments (as an array of arrays)', required=True)
   parser.add_argument('--args', type=str, help='Arguments to be passed to mimic-core', default="")
+  parser.add_argument('--metric', type=int, help='The metric to use (0 for default, 1 for naive metric)', default=0)
   parser.add_argument('--out', type=str, help='Location where the resulting function should be written to', default="result.js")
   parser.add_argument('--nocolor', help='Don\'t use any color in the output', action='store_true')
   parser.add_argument('--debug', help='Output debug information, and only do a single run of mimic-core', action='store_true')
@@ -63,7 +61,7 @@ def main():
   out_file = argv.out
 
   # the function to run
-  ff = common.Function.make(argv.argnames, argv.arguments, argv.function)
+  f = common.Function.make(argv.argnames, argv.arguments, argv.function)
 
   # header
   print "mimic - computing models for opaque code"
@@ -75,9 +73,9 @@ def main():
   if argv.debug:
     print colors.grey("Running in debug mode")
     print colors.grey(line)
-    run_mimic_core((0, 1200), debug=True)
+    run_mimic_core((0, f, 1200, argv.metric), debug=True)
 
-  result = mimic(ff, argv.threads, False, argv.parallel_t0, argv.parallel_f)
+  result = mimic(f, argv.metric, argv.threads, False, argv.parallel_t0, argv.parallel_f)
   print colors.grey(line)
   print "Successfully found a model"
   print result.get_status("  ")
@@ -86,7 +84,7 @@ def main():
   print colors.green(result.result_code)
   shutil.move(result.result_file, out_file)
 
-def mimic(ff, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel_f=parallel_f_default):
+def mimic(f, metric=0, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel_f=parallel_f_default):
   if threads < 0:
     threads = multiprocessing.cpu_count() / 2
   t0 = parallel_t0
@@ -94,8 +92,6 @@ def mimic(ff, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel
   # create a directory to store information
   global out
   out = tempfile.mkdtemp()
-  global f
-  f = ff
   success = False
   rep = 0
   total_attempts = 0
@@ -110,7 +106,7 @@ def mimic(ff, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel
     tasks = []
     total_attempts += threads
     for i in range(threads):
-      tasks.append((i, timeout))
+      tasks.append((i, f, timeout, metric))
     global q
     q = Queue()
     pool = Pool(processes=threads, maxtasksperchild=1)
@@ -135,9 +131,9 @@ def mimic(ff, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel
           pool.join()
           # return result
           code = ""
-          with open(core_result.code) as f:
-            code = "".join(f.readlines())
-          result = common.MimicResult(time.time() - start, core_result.iterations, core_result.core_time,
+          with open(core_result.code) as fl:
+            code = "".join(fl.readlines())
+          result = common.MimicResult(f, time.time() - start, core_result.iterations, core_result.core_time,
                                       total_attempts, total_crashes, core_result.loop_index, core_result.code, code)
           return result
         else:
@@ -174,13 +170,13 @@ def send_done(id):
   q.put((0, id, "done"))
 
 def run_mimic_core(data, debug=False):
-  id, timeout = data
+  id, f, timeout, metric = data
   filename = "%s/result-%d.js" % (out, id)
   t = time.time()
   col = "--colors 0"
   if debug:
     col = "--verbose"
-  command = '%s %s --out "%s" %s' % (base_command, col, filename, f.get_command_args())
+  command = '%s %s --metric %d --out "%s" %s' % (base_command, col, metric, filename, f.get_command_args())
   if debug:
     print colors.grey("Command to run")
     print command
