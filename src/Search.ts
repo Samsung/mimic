@@ -48,7 +48,7 @@ var Gray = Ansi.Gray
 export function runSearch(f, a, config: SearchConfig = new SearchConfig()) {
     Gray("Configuration: " + config.toString())
     var res = search(f, a, config)
-    Gray("Found in " + res.iterations + " iterations:")
+    Gray("Found in " + res.iterations + " iterations and " + (res.time / 1000).toFixed(3) + " seconds:")
     Gray(Util.indent(res.getStats()))
     var exit = 1
     if (res.score > 0) {
@@ -77,10 +77,10 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     if (config.debug) Ansi.Gray("Loop inference...")
     var loops = StructureInference.infer(traces)
     var loop = null
-    var loopindex = 0
+    var loopindex = -1
     if (config.loopIndex != -1) {
-        loopindex = config.loopIndex
-        if (loopindex >= 0) {
+        if (config.loopIndex >= 0) {
+            loopindex = config.loopIndex
             loop = loops[loopindex]
         }
     } else {
@@ -201,6 +201,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
     if (config.debug) Ansi.Gray(Util.linereturn())
 
     var result = mainSearch.combine(secondarySearch)
+    result.loopIndex = loopindex
     result.result = p
     result.score = Metric.evaluate(p, inputs, traces, config)
     return result
@@ -314,20 +315,23 @@ export class SearchResult {
         iterations: 0,
         result: <Data.Program>null,
         score: -1,
+        loopIndex: -1,
         executions: 0,
         time: 0
     })
     public iterations: number
     public result: Data.Program
+    public loopIndex: number
     public score: number
     public executions: number
     public time: number
-    constructor(o: { iterations: any; result: Data.Program; score: number; executions: number; time: number; }) {
+    constructor(o: { iterations: any; result: Data.Program; score: number; executions: number; time: number; loopIndex: number }) {
         this.iterations = o.iterations
         this.result = o.result
         this.score = o.score
         this.executions = o.executions
         this.time = o.time
+        this.loopIndex = o.loopIndex
     }
     combine(o: SearchResult): SearchResult {
         return new SearchResult({
@@ -335,13 +339,20 @@ export class SearchResult {
             result: this.result,
             score: this.score,
             executions: this.executions + o.executions,
-            time: this.time + o.time
+            time: this.time + o.time,
+            loopIndex: this.loopIndex
         })
     }
     getStats(): string {
         var ex = (this.executions * 1000 / this.time).toFixed(2)
         var it = (this.iterations * 1000 / this.time).toFixed(2)
-        return ex + " executions per second\n" + it + " iterations per second"
+        var res = ex + " executions per second\n" + it + " iterations per second\n";
+        if (this.loopIndex >= 0) {
+            res += "using the loop template with index: " + (this.loopIndex+1)
+        } else {
+            res += "using a loop-free template"
+        }
+        return res
     }
 }
 
@@ -454,7 +465,8 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
         result: p,
         score: badness,
         executions: -1,
-        time:time
+        time:time,
+        loopIndex: -1,
     })
 }
 

@@ -75,6 +75,32 @@ class Function(object):
 def escapeCommandArg(s):
   return s.replace("\"", "\\\"")
 
+class MimicResult(object):
+  def __init__(self, total_time, iterations, core_time, total_searches, loop_index):
+    self.total_time = total_time
+    self.core_time = core_time
+    self.iterations = iterations
+    self.total_searches = total_searches
+    self.loop_index = loop_index
+
+  def get_status(self, indent):
+    s = ""
+    s +=        indent + "Total time required:    %.2f seconds" % self.total_time
+    s += "\n" + indent + "Attempted searches:     %d" % self.total_searches
+    s += "\n" + indent + "  Successful:           1"
+    s += "\n" + indent + "  Timeouts:             %d" % (self.total_searches-1)
+    s += "\n" + indent + "Successful search:"
+    s += "\n" + indent + "  Time:                 %.2f seconds" % self.core_time
+    s += "\n" + indent + "  Iterations:           %d" % self.iterations
+    if self.loop_index == -1:
+      s += "\n" + indent + "  using a loop-free template"
+    else:
+      s += "\n" + indent + "  using loop template with index %d" % self.loop_index
+    return s
+
+  def __repr__(self):
+    return "%.2f seconds" % self.total_searches
+
 def execute(cmd, timeout=100000000):
   try:
     out = subprocess.check_output("timeout " + str(timeout) + "s " + cmd, shell=True, stderr=subprocess.STDOUT)

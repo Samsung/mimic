@@ -114,40 +114,37 @@ def main():
       if data[0] == 1:
         # process result
         id = data[1]
-        result = data[2]
-        if result.success:
+        core_result = data[2]
+        if core_result.success:
           success = True
           # kill all other tasks
           pool.close()
           pool.terminate()
           pool.join()
           # print result
+          result = common.MimicResult(time.time()-start, core_result.iterations, core_result.core_time, total_attempts, core_result.loop_index)
           print colors.grey(line)
-          print ("Successfully found a model")
-          print "  Time required:                              %.2f seconds" % (time.time() - start)
-          print "  Attempted searches:                         %d" % total_attempts
-          print "  Successful searches:                        1"
-          print "  Attempted searches that ended in a timeout: %d" % (total_attempts-1)
-          print "  Search iteration of the successful search:  %d" % result.iterations
+          print "Successfully found a model"
+          print result.get_status("  ")
           print ""
           print "Model (also stored in '%s'):" % argv.out
-          with open(result.code) as f:
+          with open(core_result.code) as f:
             print colors.green("".join(f.readlines()))
-          shutil.move(result.code, argv.out)
+          shutil.move(core_result.code, argv.out)
           # done
           break
         else:
-          if result.status == 2:
+          if core_result.status == 2:
             # definitely a user error
             print colors.red("Error in mimic-core:")
-            print result.output
+            print core_result.output
             pool.close()
             pool.terminate()
             pool.join()
             exit(1)
-          if not result.timeout:
+          if not core_result.timeout:
             error_count += 1
-            error_out = result.output
+            error_out = core_result.output
       else:
         print data
         print "unexpected message format"
@@ -187,33 +184,39 @@ def run_mimic_core(data, debug=False):
   exitstatus, output = common.execute(command, timeout)
   elapsed_time = time.time() - t
   if exitstatus == 0:
-    iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
+    iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iterations', output)][-1])
+    core_time = float([m.group(1) for m in re.finditer('and ([0-9.]+) seconds', output)][-1])
+    loop_index = -1
+    if "loop-free" not in output:
+      loop_index = int(re.search('using the loop template with index: ([0-9]+)', output).group(1))
     # res = "%s: success after %.2f seconds and %d iterations [%.1f iterations/second]" % (f.shortname, elapsed_time, iters, float(iters)/elapsed_time)
-    res = Success(output, filename, iters)
+    res = CoreSuccess(output, filename, iters, core_time, loop_index)
   else:
-    res = Failure(output, exitstatus)
+    res = CoreFailure(output, exitstatus)
   send_result(id, res)
   send_done(id)
 
-class Result(object):
+class CoreResult(object):
   def __init__(self, output, success):
     self.output = output
     self.success = success
 
-class Success(Result):
-  def __init__(self, output, code, iterations):
+class CoreSuccess(CoreResult):
+  def __init__(self, output, code, iterations, core_time, loop_index):
+    CoreResult.__init__(self, output, True)
     self.code = code
     self.iterations = iterations
-    Result.__init__(self, output, True)
+    self.core_time = core_time
+    self.loop_index = loop_index
 
   def __repr__(self):
     return "Success()"
 
-class Failure(Result):
+class CoreFailure(CoreResult):
   def __init__(self, output, status):
     self.status = status
     self.timeout = status == 124
-    Result.__init__(self, output, False)
+    CoreResult.__init__(self, output, False)
 
   def __repr__(self):
     return "Failure(%d)" % self.status

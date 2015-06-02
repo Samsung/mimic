@@ -117,7 +117,7 @@ if (argc < 6) {
         }
         Ansi.Gray("Configuration: " + config.toString())
         var res = Search.search(f, args, config)
-        Ansi.Gray("Found in " + res.iterations + " iterations:")
+        Ansi.Gray("Found in " + res.iterations + " iterations and " + (res.time / 1000).toFixed(3) + " seconds:")
         Ansi.Gray(Util.indent(res.getStats()))
         var exit = 1
         if (res.score > 0) {
