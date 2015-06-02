@@ -90,7 +90,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
             // randomly choose a loop
             if (Random.maybe(config.alphaloop)) {
-                while (Random.maybe(Random.maybe(1-config.alpha)) && loopindex < loops.length-1) {
+                while (Random.maybe(1-config.alpha) && loopindex < loops.length-1) {
                     loopindex += 1
                 }
                 loop = loops[loopindex]
