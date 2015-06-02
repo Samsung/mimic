@@ -98,9 +98,9 @@ def main():
   stat.set_message("Running experiment...")
   stat.init_progress(len(tasks))
   for c, f, i, m in tasks:
-    stat.writeln("Running mimic for %s..." % (f.shortname))
+    stat.write("Running mimic for %s..." % (f.shortname))
     res = run.mimic(f)
-    stat.write(" done in %.2f seconds" % (res.total_time))
+    stat.writeln(" done in %.2f seconds" % (res.total_time))
     stat.inc_progress(force_update=True)
     results.append(res)
     jn = cPickle.dumps(results)
