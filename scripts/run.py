@@ -45,6 +45,8 @@ def main():
   parser.add_argument('--out', type=str, help='Location where the resulting function should be written to', default="result.js")
   parser.add_argument('--nocolor', help='Don\'t use any color in the output', action='store_true')
   parser.add_argument('--debug', help='Output debug information, and only do a single run of mimic-core', action='store_true')
+  parser.add_argument('--parallel_t0', type=int, help='The timeout to be used in the first phase', default=3)
+  parser.add_argument('--parallel_f', type=float, help='The factor with which to increase the timeout (based on one thread)', default=1.025)
 
   global argv
   argv = parser.parse_args()
@@ -83,15 +85,15 @@ def main():
   # the main loop
   success = False
   results = {}
-  t0 = 3
-  factor = 2
+  t0 = argv.parallel_t0
+  factor = pow(argv.parallel_f, threads)
   rep = 0
   total_attempts = 0
   start = time.time()
   error_count = 0
   error_out = ""
   while success == False:
-    timeout = t0 * pow(factor, rep)
+    timeout = round(t0 * pow(factor, rep))
     print colors.grey("Starting phase %d with a timeout of %d seconds..." % (rep+1, timeout))
     tasks = []
     total_attempts += threads
@@ -121,7 +123,7 @@ def main():
           pool.join()
           # print result
           print colors.grey(line)
-          print colors.green(u"Successfully found a model")
+          print ("Successfully found a model")
           print "  Time required:                              %.2f seconds" % (time.time() - start)
           print "  Attempted searches:                         %d" % total_attempts
           print "  Successful searches:                        1"
@@ -130,7 +132,7 @@ def main():
           print ""
           print "Model (also stored in '%s'):" % argv.out
           with open(result.code) as f:
-            print colors.yellow("".join(f.readlines()))
+            print colors.green("".join(f.readlines()))
           shutil.move(result.code, argv.out)
           # done
           break
