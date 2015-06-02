@@ -73,7 +73,8 @@ def main():
   if argv.debug:
     print colors.grey("Running in debug mode")
     print colors.grey(line)
-    run_mimic_core((0, f, 1200, argv.metric), debug=True)
+    run_mimic_core((0, f, 1200, argv.metric), debug=True, filename=argv.out)
+    return
 
   result = mimic(f, argv.metric, argv.threads, False, argv.parallel_t0, argv.parallel_f)
   print colors.grey(line)
@@ -169,14 +170,16 @@ def send_result(id, result):
 def send_done(id):
   q.put((0, id, "done"))
 
-def run_mimic_core(data, debug=False):
+def run_mimic_core(data, debug=False, filename=None):
   id, f, timeout, metric = data
-  filename = "%s/result-%d.js" % (out, id)
+  fn = "%s/result-%d.js" % (out, id)
+  if filename is not None:
+    fn = filename
   t = time.time()
   col = "--colors 0"
   if debug:
     col = "--verbose"
-  command = '%s %s --metric %d --out "%s" %s' % (base_command, col, metric, filename, f.get_command_args())
+  command = '%s %s --metric %d --out "%s" %s' % (base_command, col, metric, fn, f.get_command_args())
   if debug:
     print colors.grey("Command to run")
     print command
@@ -192,7 +195,7 @@ def run_mimic_core(data, debug=False):
     if "loop-free" not in output:
       loop_index = int(re.search('using the loop template with index: ([0-9]+)', output).group(1))
     # res = "%s: success after %.2f seconds and %d iterations [%.1f iterations/second]" % (f.shortname, elapsed_time, iters, float(iters)/elapsed_time)
-    res = CoreSuccess(output, filename, iters, core_time, loop_index)
+    res = CoreSuccess(output, fn, iters, core_time, loop_index)
   else:
     res = CoreFailure(output, exitstatus)
   send_result(id, res)
