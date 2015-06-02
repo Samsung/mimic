@@ -134,7 +134,7 @@ def mimic(f, metric=0, threads=-1, silent=True, parallel_t0=parallel_t0_default,
           code = ""
           with open(core_result.code) as fl:
             code = "".join(fl.readlines())
-          result = common.MimicResult(f, time.time() - start, core_result.iterations, core_result.core_time,
+          result = common.MimicResult(f, core_result.metric, time.time() - start, core_result.iterations, core_result.core_time,
                                       total_attempts, total_crashes, core_result.loop_index, core_result.code, code)
           return result
         else:
@@ -195,20 +195,21 @@ def run_mimic_core(data, debug=False, filename=None):
     if "loop-free" not in output:
       loop_index = int(re.search('using the loop template with index: ([0-9]+)', output).group(1))
     # res = "%s: success after %.2f seconds and %d iterations [%.1f iterations/second]" % (f.shortname, elapsed_time, iters, float(iters)/elapsed_time)
-    res = CoreSuccess(output, fn, iters, core_time, loop_index)
+    res = CoreSuccess(output, metric, fn, iters, core_time, loop_index)
   else:
-    res = CoreFailure(output, exitstatus)
+    res = CoreFailure(output, metric, exitstatus)
   send_result(id, res)
   send_done(id)
 
 class CoreResult(object):
-  def __init__(self, output, success):
+  def __init__(self, output, success, metric):
     self.output = output
     self.success = success
+    self.metric = metric
 
 class CoreSuccess(CoreResult):
-  def __init__(self, output, code, iterations, core_time, loop_index):
-    CoreResult.__init__(self, output, True)
+  def __init__(self, output, metric, code, iterations, core_time, loop_index):
+    CoreResult.__init__(self, output, True, metric)
     self.code = code
     self.iterations = iterations
     self.core_time = core_time
@@ -218,10 +219,10 @@ class CoreSuccess(CoreResult):
     return "Success()"
 
 class CoreFailure(CoreResult):
-  def __init__(self, output, status):
+  def __init__(self, output, metric, status):
     self.status = status
     self.timeout = status == 124
-    CoreResult.__init__(self, output, False)
+    CoreResult.__init__(self, output, False, metric)
 
   def __repr__(self):
     return "Failure(%d)" % self.status

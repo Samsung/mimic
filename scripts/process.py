@@ -50,8 +50,12 @@ def main():
     data = cPickle.loads(open(folder + "/result.pickle").read())
     """:type : list[common.MimicResult] """
 
+    functions = {}
+    metrics = {}
     for res in data:
-      print res
+      functions[res.f.title] = True
+      metrics[res.metric] = True
+    print functions.keys()
     # nummetric = 1
     # header = ["Function"] + [s + " (" + str(i) + ")" for s in ["Success rate", "Time"] for i in range(nummetric)]
     # if nummetric == 2:

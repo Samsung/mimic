@@ -12,11 +12,10 @@ test:
 	npm test
 
 
-# ------------------------------------
-# some experiments
-# ------------------------------------
-
-exp: compile
+experiment: compile
 	./scripts/experiment.py --exp_name "main" -n 100 --metric "0,1" --exclude $(EXCLUDE)
+
+process:
+	./scripts/process.py
 
 .PHONY: exp_metric_long exp_short_2 exp_short_1 exp_longrunning exp_metric exp_always exp_never compile test
