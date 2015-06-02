@@ -99,7 +99,7 @@ def main():
   stat.init_progress(len(tasks))
   for c, f, i, m in tasks:
     stat.writeln("Running mimic for %s..." % (f.shortname))
-    res = run.mimic(f)
+    res = run.mimic(f, metric=m)
     stat.writeln("  done in %.2f seconds and %d searches" % (res.total_time, res.total_searches))
     stat.inc_progress(force_update=True)
     results.append(res)

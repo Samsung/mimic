@@ -56,6 +56,7 @@ def main():
       functions[res.f.title] = True
       metrics[res.metric] = True
     print functions.keys()
+    print metrics.keys()
     # nummetric = 1
     # header = ["Function"] + [s + " (" + str(i) + ")" for s in ["Success rate", "Time"] for i in range(nummetric)]
     # if nummetric == 2:
