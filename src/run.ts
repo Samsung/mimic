@@ -109,6 +109,12 @@ if (argc < 6) {
         if ("beta" in argv) {
             config.beta = +argv.beta
         }
+        if ("alpha" in argv) {
+            config.alpha = +argv.alpha
+        }
+        if ("alphaloop" in argv) {
+            config.alphaloop = +argv.alphaloop
+        }
         Ansi.Gray("Configuration: " + config.toString())
         var res = Search.search(f, args, config)
         Ansi.Gray("Found in " + res.iterations + " iterations:")

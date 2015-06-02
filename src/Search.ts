@@ -89,10 +89,12 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
             if (config.debug) print(loops.filter((x) => i++ < 6).join("\n"))
 
             // randomly choose a loop
-            while (Random.maybe(0.3) && loopindex < loops.length-1) {
-                loopindex += 1
+            if (Random.maybe(config.alphaloop)) {
+                while (Random.maybe(Random.maybe(1-config.alpha)) && loopindex < loops.length-1) {
+                    loopindex += 1
+                }
+                loop = loops[loopindex]
             }
-            loop = loops[loopindex]
         }
     }
     if (config.debug) Ansi.Gray("Found " + loops.length + " possible loops.")
@@ -352,7 +354,9 @@ export class SearchConfig {
         metric: 0,
         alwaysAcceptEqualCost: false,
         neverAcceptEqualCost: false,
-        beta: 6
+        beta: 6,
+        alpha: 0.7,
+        alphaloop: 0.9
     }
     constructor(o: SearchConfig = SearchConfig.DEFAULT) {
         this.iterations = o.iterations
@@ -363,6 +367,8 @@ export class SearchConfig {
         this.alwaysAcceptEqualCost = o.alwaysAcceptEqualCost
         this.neverAcceptEqualCost = o.neverAcceptEqualCost
         this.beta = o.beta
+        this.alpha = o.alpha
+        this.alphaloop = o.alphaloop
         Util.assert(!(this.alwaysAcceptEqualCost && this.neverAcceptEqualCost))
     }
     iterations: number
@@ -373,10 +379,15 @@ export class SearchConfig {
     alwaysAcceptEqualCost: boolean
     neverAcceptEqualCost: boolean
     beta: number
+    alpha: number
+    alphaloop: number
 
     toString(): string {
         return this.iterations + " core iterations, and " + this.cleanupIterations + " for cleanup, using loop " +
-                this.loopIndex + ", and metric " + this.metric + ", and beta " +
+                this.loopIndex + ", and metric " + this.metric +
+                ", and alpha " + this.alpha +
+                ", and alphaloop " + this.alphaloop +
+                ", and beta " +
                 this.beta + (this.alwaysAcceptEqualCost ? ", and always accept equal cost" : "") +
                 (this.neverAcceptEqualCost ? ", and never accept equal cost" : "")
     }
