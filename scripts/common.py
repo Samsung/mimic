@@ -76,12 +76,14 @@ def escapeCommandArg(s):
   return s.replace("\"", "\\\"")
 
 class MimicResult(object):
-  def __init__(self, total_time, iterations, core_time, total_searches, loop_index):
+  def __init__(self, total_time, iterations, core_time, total_searches, loop_index, result_file, result_code):
     self.total_time = total_time
     self.core_time = core_time
     self.iterations = iterations
     self.total_searches = total_searches
     self.loop_index = loop_index
+    self.result_file = result_file
+    self.result_code = result_code
 
   def get_status(self, indent):
     s = ""

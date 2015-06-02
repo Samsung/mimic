@@ -27,6 +27,8 @@ q = None # the queue used for communication
 argv = None # the arguments
 out = None # the output folder
 base_command = os.path.abspath(os.path.dirname(__file__) + '/../mimic-core') + ' synth --iterations 100000000'
+parallel_t0_default = 3
+parallel_f_default = 1.025
 
 f = None
 """:type : common.Function """
@@ -45,8 +47,8 @@ def main():
   parser.add_argument('--out', type=str, help='Location where the resulting function should be written to', default="result.js")
   parser.add_argument('--nocolor', help='Don\'t use any color in the output', action='store_true')
   parser.add_argument('--debug', help='Output debug information, and only do a single run of mimic-core', action='store_true')
-  parser.add_argument('--parallel_t0', type=int, help='The timeout to be used in the first phase', default=3)
-  parser.add_argument('--parallel_f', type=float, help='The factor with which to increase the timeout (based on one thread)', default=1.025)
+  parser.add_argument('--parallel_t0', type=int, help='The timeout to be used in the first phase', default=parallel_t0_default)
+  parser.add_argument('--parallel_f', type=float, help='The factor with which to increase the timeout (based on one thread)', default=parallel_f_default)
 
   global argv
   argv = parser.parse_args()
@@ -58,17 +60,14 @@ def main():
   if argv.nocolor:
     colors.no_color = True
 
-  # create a directory to store information
-  global out
-  out = tempfile.mkdtemp()
-
   threads = argv.threads
   if threads < 0:
     threads = multiprocessing.cpu_count() / 2
 
+  out_file = argv.out
+
   # the function to run
-  global f
-  f = common.Function.make(argv.argnames, argv.arguments, argv.function)
+  ff = common.Function.make(argv.argnames, argv.arguments, argv.function)
 
   # header
   print "mimic - computing models for opaque code"
@@ -83,18 +82,34 @@ def main():
     run_mimic_core((0, 1200), debug=True)
 
   # the main loop
-  success = False
-  results = {}
   t0 = argv.parallel_t0
   factor = pow(argv.parallel_f, threads)
+
+  result = mimic(ff, threads, False, t0, factor)
+  print colors.grey(line)
+  print "Successfully found a model"
+  print result.get_status("  ")
+  print ""
+  print "Model (also stored in '%s'):" % out_file
+  print colors.green(result.result_code)
+  shutil.move(result.result_file, out_file)
+
+def mimic(ff, threads, silent=True, parallel_t0=parallel_t0_default, parallel_f=parallel_f_default):
+  # create a directory to store information
+  global out
+  out = tempfile.mkdtemp()
+  global f
+  f = ff
+  success = False
   rep = 0
   total_attempts = 0
   start = time.time()
   error_count = 0
   error_out = ""
   while success == False:
-    timeout = round(t0 * pow(factor, rep))
-    print colors.grey("Starting phase %d with a timeout of %d seconds..." % (rep+1, timeout))
+    timeout = round(parallel_t0 * pow(parallel_f, rep))
+    if not silent:
+      print colors.grey("Starting phase %d with a timeout of %d seconds..." % (rep + 1, timeout))
     tasks = []
     total_attempts += threads
     for i in range(threads):
@@ -121,18 +136,13 @@ def main():
           pool.close()
           pool.terminate()
           pool.join()
-          # print result
-          result = common.MimicResult(time.time()-start, core_result.iterations, core_result.core_time, total_attempts, core_result.loop_index)
-          print colors.grey(line)
-          print "Successfully found a model"
-          print result.get_status("  ")
-          print ""
-          print "Model (also stored in '%s'):" % argv.out
+          # return result
+          code = ""
           with open(core_result.code) as f:
-            print colors.green("".join(f.readlines()))
-          shutil.move(core_result.code, argv.out)
-          # done
-          break
+            code = "".join(f.readlines())
+          result = common.MimicResult(time.time() - start, core_result.iterations, core_result.core_time,
+                                      total_attempts, core_result.loop_index, core_result.code, code)
+          return result
         else:
           if core_result.status == 2:
             # definitely a user error
@@ -158,13 +168,10 @@ def main():
       pool.join()
     rep += 1
 
-
 def send_result(id, result):
-  global q
   q.put((1, id, result))
 
 def send_done(id):
-  global q
   q.put((0, id, "done"))
 
 def run_mimic_core(data, debug=False):
@@ -172,7 +179,7 @@ def run_mimic_core(data, debug=False):
   filename = "%s/result-%d.js" % (out, id)
   t = time.time()
   col = "--colors 0"
-  if debug and not argv.nocolor:
+  if debug:
     col = "--verbose"
   command = '%s %s --out "%s" %s' % (base_command, col, filename, f.get_command_args())
   if debug:
