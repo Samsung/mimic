@@ -366,8 +366,8 @@ export class SearchConfig {
         metric: 0,
         alwaysAcceptEqualCost: false,
         neverAcceptEqualCost: false,
-        beta: 6,
-        beta2: 1,
+        beta: 9,
+        beta2: 6,
         alpha: 0.7,
         alphaloop: 0.9
     }
@@ -445,7 +445,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             p = newp
             badness = newbadness
         } else {
-            var alpha = Math.min(1, Math.exp(-base.beta * (newbadness - badness) + base.beta2))
+            var alpha = Math.min(1, Math.exp(-base.beta * (newbadness - badness) - base.beta2))
             if (base.alwaysAcceptEqualCost || (!base.neverAcceptEqualCost && maybe(alpha))) {
                 if (base.debug > 0) {
                     Ansi.Gray(" ! improvement at iteration "+Util.pad(i, 5, ' ')+": " +
