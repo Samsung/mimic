@@ -90,6 +90,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
             // randomly choose a loop
             if (Random.maybe(config.alphaloop)) {
+                loopindex = 0
                 while (Random.maybe(1-config.alpha) && loopindex < loops.length-1) {
                     loopindex += 1
                 }
@@ -366,6 +367,7 @@ export class SearchConfig {
         alwaysAcceptEqualCost: false,
         neverAcceptEqualCost: false,
         beta: 6,
+        beta2: 1,
         alpha: 0.7,
         alphaloop: 0.9
     }
@@ -378,6 +380,7 @@ export class SearchConfig {
         this.alwaysAcceptEqualCost = o.alwaysAcceptEqualCost
         this.neverAcceptEqualCost = o.neverAcceptEqualCost
         this.beta = o.beta
+        this.beta2 = o.beta2
         this.alpha = o.alpha
         this.alphaloop = o.alphaloop
         Util.assert(!(this.alwaysAcceptEqualCost && this.neverAcceptEqualCost))
@@ -390,6 +393,7 @@ export class SearchConfig {
     alwaysAcceptEqualCost: boolean
     neverAcceptEqualCost: boolean
     beta: number
+    beta2: number
     alpha: number
     alphaloop: number
 
@@ -398,8 +402,9 @@ export class SearchConfig {
                 this.loopIndex + ", and metric " + this.metric +
                 ", and alpha " + this.alpha +
                 ", and alphaloop " + this.alphaloop +
-                ", and beta " +
-                this.beta + (this.alwaysAcceptEqualCost ? ", and always accept equal cost" : "") +
+                ", and beta " + this.beta +
+                ", and beta2 " + this.beta2 +
+                (this.alwaysAcceptEqualCost ? ", and always accept equal cost" : "") +
                 (this.neverAcceptEqualCost ? ", and never accept equal cost" : "")
     }
 }
@@ -440,7 +445,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             p = newp
             badness = newbadness
         } else {
-            var alpha = Math.min(1, Math.exp(-base.beta * (newbadness - badness + 1)))
+            var alpha = Math.min(1, Math.exp(-base.beta * (newbadness - badness) + base.beta2))
             if (base.alwaysAcceptEqualCost || (!base.neverAcceptEqualCost && maybe(alpha))) {
                 if (base.debug > 0) {
                     Ansi.Gray(" ! improvement at iteration "+Util.pad(i, 5, ' ')+": " +

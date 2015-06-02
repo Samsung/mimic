@@ -109,6 +109,9 @@ if (argc < 6) {
         if ("beta" in argv) {
             config.beta = +argv.beta
         }
+        if ("beta2" in argv) {
+            config.beta2 = +argv.beta2
+        }
         if ("alpha" in argv) {
             config.alpha = +argv.alpha
         }
