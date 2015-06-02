@@ -94,13 +94,18 @@ def main():
   common.fprinta(logfile, "Time: " + common.get_time() + "\n")
   common.fprinta(logfile, get_details() + "\n" + line + "\n")
   print line
+  stat = status.get_status()
+  stat.set_message("Running experiment...")
+  stat.init_progress(len(tasks))
   for c, f, i, m in tasks:
-    sys.stdout.write("Running mimic for %s..." % (f.shortname))
+    stat.writeln("Running mimic for %s..." % (f.shortname))
     res = run.mimic(f)
-    print " done in %.2f seconds" % (res.total_time)
+    stat.write(" done in %.2f seconds" % (res.total_time))
+    stat.inc_progress(force_update=True)
     results.append(res)
     jn = cPickle.dumps(results)
     common.fprint(out + "/result.pickle", jn)
+  stat.end_progress()
   print line
   print "Finished experiment:"
   print get_details()
