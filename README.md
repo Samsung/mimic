@@ -1,4 +1,6 @@
-# Mimic: Model Synthesis for JavaScript Functions
+# Mimic: Compute Models for Opaque Code
+
+Mimic is a research prototype to automatically compute models for JavaScript functions whose source code is not available or not easily processed by automatic tools.  Our research paper at the ACM SIGSOFT Symposium on the Foundations of Software Engineering 2015 conference gives some more details, and is [freely available](http://stefanheule.com/publications/fse15-mimic/).
 
 ## Installation
 
@@ -58,7 +60,15 @@ As an example, the following command synthesizes code for the identify function:
 
     ./mimic --function "return x" --argnames "x" --arguments "1" "2"
 
-There are a number of scripts to run experiments and process data.  They are all located in `scripts`, most notably `scripts/experiment.py` (to run one or more experiments) and `scripts/process.py` to process the collected data.  Pass `--help` to them to get more information.
+Mimic works by running multiple instances of `mimic-core` internally, each with a different random seed, and stops as soon as one of them succeeds.  To understand the tool a little better, it is possible to run `mimic` with the option `--debug`, which will only launch a single copy of `mimic-core`, and output various information along the way.  For example:
+
+    ./mimic --function "return x" --argnames "x" --arguments "1" "2" --debug
+
+It is also possible to run `mimic-core` directly.  Furthermore, we have collected a few examples from the array standard library, and the script `scripts/example.py` can be used to conveniently access them.  For instance, the following command synthesizes a JavaScript model for the Array.prototype.pop function:
+
+    scripts/example.py pop
+
+Finally, there are two more useful scripts included: `scripts/experiment.py` repeats runs of mimic for all examples and gathers statistics.  The script `scripts/process.py` can then be used to analyze that information.  Pass `--help` to them to get more information on how to use them.
 
 ## Tests
 
