@@ -5,12 +5,11 @@ all: compile
 
 compile: bin/src/run.js
 
-bin/src/run.js: src/*.ts src/util/*.ts test/*.ts
+bin/src/run.js: src/*.ts src/util/*.ts src/test/*.ts
 	grunt
 
-test:
+test: compile
 	npm test
-
 
 experiment: compile
 	./scripts/experiment.py --exp_name "main" -n 100 --metric "0,1" --exclude $(EXCLUDE)
@@ -18,4 +17,7 @@ experiment: compile
 process:
 	./scripts/process.py
 
-.PHONY: exp_metric_long exp_short_2 exp_short_1 exp_longrunning exp_metric exp_always exp_never compile test
+clean:
+	rm -rf bin
+
+.PHONY: all compile test clean experiment process

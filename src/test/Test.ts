@@ -21,21 +21,21 @@
 
 //"use strict";
 
-/// <reference path="../ts-decl/node.d.ts" />
-/// <reference path="../ts-decl/mocha.d.ts" />
+/// <reference path="../../ts-decl/node.d.ts" />
+/// <reference path="../../ts-decl/mocha.d.ts" />
 
 import ass = require('assert')
-import Ansi = require('../src/util/Ansicolors')
-import Util = require('../src/util/Util')
-import Random = require('../src/util/Random')
-import Data = require('../src/Data')
-import Metric = require('../src/Metric')
-import InputGen = require('../src/InputGen')
-import Compile = require('../src/Compile')
-import Recorder = require('../src/Recorder')
-import ProgramGen = require('../src/ProgramGen')
-import StructureInference = require('../src/StructureInference')
-import Search = require('../src/Search')
+import Ansi = require('../util/Ansicolors')
+import Util = require('../util/Util')
+import Random = require('../util/Random')
+import Data = require('../Data')
+import Metric = require('../Metric')
+import InputGen = require('../InputGen')
+import Compile = require('../Compile')
+import Recorder = require('../Recorder')
+import ProgramGen = require('../ProgramGen')
+import StructureInference = require('../StructureInference')
+import Search = require('../Search')
 
 var print = Util.print
 var log = Util.log

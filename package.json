@@ -1,7 +1,7 @@
 {
   "name": "mimic",
   "version": "1.0.0",
-  "description": "Model Synthesis for JavaScript Functions",
+  "description": "Computing Models for Opaque Code",
   "main": "run.js",
   "directories": {
     "doc": "docs",

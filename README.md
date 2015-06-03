@@ -7,33 +7,27 @@ This project requires `node`, its package manager `npm`, as well as `grunt` to r
     sudo apt-get install nodejs-legacy npm
     sudo npm install -g grunt-cli
 
-Install all dependencies via `npm`:
+Then, install all dependencies via `npm`:
 
     npm install
 
 Finally build the project:
 
-    grunt
+    make
 
-You may want to make sure that all tests pass to verify the build by running `npm test`.
+You may want to make sure that all tests pass to verify the build by running `make test`.
 
 ## Usage
 
-To run the model synthesis, the script `mimic` can be used.  For instance:
-
-    ./mimic synth "x,y" "return x+1" "1"
+To run the model synthesis, the script `mimic` can be used.  
 
 There are a number of scripts to run experiments and process data.  They are all located in `scripts`, most notably `scripts/experiment.py` (to run one or more experiments) and `scripts/process.py` to process the collected data.  Pass `--help` to them to get more information.
-
-There is also the file `src/main.ts`, that contains various ways to run things (mostly used for debugging).  Invoke it (after compilation) as follows:
-
-    node --harmony --harmony-proxies bin/src/main.js 0 0
 
 ## Tests
 
 Tests are written using mocha, and can be run by the following command:
 
-    npm test
+    make test
 
 License
 -------

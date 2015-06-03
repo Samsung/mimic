@@ -19,7 +19,7 @@ module.exports = function(grunt) {
       ts: {
           // A specific target
           build: {
-              src: ["src/**/*.ts", "test/**/*.ts"],
+              src: ["src/**/*.ts"],
               outDir: 'bin',
               //watch: 'test',
               options: {
