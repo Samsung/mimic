@@ -56,6 +56,7 @@ def main():
   metrics = sorted(metrics.keys())
 
   slowdowns = []
+  averages = []
   header = ["Function"]
   for m in metrics:
     time = "Time"
@@ -79,6 +80,8 @@ def main():
       fmdata = filter_data(data, f, m)
       times = map(lambda x: x.total_time, fmdata)
       raw[m] = avg(times) if len(times) > 0 else None
+      if m == 0 and raw[m] is not None:
+        averages.append(raw[m])
       cols[c].append(avg_stats(times))
       c += 1
     if len(metrics) > 1:
@@ -95,6 +98,10 @@ def main():
     cols[c].append(str(fdata[0].loop_index))
 
   print_table(header, cols)
+  print ""
+  print "Overall average: %s seconds" % (avg_stats(averages))
+  print "Overall minimum: %.2f seconds" % (min(averages))
+  print "Overall maximum: %.2f seconds" % (max(averages))
   print ""
   print "Slowdown average: %s percent" % (avg_stats(slowdowns))
   print "Slowdown minimum: %.2f%%" % (min(slowdowns))
