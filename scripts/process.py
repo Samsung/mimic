@@ -136,9 +136,12 @@ def main():
   s += "\n" + "\\bottomrule"
   s += "\n" + "\\end{tabular}"
 
-  file = codecs.open(argv.out, "w", "utf-8")
-  file.write(s)
-  file.close()
+  try:
+    file = codecs.open(argv.out, "w", "utf-8")
+    file.write(s)
+    file.close()
+  except:
+    pass
 
 def filter_data(data, f, m=None):
   """
