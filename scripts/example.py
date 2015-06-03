@@ -29,15 +29,15 @@ import experiment
 # ------------------------------------------
 
 def main():
+  fncs = experiment.parse_functions(os.path.abspath(os.path.dirname(__file__) + "/../tests"))
+
   if len(sys.argv) == 1:
     print "example - Run an example from the mimic experiment suite with mimic"
     print ""
     print "usage: example <name-of-experiment> [other arguments for mimic]"
     print ""
-    print "The list of examples can be found in the files tests/*.json."
+    print "Examples: " + ", ".join(map(lambda x: x.shortname, fncs))
     sys.exit(1)
-
-  fncs = experiment.parse_functions(os.path.abspath(os.path.dirname(__file__) + "/../tests"))
 
   name = sys.argv[1]
   matches = []

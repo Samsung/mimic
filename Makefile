@@ -1,5 +1,5 @@
 
-EXCLUDE="(slice|unshift|reverse)"
+EXCLUDE=""
 
 all: compile
 

@@ -5,7 +5,6 @@
   "function": [
     "return Array.prototype.filter.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 0,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[1,2,3,4,5], function f(a) { return a % 2 == 0 }, {}"
@@ -17,7 +16,6 @@
   "function": [
     "return Array.prototype.pop.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 0,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[1,2,3,4]"
@@ -46,7 +44,6 @@
     "  return first",
     "}"
   ],
-  "loop": 0,
   "argnames": "arg0, arg1, arg2",
   "arguments": [
     "[1,2,3,,5]"
@@ -58,7 +55,6 @@
   "function": [
     "return Array.prototype.forEach.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 0,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[1,2,3], function f(e) { return 7; }, {}"
@@ -70,7 +66,6 @@
   "function": [
     "return Array.prototype.map.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 0,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[1,2,3,4], function f(e) { return e + 1; }, {}"
@@ -82,7 +77,6 @@
   "function": [
     "return Array.prototype.every.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 0,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[0,5,2,20,3,23], function f(e) { return e < 10; }, {}"
@@ -94,7 +88,6 @@
   "function": [
     "return Array.prototype.some.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 0,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[1,2,3], function f(e) { return e < 10; }, {}",
@@ -107,7 +100,6 @@
   "function": [
     "return Array.prototype.reduce.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 0,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[1,2,3], function f(previousValue, currentValue, index, array) { return previousValue + currentValue; }, 0"
@@ -119,7 +111,6 @@
   "function": [
     "return Array.prototype.push.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 2,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[1,2,3], 4, 5, 6",
@@ -133,7 +124,6 @@
   "function": [
     "return Array.prototype.reduceRight.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 0,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[1,2,3], function f(previousValue, currentValue, index, array) { return previousValue + currentValue; }, 0"
@@ -145,7 +135,6 @@
   "function": [
     "return Array.prototype.indexOf.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 1,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[1,2,3,2], 2"
@@ -157,58 +146,9 @@
   "function": [
     "return Array.prototype.lastIndexOf.apply(self, Array.prototype.slice.call(arguments, 1))"
   ],
-  "loop": 1,
   "argnames": "self, arg0, arg1, arg2",
   "arguments": [
     "[1,2,3,2], 4"
-  ]
-},
-
-{
-  "name": "Array.prototype.slice",
-  "function": [
-    "return Array.prototype.slice.apply(self, Array.prototype.slice.call(arguments, 1))"
-  ],
-  "loop": 0,
-  "argnames": "self, arg0, arg1, arg2",
-  "arguments": [
-    "[1,2,3,4,5], 2, 3"
-  ]
-},
-
-{
-  "name": "Array.prototype.slice2",
-  "function": [
-    "return Array.prototype.slice.apply(self, Array.prototype.slice.call(arguments, 1))"
-  ],
-  "loop": 0,
-  "argnames": "self, arg0, arg1, arg2",
-  "arguments": [
-    "[1,2,3,4,5], 2"
-  ]
-},
-
-{
-  "name": "Array.prototype.reverse",
-  "function": [
-    "return Array.prototype.reverse.apply(self, Array.prototype.slice.call(arguments, 1))"
-  ],
-  "loop": 0,
-  "argnames": "self, arg0, arg1, arg2",
-  "arguments": [
-    "[10,11,12,13,14]"
-  ]
-},
-
-{
-  "name": "Array.prototype.unshift",
-  "function": [
-    "return Array.prototype.unshift.apply(self, Array.prototype.slice.call(arguments, 1))"
-  ],
-  "loop": 0,
-  "argnames": "self, arg0, arg1, arg2",
-  "arguments": [
-    "[10,11,12,13,14], 0"
   ]
 },
 
@@ -217,7 +157,6 @@
   "function": [
     "var result = 0; var l = a.length; for (var i = 0; i < l; i++) result += a[i]; return result;"
   ],
-  "loop": 1,
   "argnames": "a",
   "arguments": [
     "[4,5,6]",
@@ -230,7 +169,6 @@
   "function": [
     "var result = -Infinity; var l = a.length; for (var i = 0; i < l; i++) { var ai = a[i]; if (ai > result) result = ai; } return result;"
   ],
-  "loop": 1,
   "argnames": "a",
   "arguments": [
     "[0,2,0]"
@@ -242,7 +180,6 @@
   "function": [
     "var result = Infinity; var l = a.length; for (var i = 0; i < l; i++) { var ai = a[i]; if (ai < result) result = ai; } return result;"
   ],
-  "loop": 1,
   "argnames": "a",
   "arguments": [
     "[1,2,1]"

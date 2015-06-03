@@ -35,18 +35,35 @@ parallel_f_default = 1.025
 # ------------------------------------------
 
 def main():
-  parser = argparse.ArgumentParser(description='Run Mimic.')
-  parser.add_argument('-t', '--threads', type=int, help='Number of threads (-1 = 1/2 of cores available)', default=-1)
-  parser.add_argument('--function', type=str, help='The function body of the opaque code', required=True)
-  parser.add_argument('--argnames', type=str, help='The name of the arguments', default="arg0, arg1, arg2, arg3, arg4, arg5, arg6")
-  parser.add_argument('--arguments', nargs='+', type=str, help='A list of arguments (as an array of arrays)', required=True)
-  parser.add_argument('--args', type=str, help='Arguments to be passed to mimic-core', default="")
-  parser.add_argument('--metric', type=int, help='The metric to use (0 for default, 1 for naive metric)', default=0)
-  parser.add_argument('--out', type=str, help='Location where the resulting function should be written to', default="result.js")
+  parser = argparse.ArgumentParser(description='Run Mimic to compute models for opaque code',
+                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  parser.add_argument('-t', '--threads', metavar="<n>", type=int,
+                      help='Number of threads (-1 = 1/2 of cores available)', default=-1)
+  parser.add_argument('--function', type=str,
+                      metavar="<body>",
+                      help='The function body of the opaque code (as JavaScript source code)', required=True)
+  parser.add_argument('--arguments', nargs='+', type=str,
+                      help='One (or more) initial inputs to the opaque code as a comma-separated list',
+                      metavar="<arglist>",
+                      required=True)
+  parser.add_argument('--argnames', type=str, help='The name of the arguments',
+                      metavar="<names>",
+                      default="arg0, arg1, arg2, arg3, arg4, arg5, arg6")
+  parser.add_argument('--args',
+                      metavar='<args>',
+                      type=str, help='Arguments to be passed to mimic-core', default="")
+  parser.add_argument('--metric', metavar="<m>", type=int, help='The metric to use (0 for default, 1 for naive metric)',
+                      default=0)
+  parser.add_argument('--out', type=str, help='Location where the resulting function should be written to',
+                      default="result.js")
   parser.add_argument('--nocolor', help='Don\'t use any color in the output', action='store_true')
-  parser.add_argument('--debug', help='Output debug information, and only do a single run of mimic-core', action='store_true')
-  parser.add_argument('--parallel_t0', type=int, help='The timeout to be used in the first phase', default=parallel_t0_default)
-  parser.add_argument('--parallel_f', type=float, help='The factor with which to increase the timeout (based on one thread)', default=parallel_f_default)
+  parser.add_argument('--debug', help='Output debug information, and only do a single run of mimic-core',
+                      action='store_true')
+  parser.add_argument('--parallel_t0', metavar="<t0>", type=int, help='The timeout to be used in the first phase',
+                      default=parallel_t0_default)
+  parser.add_argument('--parallel_f', metavar="<f>", type=float,
+                      help='The factor with which to increase the timeout (based on a single thread, and scaled appropriately for more threads)',
+                      default=parallel_f_default)
 
   global argv
   argv = parser.parse_args()
