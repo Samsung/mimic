@@ -1,4 +1,4 @@
-# Mimic: Compute Models for Opaque Code
+# Mimic: Computing Models for Opaque Code
 
 Mimic is a research prototype to automatically compute models for JavaScript functions whose source code is not available or not easily processed by automatic tools.  Our research paper at the ACM SIGSOFT Symposium on the Foundations of Software Engineering 2015 conference gives some more details, and is [freely available](http://stefanheule.com/publications/fse15-mimic/).
 
