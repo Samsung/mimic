@@ -54,11 +54,9 @@ def main():
 
   f = matches[0]
   command = os.path.abspath(os.path.dirname(__file__) + '/../mimic') + " "
-  command += (" ".join(sys.argv[2:])) + " "
+  command += (" ".join(map(lambda x: x if " " not in x else '"' + x + '"', sys.argv[2:]))) + " "
   command += f.get_noncore_command_args()
   sys.exit(os.system(command))
-
-
 
 if __name__ == '__main__':
   main()

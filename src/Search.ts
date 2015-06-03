@@ -366,8 +366,8 @@ export class SearchConfig {
         metric: 0,
         alwaysAcceptEqualCost: false,
         neverAcceptEqualCost: false,
-        beta: 9,
-        beta2: 6,
+        beta: 8,
+        beta2: 8,
         alpha: 0.7,
         alphaloop: 0.9
     }

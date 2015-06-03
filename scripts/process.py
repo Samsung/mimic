@@ -78,6 +78,8 @@ def main():
     raw = range(len(metrics))
     for m in metrics:
       fmdata = filter_data(data, f, m)
+      # dd = sum(map(lambda x: x.total_crashes, fmdata))
+      # if dd > 0: print ("%.3f" % (float(dd)/sum(map(lambda x: x.total_searches, fmdata)))), fmdata[0].f.title
       times = map(lambda x: x.total_time, fmdata)
       raw[m] = avg(times) if len(times) > 0 else None
       if m == 0 and raw[m] is not None:
