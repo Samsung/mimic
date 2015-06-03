@@ -8,3 +8,4 @@ node_modules
 bin/**
 tmp/**
 tests/out/**
+src/.baseDir.ts
