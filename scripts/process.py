@@ -8,21 +8,13 @@
 # Author: Stefan Heule <sheule@cs.stanford.edu>
 #
 # ------------------------------------------------------------------------------
+import codecs
 
 import sys
 import os
-import time
 import argparse
-import json
-import subprocess
-import re
 import cPickle
-import status
-import colors
-import multiprocessing
-from multiprocessing import Pool
-from multiprocessing import Queue
-import random
+import common
 
 line = "-" * 80
 argv = None # the arguments
@@ -35,6 +27,7 @@ out = None # the output folder
 def main():
   parser = argparse.ArgumentParser(description='Process the data from the synthesize experiment.')
   parser.add_argument('--folder', type=str, help='The folder to process', default="<latest>")
+  parser.add_argument('--out', type=str, help='The file to store the LaTeX table', default="../paper/table.tex")
 
   global argv
   argv = parser.parse_args()
@@ -49,87 +42,111 @@ def main():
   try:
     data = cPickle.loads(open(folder + "/result.pickle").read())
     """:type : list[common.MimicResult] """
-
-    functions = {}
-    metrics = {}
-    for res in data:
-      functions[res.f.title] = True
-      metrics[res.metric] = True
-    print functions.keys()
-    print metrics.keys()
-    # nummetric = 1
-    # header = ["Function"] + [s + " (" + str(i) + ")" for s in ["Success rate", "Time"] for i in range(nummetric)]
-    # if nummetric == 2:
-    #   diff = []
-    #   header.append("Succ Prob Lower By")
-    # cols = map(lambda x: [], header)
-    # for ex in data:
-    #   results = filter_bug(data[ex]['results'])
-    #   name = ex[ex.rfind(".")+1:]
-    #   cols[0].append(name)
-    #   c = 1
-    #   if fulltable:
-    #     full[ex]['succprob'] = success_rate(results)
-    #   for i in range(nummetric):
-    #     cols[c].append(success_rate_str(results, i))
-    #     c += 1
-    #   for i in range(nummetric):
-    #     cols[c].append(succ_time_str(results, i))
-    #     c += 1
-    #   if nummetric == 2:
-    #     # calculate difference
-    #     a = success_rate(results, 0)
-    #     b = success_rate(results, 1)
-    #     diff.append(100.0*(a-b)/b)
-    #     cols[c].append("%.2f" % (100.0*(a-b)/b))
-    # if not fulltable:
-    #   print_table(header, cols)
-    # if nummetric == 2:
-    #   print "Average increase of success probability: %s" % avg_stats(diff)
   except ValueError as ex:
     print "Failed to parse configuration: " + str(ex)
     sys.exit(1)
 
+  lookup = {}
+  metrics = {}
+  for res in data:
+    lookup[res.f.title] = res
+    metrics[res.metric] = True
+  functions = sorted(lookup.keys())
+  functions = functions[3:] + functions[0:3]
+  metrics = sorted(metrics.keys())
 
-  # if fulltable:
-  #   print "% this is automatically generated content, do not modify"
-  #   keys = sorted(full.keys())
-  #   keys = keys[3:] + keys[0:3]
-  #   header = [
-  #     ["Function", "Time to synthesize",
-  #      "Success", "Loop"],
-  #     ["", "(in seconds)",
-  #      "rate", "rank"]
-  #   ]
-  #   print "\\begin{tabular}{llll}"
-  #   space = " & "
-  #   endline = "\\\\"
-  #   print "\\toprule"
-  #   for hr in header:
-  #     for h in hr[:-1]:
-  #       print "\\textbf{%s} & " % h
-  #     print "\\textbf{%s} %s" % (hr[-1], endline)
-  #   print "\\midrule"
-  #   for k in keys:
-  #     nm = full[k]['name']
-  #     nm = nm[nm.rfind(".")+1:]
-  #     # if nm in ["max", "min", "sum", "shift"]:
-  #     #   nm += "$^*$"
-  #     print nm
-  #     print space
-  #     print full[k]['time']
-  #     print space
-  #     print "%.2f \\%%" % (full[k]['succprob'])
-  #     print space
-  #     print full[k]['loop']
-  #     # print space
-  #     # print "%.1f \\%%" % (full[k]['correction'])
-  #     print endline
-  #   print "\\bottomrule"
-  #   print "\\end{tabular}"
+  slowdowns = []
+  header = ["Function"]
+  for m in metrics:
+    time = "Time"
+    if len(metrics) > 1:
+      if m == 0:
+        time += " (normal metric)"
+      else:
+        time += " (naive metric)"
+    header.append(time)
+  if len(metrics) > 1:
+    for i in range(len(metrics)-1):
+      header.append("Slowdown")
+  header.append("Loop rank")
+  cols = map(lambda x: [], header)
+  for f in functions:
+    fdata = filter_data(data, f)
+    cols[0].append(fdata[0].f.shortname)
+    c = 1
+    raw = range(len(metrics))
+    for m in metrics:
+      fmdata = filter_data(data, f, m)
+      times = map(lambda x: x.total_time, fmdata)
+      raw[m] = avg(times) if len(times) > 0 else None
+      cols[c].append(avg_stats(times))
+      c += 1
+    if len(metrics) > 1:
+      base = raw[0]
+      for i in range(len(metrics)-1):
+        alt = raw[i+1]
+        if base is None or alt is None:
+          cols[c].append("n/a")
+        else:
+          sd = (alt - base) / base * 100
+          cols[c].append("%.2f%%" % (sd))
+          slowdowns.append(sd)
+        c += 1
+    cols[c].append(str(fdata[0].loop_index))
 
-def succ_time_str(results, metric):
-  return avg_stats(map(lambda x: x['time'], []))
+  print_table(header, cols)
+  print ""
+  print "Slowdown average: %s percent" % (avg_stats(slowdowns))
+  print "Slowdown minimum: %.2f%%" % (min(slowdowns))
+  print "Slowdown maximum: %.2f%%" % (max(slowdowns))
+
+  s = "% this is automatically generated content, do not modify"
+  header = [
+    ["Function", "Time to synthesize", "Loop"],
+    ["", "(in seconds)", "rank"]
+  ]
+  s += "\n" + "\\begin{tabular}{lll}"
+  space = " & "
+  endline = "\\\\"
+  s += "\n" + "\\toprule"
+  for hr in header:
+    for h in hr[:-1]:
+      s += "\n" + "\\textbf{%s} & " % h
+    s += "\n" + "\\textbf{%s} %s" % (hr[-1], endline)
+  s += "\n" + "\\midrule"
+  for k in functions:
+    fdata = filter_data(data, k, 0)
+    nm = fdata[0].f.shortname
+    # if nm in ["max", "min", "sum", "shift"]:
+    #   nm += "$^*$"
+    s += "\n" + nm
+    s += "\n" + space
+    times = map(lambda x: x.total_time, fdata)
+    s += "\n" + avg_stats(times)
+    s += "\n" + space
+    s += "\n" + str(fdata[0].loop_index)
+    s += "\n" + endline
+  s += "\n" + "\\bottomrule"
+  s += "\n" + "\\end{tabular}"
+
+  file = codecs.open(argv.out, "w", "utf-8")
+  file.write(s)
+  file.close()
+
+def filter_data(data, f, m=None):
+  """
+  :type data: list[common.MimicResult]
+  :type f: str
+  :type m: int
+  :rtype: list[common.MimicResult]
+  """
+  res = []
+  for d in data:
+    if d.f.title != f: continue
+    if m is not None and m != d.metric: continue
+    res.append(d)
+  return res
+
 
 def avg(l):
   assert len(l) > 0
@@ -152,10 +169,10 @@ def pstdev(data):
 
 def avg_stats(l):
   if len(l) == 0:
-    return "n/a"
+    return u"n/a"
   if len(l) == 1:
-    return "%.2f" % avg(l)
-  return "%.2f ± %.2f" % (avg(l), pstdev(l))
+    return u"%.2f" % avg(l)
+  return u"%.2f ± %.2f" % (avg(l), pstdev(l))
 
 
 def percent(a, b):
