@@ -84,7 +84,7 @@ def main():
   print "mimic - computing models for opaque code"
   print colors.grey(line)
   print colors.grey("Configuration:")
-  print colors.grey("  Number of threads: %d" % (argv.threads if argv.threads > 0 else multiprocessing.cpu_count()/2))
+  print colors.grey("  Number of threads: %d" % (argv.threads if argv.threads > 0 else get_default_threads()))
   print line
 
   if argv.debug:
@@ -102,9 +102,12 @@ def main():
   print colors.green(result.result_code)
   shutil.move(result.result_file, out_file)
 
+def get_default_threads():
+  return round(float(multiprocessing.cpu_count()) / 2.0)
+
 def mimic(f, metric=0, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel_f=parallel_f_default):
   if threads < 0:
-    threads = multiprocessing.cpu_count() / 2
+    threads = get_default_threads()
   t0 = parallel_t0
   factor = pow(parallel_f, threads)
   # create a directory to store information
