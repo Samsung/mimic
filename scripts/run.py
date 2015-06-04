@@ -103,7 +103,7 @@ def main():
   shutil.move(result.result_file, out_file)
 
 def get_default_threads():
-  return round(float(multiprocessing.cpu_count()) / 2.0)
+  return int(round(float(multiprocessing.cpu_count()) / 2.0))
 
 def mimic(f, metric=0, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel_f=parallel_f_default):
   if threads < 0:
