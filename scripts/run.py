@@ -38,7 +38,7 @@ def main():
   parser = argparse.ArgumentParser(description='Run Mimic to compute models for opaque code',
                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument('-t', '--threads', metavar="<n>", type=int,
-                      help='Number of threads (-1 = 1/2 of cores available)', default=-1)
+                      help='Number of threads (-1 = number of cores available)', default=-1)
   parser.add_argument('--function', type=str,
                       metavar="<body>",
                       help='The function body of the opaque code (as JavaScript source code)', required=True)
@@ -104,7 +104,7 @@ def main():
 
 def mimic(f, metric=0, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel_f=parallel_f_default):
   if threads < 0:
-    threads = multiprocessing.cpu_count() / 2
+    threads = multiprocessing.cpu_count()
   t0 = parallel_t0
   factor = pow(parallel_f, threads)
   # create a directory to store information
