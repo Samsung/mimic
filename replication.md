@@ -22,7 +22,7 @@ In the paper we consider the array standard library, and we could synthesize mod
 
     scripts/example.py pop
 
-This will actually show the command that is used to invoke `mimic`.  The tool is now taking a bit more time.  `mimic` can run highly parallel, and depending on the machine it is run on, synthesize can take more or less time.  Hint: Use `--threads <n>` to control the number of threads that `mimic` should use (the number defaults to the number of processors available).
+This will actually show the command that is used to invoke `mimic`.  The tool is now taking a bit more time.  `mimic` can run highly parallel, and depending on the machine it is run on, synthesize can take more or less time.  Hint: Use `--threads <n>` to control the number of threads that `mimic` should use (the number defaults to half the number of processors available).
 
 To see how `mimic` works in more detail, we can pass the parameter `--debug` to `mimic` (or `scripts/example.py`, which just forwards parameters).  If we run
 

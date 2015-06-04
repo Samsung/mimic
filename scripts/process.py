@@ -104,10 +104,12 @@ def main():
   print "Overall average: %s seconds" % (avg_stats(averages))
   print "Overall minimum: %.2f seconds" % (min(averages))
   print "Overall maximum: %.2f seconds" % (max(averages))
-  print ""
-  print "Slowdown average: %s percent" % (avg_stats(slowdowns))
-  print "Slowdown minimum: %.2f%%" % (min(slowdowns))
-  print "Slowdown maximum: %.2f%%" % (max(slowdowns))
+
+  if len(slowdowns) > 0:
+    print ""
+    print "Slowdown average: %s percent" % (avg_stats(slowdowns))
+    print "Slowdown minimum: %.2f%%" % (min(slowdowns))
+    print "Slowdown maximum: %.2f%%" % (max(slowdowns))
 
   s = "% this is automatically generated content, do not modify"
   header = [
