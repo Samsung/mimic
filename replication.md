@@ -10,23 +10,25 @@ The paper evaluates `mimic` on five research question, and in this document we e
 
 ## Usage and Overview
 
-`mimic` is open source and available at [github.com/Samsung/mimic](https://github.com/Samsung/mimic).  The `README.md` file contains instructions on how to install and run the tool.  The virtual machine we provide for the FSE Replication Packages Evaluation Committee has `mimic` installed and this guide should cover all necessary information.  It also contains the full source code.
+`mimic` is open source and available at [github.com/Samsung/mimic](https://github.com/Samsung/mimic).  The `README.md` file contains instructions on how to install and run the tool.  The virtual machine we provide for the FSE Replication Packages Evaluation Committee has `mimic` installed and this guide should cover all necessary information.  The artifact also contains the full source code.
 
 The main way to invoke the tool is via the script `mimic`.  It requires as input a function (for which a model should be computed) as well as some initial inputs.  To start, lets consider a trivial example and synthesize a model for the identity function:
 
     ./mimic --function "return x" --argnames "x" --arguments "1" "2"
 
-We provide the body of the function to be synthesized, as well as two sample inputs (`1` and `2`).  `mimic` should be able to find a model for this trivial example in no time.
+We provide the body of the function to be synthesized (`return x` here), as well as two sample inputs (`1` and `2`).  `mimic` should be able to find a model for this trivial example in no time.  Note that while we pass the code of the body to `mimic`, the tool does not look at the source and only uses it to execute it.  Furthermore, the code might contain calls to native functions like those from the standard library.
 
-In the paper we consider the array standard library, and we could synthesize models for those function in the same way.  To make things a bit easier, we have collected the functions from Table 1 in the paper in tests/array.json, and wrote a script to use that information to pass it to mimic.  For instance, to synthesize code for `Array.prototype.pop`, we can run
+In the paper we consider the array standard library, and we could synthesize models for those function in the same way.  To make things a bit easier, we have collected the functions from Table 1 in the paper in `tests/array.json`, and wrote a script to use that information to pass it to mimic.  For instance, to synthesize code for `Array.prototype.pop`, we can simply run
 
     scripts/example.py pop
 
-This will actually show the command that is used to invoke `mimic`.  Synthesize is now taking a bit more time.  `mimic` can run highly parallel, and depending on the machine it is run on, synthesize can take more or less time.  To see how `mimic` works in more detail, we can pass the parameter `--debug` to `mimic` (or `scripts/example.py`, which just forwards parameters).  If we run
+This will actually show the command that is used to invoke `mimic`.  The tool is now taking a bit more time.  `mimic` can run highly parallel, and depending on the machine it is run on, synthesize can take more or less time.  Hint: Use `--threads <n>` to control the number of threads that `mimic` should use (the number defaults to half the number of processors available).
+
+To see how `mimic` works in more detail, we can pass the parameter `--debug` to `mimic` (or `scripts/example.py`, which just forwards parameters).  If we run
 
     scripts/example.py pop --debug
 
-then `mimic` will only invoke one copy of `mimic-core` and show various additional information on what is going on.  Since this just runs `mimic-core` once, the search may not converge (or fail), but if it is repeated often enough, eventually `mimic` will find a model.  Of course, when we run `mimic` (rather than `mimic-core`), many runs of `mimic-core` are done automatically, and there is no need to manually restart.
+then `mimic` will only invoke one copy of `mimic-core` and show various additional information on what is going on.  Since this just runs `mimic-core` once, the search may not converge (or fail), but if it is repeated often enough, eventually `mimic` will find a model.  It works best to kill `mimic-core` (using Ctrl+C) after a while, and retry with a new random seed (which is automatically chosen).  Of course, when we run `mimic` (rather than `mimic-core` via `--debug`), many runs of `mimic-core` are done automatically, and there is no need to manually restart.
 
 ## Replication Instructions
 
@@ -38,13 +40,13 @@ We claim in Table 1 that `mimic` is able to find a model for 15 functions.  This
 
     scripts/example.py <function>
 
-for all 15 different `<function>`s.  Note that depending on your hardware, it may take significantly more time to find models (see next section).
+for all 15 different functions.  Note that depending on your hardware, it may take significantly more time to find the models (see next section).
 
 ### RQ2: Performance
 
-Reproducing performance results requires the same hardware and likely `mimic` should be run natively (and not in a VM).  We used an Intel Xeon CPU E5-2697 (which has 26 physical cores).  On other machines the numbers may be different, and for best results you may want to consider installing `mimic` on your machine (rather than running it in a VM).
+Reproducing performance results requires the same hardware and likely `mimic` should be run natively (and not in a VM).  We used an Intel Xeon CPU E5-2697 (which has 26 physical cores).  On other machines the numbers may be different, and for best results you may want to consider installing `mimic` on your machine directly (rather than running it in a VM).
 
-The performance numbers are obtained with 100 repetitions for all functions, and we actually additionally use two different fitness functions (to answer RQ5), which results in 15*100*2 = 3000 individual runs.  On our hardware, this took about 29 hours.
+The performance numbers are obtained with 100 repetitions for all functions, and we actually additionally use two different fitness functions (to answer RQ5), which results in `15*100*2 = 3000` individual runs.  On our hardware, this took about 28 hours.
 
 The experiment can be run by invoking `make experiment`, which runs the following command
 
@@ -54,7 +56,7 @@ It is possible to only reproduce some of the table (so that the experiment takes
 
     scripts/experiment.py --exp_name "pop_only" -n 10 --metric "0" --filter "pop"
 
-This should be significantly faster than the full run.  Note that `scripts/experiment.py` only collects the data and stores it in an output folder in `tests/out`, but does not analyze it.  For this, we use `scripts/process.py`.
+This should be significantly faster than the full run.  Note that `scripts/experiment.py` only collects the data and stores it in an output folder in `tests/out`, but does not analyze it.  For the analysis, we use `scripts/process.py`.
 
 In our package we include the data gathered by our own experimental run, so the next step will work even if you have not (yet) run `scripts/experiment.py` yourself.  To analyze this data, run
 
