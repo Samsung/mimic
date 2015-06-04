@@ -6,7 +6,7 @@ These are instructions to reproduce the results in our paper "Mimic: Computing M
 
 This artifact was used to obtain all results in the paper, and can be used to replicate these results, and experiment with the prototype beyond what is discussed in the paper.  We remark that we cannot give guarantees about the applicability of `mimic` to other domains;  there may be technical limitations like the experimental proxy support in `node.js`.  Furthermore, our prototype has not been tuned for wide adoption and instead serves as a proof of concept.
 
-The paper evaluates `mimic` on five research question, and in this document we explain how to reproduce the answers to all of these questions.  But first, we give a brief overview of the artifact and the usage of `mimic`.
+The paper evaluates `mimic` on five research questions, and in this document we explain how to reproduce the answers to all of these questions.  But first, we give a brief overview of the artifact and the usage of `mimic`.
 
 ## Usage and Overview
 
@@ -22,7 +22,7 @@ In the paper we consider the array standard library, and we could synthesize mod
 
     scripts/example.py pop
 
-This will actually show the command that is used to invoke `mimic`.  The tool is now taking a bit more time.  `mimic` can run highly parallel, and depending on the machine it is run on, synthesize can take more or less time.  Hint: Use `--threads <n>` to control the number of threads that `mimic` should use (the number defaults to half the number of processors available).
+This will actually show the command that is used to invoke `mimic`.  The tool is now taking a bit more time.  `mimic` can run highly parallel, and depending on the machine it is run on, synthesis can take more or less time.  Hint: Use `--threads <n>` to control the number of threads that `mimic` should use (the number defaults to half the number of processors available).
 
 To see how `mimic` works in more detail, we can pass the parameter `--debug` to `mimic` (or `scripts/example.py`, which just forwards parameters).  If we run
 
