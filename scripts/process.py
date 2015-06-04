@@ -143,7 +143,8 @@ def main():
     file.write(s)
     file.close()
   except:
-    pass
+    print ""
+    print "Failed to write latex table (specify a location with --out)"
 
 def filter_data(data, f, m=None):
   """

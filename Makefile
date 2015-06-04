@@ -12,7 +12,7 @@ test: compile
 	npm test
 
 experiment: compile
-	./scripts/experiment.py --exp_name "main" -n 100 --metric "0,1" --exclude $(EXCLUDE)
+	scripts/experiment.py --exp_name "main" -n 100 --metric "0,1"
 
 process:
 	./scripts/process.py

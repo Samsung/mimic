@@ -56,6 +56,7 @@ def main():
   command = os.path.abspath(os.path.dirname(__file__) + '/../mimic') + " "
   command += (" ".join(map(lambda x: x if " " not in x else '"' + x + '"', sys.argv[2:]))) + " "
   command += f.get_noncore_command_args()
+  print command
   sys.exit(os.system(command))
 
 if __name__ == '__main__':
