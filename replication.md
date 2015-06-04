@@ -66,7 +66,36 @@ If you have generated your own experimental data, change the folder above accord
 
 ### RQ3: Usefulness
 
+The `mimic`-generated models accepted into WALA can be seen [here](https://github.com/wala/WALA/pull/64/files).  Here is an example program whose analysis benefits from the `mimic` models for `reduce`, `every`, and `some`:
 
+```javascript
+function a() {
+  return false;
+}
+
+function b() {
+  return a();
+}
+
+
+var x = [1,3,5];
+console.log(x.some(b));
+
+function c(i) {
+  return i%2 === 1;
+}
+
+console.log(x.every(c));
+
+function add(previousValue, currentValue, index, array) {
+  return previousValue + currentValue;
+}
+
+var y = [0,1,3,5,2];
+console.log(y.reduce(add));
+```
+
+Without the `mimic` models, when WALA constructed a call graph for the above code, it would erroneously conclude that functions `a`, `b`, `c`, and `add` were dead code.  With the `mimic` models, WALA observed the callbacks from the library functions to these methods, and its call graph correctly identifies the methods as live.  For further details on actually running WALA to generate call graphs, see the [WALA Getting Started Guide](http://wala.sourceforge.net/wiki/index.php/UserGuide:Getting_Started).
 
 ### RQ4: Obfuscation
 
