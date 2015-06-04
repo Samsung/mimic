@@ -367,7 +367,7 @@ export class SearchConfig {
         alwaysAcceptEqualCost: false,
         neverAcceptEqualCost: false,
         beta: 8,
-        beta2: 8,
+        gamma: 8,
         alpha: 0.7,
         alphaloop: 0.9
     }
@@ -380,7 +380,7 @@ export class SearchConfig {
         this.alwaysAcceptEqualCost = o.alwaysAcceptEqualCost
         this.neverAcceptEqualCost = o.neverAcceptEqualCost
         this.beta = o.beta
-        this.beta2 = o.beta2
+        this.gamma = o.gamma
         this.alpha = o.alpha
         this.alphaloop = o.alphaloop
         Util.assert(!(this.alwaysAcceptEqualCost && this.neverAcceptEqualCost))
@@ -393,7 +393,7 @@ export class SearchConfig {
     alwaysAcceptEqualCost: boolean
     neverAcceptEqualCost: boolean
     beta: number
-    beta2: number
+    gamma: number
     alpha: number
     alphaloop: number
 
@@ -403,7 +403,7 @@ export class SearchConfig {
                 ", and alpha " + this.alpha +
                 ", and alphaloop " + this.alphaloop +
                 ", and beta " + this.beta +
-                ", and beta2 " + this.beta2 +
+                ", and gamma " + this.gamma +
                 (this.alwaysAcceptEqualCost ? ", and always accept equal cost" : "") +
                 (this.neverAcceptEqualCost ? ", and never accept equal cost" : "")
     }
@@ -445,7 +445,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             p = newp
             badness = newbadness
         } else {
-            var alpha = Math.min(1, Math.exp(-base.beta * (newbadness - badness) - base.beta2))
+            var alpha = Math.min(1, Math.exp(-base.beta * (newbadness - badness) - base.gamma))
             if (base.alwaysAcceptEqualCost || (!base.neverAcceptEqualCost && maybe(alpha))) {
                 if (base.debug > 0) {
                     Ansi.Gray(" ! improvement at iteration "+Util.pad(i, 5, ' ')+": " +
