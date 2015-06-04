@@ -4,29 +4,29 @@ These are instructions to reproduce the results in our paper "Mimic: Computing M
 
 ## Claims
 
-This artifact was used to obtain all results in the paper, and can be used to replicate these results, and experiment with the prototype beyond what is discussed in the paper.  We remark that we cannot give guarantees about the applicability of mimic to other domains;  there may be technical limitations like the experimental proxy support in `node.js`.  Furthermore, our prototype has not been tuned for wide adoption and instead serves as a proof of concept.
+This artifact was used to obtain all results in the paper, and can be used to replicate these results, and experiment with the prototype beyond what is discussed in the paper.  We remark that we cannot give guarantees about the applicability of `mimic` to other domains;  there may be technical limitations like the experimental proxy support in `node.js`.  Furthermore, our prototype has not been tuned for wide adoption and instead serves as a proof of concept.
 
-The paper evaluates mimic on five research question, and in this document we explain how to reproduce the answers to all of these questions.  But first, we give a brief overview of the artifact and the usage of mimic.
+The paper evaluates `mimic` on five research question, and in this document we explain how to reproduce the answers to all of these questions.  But first, we give a brief overview of the artifact and the usage of `mimic`.
 
 ## Usage and Overview
 
-Mimic is open source and available at [github.com/Samsung/mimic](https://github.com/Samsung/mimic).  The `README.md` file contains instructions on how to install and run the tool.  The virtual machine we provide for the FSE Replication Packages Evaluation Committee has mimic installed and this guide should cover all necessary information.  It also contains the full source code.
+`mimic` is open source and available at [github.com/Samsung/mimic](https://github.com/Samsung/mimic).  The `README.md` file contains instructions on how to install and run the tool.  The virtual machine we provide for the FSE Replication Packages Evaluation Committee has `mimic` installed and this guide should cover all necessary information.  It also contains the full source code.
 
 The main way to invoke the tool is via the script `mimic`.  It requires as input a function (for which a model should be computed) as well as some initial inputs.  To start, lets consider a trivial example and synthesize a model for the identity function:
 
     ./mimic --function "return x" --argnames "x" --arguments "1" "2"
 
-We provide the body of the function to be synthesized, as well as two sample inputs (`1` and `2`).  mimic should be able to find a model for this trivial example in no time.
+We provide the body of the function to be synthesized, as well as two sample inputs (`1` and `2`).  `mimic` should be able to find a model for this trivial example in no time.
 
 In the paper we consider the array standard library, and we could synthesize models for those function in the same way.  To make things a bit easier, we have collected the functions from Table 1 in the paper in tests/array.json, and wrote a script to use that information to pass it to mimic.  For instance, to synthesize code for `Array.prototype.pop`, we can run
 
     scripts/example.py pop
 
-This will actually show the command that is used to invoke mimic.  Synthesize is now taking a bit more time.  Mimic can run highly parallel, and depending on the machine it is run on, synthesize can take more or less time.  To see how mimic works in more detail, we can pass the parameter `--debug` to `mimic` (or `scripts/example.py`, which just forwards parameters).  If we run
+This will actually show the command that is used to invoke `mimic`.  Synthesize is now taking a bit more time.  `mimic` can run highly parallel, and depending on the machine it is run on, synthesize can take more or less time.  To see how `mimic` works in more detail, we can pass the parameter `--debug` to `mimic` (or `scripts/example.py`, which just forwards parameters).  If we run
 
     scripts/example.py pop --debug
 
-then mimic will only invoke one copy of `mimic-core` and show various additional information on what is going on.  Since this just runs `mimic-core` once, the search may not converge (or fail), but if it is repeated often enough, eventually mimic will find a model.  Of course, when we run `mimic` (rather than `mimic-core`), many runs of `mimic-core` are done automatically, and there is no need to manually restart.
+then `mimic` will only invoke one copy of `mimic-core` and show various additional information on what is going on.  Since this just runs `mimic-core` once, the search may not converge (or fail), but if it is repeated often enough, eventually `mimic` will find a model.  Of course, when we run `mimic` (rather than `mimic-core`), many runs of `mimic-core` are done automatically, and there is no need to manually restart.
 
 ## Replication Instructions
 
@@ -68,7 +68,7 @@ If you have generated your own experimental data, change the folder above accord
 
 ### RQ4: Obfuscation
 
-For this experiment, we start with the model that mimic found (see `models/array.js`).  For instance, for `Array.prototype.pop`, this code would be
+For this experiment, we start with the model that `mimic` found (see `models/array.js`).  For instance, for `Array.prototype.pop`, this code would be
 
     function pop(arg0) {
       var n0 = arg0.length
