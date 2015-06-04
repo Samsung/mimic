@@ -84,7 +84,7 @@ def main():
   print "mimic - computing models for opaque code"
   print colors.grey(line)
   print colors.grey("Configuration:")
-  print colors.grey("  Number of threads: %d" % (argv.threads if argv.threads < 0 else multiprocessing.cpu_count()/2))
+  print colors.grey("  Number of threads: %d" % (argv.threads if argv.threads > 0 else multiprocessing.cpu_count()/2))
   print line
 
   if argv.debug:
