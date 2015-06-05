@@ -140,16 +140,17 @@ def main():
   s += "\n" + "\\midrule"
   for k in functions:
     fdata = filter_data(data, k, 0)
-    nm = fdata[0].f.shortname
-    # if nm in ["max", "min", "sum", "shift"]:
-    #   nm += "$^*$"
-    s += "\n" + nm
-    s += "\n" + space
-    times = map(lambda x: x.total_time, fdata)
-    s += "\n" + avg_stats(times)
-    s += "\n" + space
-    s += "\n" + str(fdata[0].loop_index)
-    s += "\n" + endline
+    if len(fdata) > 0:
+      nm = fdata[0].f.shortname
+      # if nm in ["max", "min", "sum", "shift"]:
+      #   nm += "$^*$"
+      s += "\n" + nm
+      s += "\n" + space
+      times = map(lambda x: x.total_time, fdata)
+      s += "\n" + avg_stats(times)
+      s += "\n" + space
+      s += "\n" + str(fdata[0].loop_index)
+      s += "\n" + endline
   s += "\n" + "\\bottomrule"
   s += "\n" + "\\end{tabular}"
 
