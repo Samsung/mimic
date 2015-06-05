@@ -2,6 +2,8 @@
 
 These are instructions to reproduce the results in our paper "Mimic: Computing Models for Opaque Code" in FSE'15.
 
+The virtual machine contains a clone of our [GitHub repository](https://github.com/Samsung/mimic) in the directory `~/mimic`, and the user should start a terminal and navigate to that folder using `cd ~/mimic` as the first step upon booting the virtual machine.
+
 ## Claims
 
 This artifact was used to obtain all results in the paper, and can be used to replicate these results, and experiment with the prototype beyond what is discussed in the paper.  We remark that we cannot give guarantees about the applicability of `mimic` to other domains;  there may be technical limitations like the experimental proxy support in `node.js`.  Furthermore, our prototype has not been tuned for wide adoption and instead serves as a proof of concept.
@@ -44,9 +46,9 @@ for all 15 different functions.  Note that depending on your hardware, it may ta
 
 ### RQ2: Performance
 
-Reproducing performance results requires the same hardware and likely `mimic` should be run natively (and not in a VM).  We used an Intel Xeon CPU E5-2697 (which has 26 physical cores).  On other machines the numbers may be different, and for best results you may want to consider installing `mimic` on your machine directly (rather than running it in a VM).
+Reproducing performance results requires the same hardware and likely `mimic` should be run natively (and not in a VM).  We used an Intel Xeon CPU E5-2697 (which has 26 physical cores).  On other machines the numbers may be different.  If you would like to fully reproduce these numbers, we urge you to run `mimic` natively (and not in a VM).  In particular, the VM likely has only one (virtual) CPU, which means that `mimic` will not be able to make use of any parallelism.
 
-The performance numbers are obtained with 100 repetitions for all functions, and we actually additionally use two different fitness functions (to answer RQ5), which results in `15*100*2 = 3000` individual runs.  On our hardware, this took about 28 hours.
+The performance numbers are obtained with 100 repetitions for all functions, and we actually additionally use two different fitness functions (to answer RQ5), which results in `15*100*2 = 3000` individual runs.  On our hardware, this took just over 28 hours.
 
 The experiment can be run by invoking `make experiment`, which runs the following command
 
@@ -101,21 +103,25 @@ Without the `mimic` models, when WALA constructed a call graph for the above cod
 
 For this experiment, we start with the model that `mimic` found (see `models/array.js`).  For instance, for `Array.prototype.pop`, this code would be
 
-    function pop(arg0) {
-      var n0 = arg0.length
-      if (n0) {
-        var n1 = arg0[n0-1]
-        arg0.length = n0-1
-        delete arg0[n0-1]
-        return n1
-      } else {
-        arg0.length = 0
-      }
-    }
+```javascript
+function pop(arg0) {
+  var n0 = arg0.length
+  if (n0) {
+    var n1 = arg0[n0-1]
+    arg0.length = n0-1
+    delete arg0[n0-1]
+    return n1
+  } else {
+    arg0.length = 0
+  }
+}
+```
 
 We take the function body, and pass it through the obfuscator at [javascriptobfuscator.com](http://www.javascriptobfuscator.com/Javascript-Obfuscator.aspx).  This yields a new body like the following:
 
-    var _0x6339=["\x6C\x65\x6E\x67\x74\x68"];var n0=arg0[_0x6339[0]];if(n0){var n1=arg0[n0-1];arg0[_0x6339[0]]=n0-1;delete arg0[n0-1];return n1;}else {arg0[_0x6339[0]]=0};
+```javascript
+var _0x6339=["\x6C\x65\x6E\x67\x74\x68"];var n0=arg0[_0x6339[0]];if(n0){var n1=arg0[n0-1];arg0[_0x6339[0]]=n0-1;delete arg0[n0-1];return n1;}else {arg0[_0x6339[0]]=0};
+```
 
 We can run `mimic` directly by passing the string as the `--function` parameter:
 
