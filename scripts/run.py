@@ -27,7 +27,7 @@ q = None # the queue used for communication
 argv = None # the arguments
 out = None # the output folder
 base_command = os.path.abspath(os.path.dirname(__file__) + '/../mimic-core') + ' synth --iterations 100000000'
-parallel_t0_default = 3
+parallel_t0_default = 8
 parallel_f_default = 1.025
 
 # ------------------------------------------
