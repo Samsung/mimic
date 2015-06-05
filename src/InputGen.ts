@@ -263,7 +263,8 @@ export function selectInputs(inputs: any[][],
                              metric: (i: any[], t: Data.Trace) => number,
                              maxCategories: number = 10,
                              maxInputsPerCat: number = 2,
-                             idealNumberOfInputs: number = 20): any[][] {
+                             idealNumberOfInputs: number = 20,
+                             use_length: boolean = false): any[][] {
     if (inputs.length < idealNumberOfInputs) {
         return inputs
     }
@@ -271,9 +272,11 @@ export function selectInputs(inputs: any[][],
     var categories = []
     for (var i = 0; i < inputs.length; i++) {
         var category = traces[i].events.length*1000 + metric(inputs[i], traces[i])
-        for (var k = 0; k < inputs[i].length; k++) {
-            if (Array.isArray(inputs[i][k])) {
-                category += 100*k + inputs[i][k].length
+        if (use_length) {
+            for (var k = 0; k < inputs[i].length; k++) {
+                if (Array.isArray(inputs[i][k])) {
+                    category += 100*k + inputs[i][k].length
+                }
             }
         }
         if (!lookup.has(category)) {

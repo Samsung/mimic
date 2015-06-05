@@ -167,7 +167,7 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
 
     // shorten the program
     if (config.debug) Ansi.Gray("Starting secondary cleanup search...")
-    var cleanupInputs = InputGen.selectInputs(inputs, traces, (i, t) => Metric.evaluate(p, [i], [t], config), 40)
+    var cleanupInputs = InputGen.selectInputs(inputs, traces, (i, t) => Metric.evaluate(p, [i], [t], config), 40, 2, 20, true)
     var cleanupTraces = cleanupInputs.map((i) => Recorder.record(f, i))
     p = shorten(p, inputs, traces, config)
 
