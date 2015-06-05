@@ -30,11 +30,8 @@ import InputGen = require('./InputGen')
 import ProgramGen = require('./ProgramGen')
 import Ansi = require('./util/Ansicolors')
 
-var randInt = Random.randInt
-var WeightedPair = Random.WeightedPair
 var maybe = Random.maybe
 var pick = Random.pick
-var randArr = Random.randArr
 
 var print = Util.print
 var log = Util.log
@@ -132,7 +129,8 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
             metric: (pp) => Metric.evaluate(pp, inputs, realTraces, config),
             iterations: iterations,
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
-            base: config
+            base: config,
+            only_better: false
         })
         result.executions = inputs.length * result.iterations
 
@@ -188,7 +186,8 @@ export function search(f: (...a: any[]) => any, args: any[][], config: SearchCon
             metric: (pp) => Metric.evaluate(pp, cleanupInputs, cleanupTraces, config, true),
             iterations: config.cleanupIterations,
             randomChange: (pp) => ProgramGen.randomChange(mutationInfo, pp),
-            base: config
+            base: config,
+            only_better: true
         })
         secondarySearch.executions = cleanupInputs.length * secondarySearch.iterations
         p = secondarySearch.result
@@ -414,6 +413,7 @@ interface CoreSearchConfig {
     iterations: number
     randomChange: (p: Data.Program) => Data.Program
     base: SearchConfig
+    only_better: boolean
 }
 
 function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
@@ -444,7 +444,7 @@ function core_search(p: Data.Program, config: CoreSearchConfig): SearchResult {
             Util.assert(p.toString() != newp.toString())
             p = newp
             badness = newbadness
-        } else {
+        } else if (!config.only_better) {
             var alpha = Math.min(1, Math.exp(-base.beta * (newbadness - badness) - base.gamma))
             if (base.alwaysAcceptEqualCost || (!base.neverAcceptEqualCost && maybe(alpha))) {
                 if (base.debug > 0) {

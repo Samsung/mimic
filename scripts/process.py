@@ -57,6 +57,7 @@ def main():
 
   slowdowns = []
   averages = []
+  its_per_sec = []
   header = ["Function"]
   for m in metrics:
     time = "Time"
@@ -78,6 +79,8 @@ def main():
     raw = range(len(metrics))
     for m in metrics:
       fmdata = filter_data(data, f, m)
+      if m == 0 and len(fmdata) > 0:
+        its_per_sec.append((fdata[0].f.shortname, 1000.0/avg(map(lambda x: float(x.iterations)/x.core_time, fmdata))))
       # dd = sum(map(lambda x: x.total_crashes, fmdata))
       # if dd > 0: print ("%.3f" % (float(dd)/sum(map(lambda x: x.total_searches, fmdata)))), fmdata[0].f.title
       times = map(lambda x: x.total_time, fmdata)
@@ -110,6 +113,16 @@ def main():
     print "Slowdown average: %s percent" % (avg_stats(slowdowns))
     print "Slowdown minimum: %.2f%%" % (min(slowdowns))
     print "Slowdown maximum: %.2f%%" % (max(slowdowns))
+
+  if len(its_per_sec) > 0:
+    its_per_sec_data = map(lambda x: x[1], its_per_sec)
+    print ""
+    print "Time for cleanup:"
+    for f, ips in its_per_sec:
+      print "  %s: %.2f seconds" % (f, ips)
+    print "Overall cleanup average: %s seconds" % (avg_stats(its_per_sec_data))
+    print "Overall cleanup minimum: %.2f seconds" % (min(its_per_sec_data))
+    print "Overall cleanup maximum: %.2f seconds" % (max(its_per_sec_data))
 
   s = "% this is automatically generated content, do not modify"
   header = [

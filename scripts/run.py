@@ -90,7 +90,7 @@ def main():
   if argv.debug:
     print colors.grey("Running in debug mode")
     print colors.grey(line)
-    run_mimic_core((0, f, 1200, argv.metric), debug=True, filename=argv.out)
+    run_mimic_core((0, f, 1200, argv.metric, 1000), debug=True, filename=argv.out)
     return
 
   result = mimic(f, argv.metric, argv.threads, False, argv.parallel_t0, argv.parallel_f)
@@ -105,7 +105,9 @@ def main():
 def get_default_threads():
   return int(round(float(multiprocessing.cpu_count()) / 2.0))
 
-def mimic(f, metric=0, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel_f=parallel_f_default):
+
+def mimic(f, metric=0, threads=-1, silent=True, parallel_t0=parallel_t0_default, parallel_f=parallel_f_default,
+          cleanup=1000):
   if threads < 0:
     threads = get_default_threads()
   t0 = parallel_t0
@@ -127,7 +129,7 @@ def mimic(f, metric=0, threads=-1, silent=True, parallel_t0=parallel_t0_default,
     tasks = []
     total_attempts += threads
     for i in range(threads):
-      tasks.append((i, f, timeout, metric))
+      tasks.append((i, f, timeout, metric, cleanup))
     global q
     q = Queue()
     pool = Pool(processes=threads, maxtasksperchild=1)
@@ -191,7 +193,7 @@ def send_done(id):
   q.put((0, id, "done"))
 
 def run_mimic_core(data, debug=False, filename=None):
-  id, f, timeout, metric = data
+  id, f, timeout, metric, cleanup = data
   fn = "%s/result-%d.js" % (out, id)
   if filename is not None:
     fn = filename
@@ -199,7 +201,7 @@ def run_mimic_core(data, debug=False, filename=None):
   col = "--colors 0"
   if debug:
     col = "--verbose"
-  command = '%s %s --metric %d --out "%s" %s' % (base_command, col, metric, fn, f.get_command_args())
+  command = '%s %s --metric %d --cleanup %d --out "%s" %s' % (base_command, col, metric, cleanup, fn, f.get_command_args())
   if debug:
     print colors.grey("Command to run")
     print command

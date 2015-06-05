@@ -11,15 +11,10 @@
 
 import sys
 import os
-import time
 import argparse
 import json
 import re
 import status
-import colors
-import multiprocessing
-from multiprocessing import Pool
-from multiprocessing import Queue
 from random import shuffle
 import common
 import run
@@ -99,7 +94,7 @@ def main():
   stat.init_progress(len(tasks))
   for c, f, i, m in tasks:
     stat.writeln("Running mimic for %s..." % (f.shortname))
-    res = run.mimic(f, metric=m)
+    res = run.mimic(f, metric=m, cleanup=0)
     stat.writeln("  done in %.2f seconds and %d searches" % (res.total_time, res.total_searches))
     stat.inc_progress(force_update=True)
     results.append(res)
@@ -123,44 +118,6 @@ def send_result(id, f, o):
 def send_done(id):
   global q
   q.put((0, id, "done"))
-
-def run_experiment(data):
-  taskid, ff, i, metric = data
-  f = ff
-  """:type : common.Function """
-  filename = "%s/%s-%s-%d" % (out, f.category, f.shortname, i)
-  t = time.time()
-  command = '%s --colors 0 --metric %d --out "%s.js" %s' % (base_command, metric, filename, f.get_command_args())
-  exitstatus, output = common.execute(command, argv.timeout)
-  log = "Experiment: " + f.title + "\n"
-  log += command + "\n"
-  log += line + "\n"
-  log += output + "\n"
-  log += line + "\n"
-  elapsed_time = time.time() - t
-  log += ". Exit status %d after %.2f seconds.\n" % (exitstatus, elapsed_time)
-  common.fprint(filename + ".log.txt", log)
-  iters = -1
-  if exitstatus == 0:
-    iters = int([m.group(1) for m in re.finditer('Found in ([0-9]+) iteration', output)][-1])
-    msg = "%s: success after %.2f seconds and %d iterations [%.1f iterations/second]" % (f.shortname, elapsed_time, iters, float(iters)/elapsed_time)
-    icon = colors.green(u"✓")
-  elif exitstatus == 124:
-    msg = "%s: timed out" % (f.shortname)
-    icon = colors.yellow(u"✗")
-  else:
-    msg = "%s: failed with status %d" % (f.shortname, exitstatus)
-    icon = colors.red(u"✗")
-  send_msg(taskid, icon + " " + colors.grey(msg), color=True)
-  send_result(id, f, {
-    'iterations': iters,
-    'time': elapsed_time,
-    'exitstatus': exitstatus,
-    'i': i,
-    'loop': f.loop,
-    'metric': metric
-  })
-  send_done(taskid)
 
 def parse_functions(workdir, filter="", exclude=""):
   """

@@ -271,6 +271,11 @@ export function selectInputs(inputs: any[][],
     var categories = []
     for (var i = 0; i < inputs.length; i++) {
         var category = traces[i].events.length*1000 + metric(inputs[i], traces[i])
+        for (var k = 0; k < inputs[i].length; k++) {
+            if (Array.isArray(inputs[i][k])) {
+                category += 100*k + inputs[i][k].length
+            }
+        }
         if (!lookup.has(category)) {
             lookup.set(category, [])
             categories.push(category)
