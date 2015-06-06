@@ -2,11 +2,11 @@
 
 These are instructions to reproduce the results in our paper "Mimic: Computing Models for Opaque Code" in FSE'15.
 
-The virtual machine contains a clone of our [GitHub repository](https://github.com/Samsung/mimic) in the directory `~/mimic`, and the user should start a terminal and navigate to that folder using `cd ~/mimic` as the first step upon booting the virtual machine.
+The virtual machine contains a clone of our [GitHub repository](https://github.com/Samsung/mimic) in the directory `~/mimic`, and the user should start a terminal and navigate to that folder using `cd ~/mimic` as the first step upon booting the virtual machine.  We encourage reviewers to read our updated version of the paper, as it contains an important correction as well as an improved evaluation section.
 
 ## Claims
 
-This artifact was used to obtain all results in the paper, and can be used to replicate these results, and experiment with the prototype beyond what is discussed in the paper.  We remark that we cannot give guarantees about the applicability of `mimic` to other domains;  there may be technical limitations like the experimental proxy support in `node.js`.  Furthermore, our prototype has not been tuned for wide adoption and instead serves as a proof of concept.
+This artifact was used to obtain all results in the paper, and can be used to replicate these results, and experiment with the prototype beyond what is discussed in the paper.  Note that we cannot give guarantees about the applicability of `mimic` to other domains;  there may be technical limitations like the experimental proxy support in `node.js`.  Furthermore, our prototype has not been tuned for wide adoption and instead serves as a proof of concept.
 
 The paper evaluates `mimic` on five research questions, and in this document we explain how to reproduce the answers to all of these questions.  But first, we give a brief overview of the artifact and the usage of `mimic`.
 
@@ -20,7 +20,7 @@ The main way to invoke the tool is via the script `mimic`.  It requires as input
 
 We provide the body of the function to be synthesized (`return x` here), as well as two sample inputs (`1` and `2`).  `mimic` should be able to find a model for this trivial example in no time.  Note that while we pass the code of the body to `mimic`, the tool does not look at the source and only uses it to execute it.  Furthermore, the code might contain calls to native functions like those from the standard library.
 
-In the paper we consider the array standard library, and we could synthesize models for those function in the same way.  To make things a bit easier, we have collected the functions from Table 1 in the paper in `tests/array.json`, and wrote a script to use that information to pass it to mimic.  For instance, to synthesize code for `Array.prototype.pop`, we can simply run
+In the paper we consider the array standard library, and we could synthesize models for those functions in the same way.  To make things a bit easier, we have collected the functions from Table 1 in the paper in `tests/array.json`, and wrote a script to use that information to pass it to mimic.  For instance, to synthesize code for `Array.prototype.pop`, we can simply run
 
     scripts/example.py pop
 
@@ -46,11 +46,11 @@ for all 15 different functions.  Note that depending on your hardware, it may ta
 
 ### RQ2: Performance
 
-Reproducing performance results requires the same hardware and likely `mimic` should be run natively (and not in a VM).  We used an Intel Xeon CPU E5-2697 (which has 26 physical cores).  On other machines the numbers may be different.  If you would like to fully reproduce these numbers, we urge you to run `mimic` natively (and not in a VM).  In particular, the VM likely has only one (virtual) CPU, which means that `mimic` will not be able to make use of any parallelism.
+Reproducing performance results requires the same hardware and likely `mimic` should be run natively (and not in a VM).  We used an Intel Xeon CPU E5-2697 (which has 28 physical cores).  On other machines the numbers may be different.  If you would like to reproduce these numbers, we urge you to run `mimic` natively (and not in a VM).  In particular, the VM likely has only one (virtual) CPU, which means that `mimic` will not be able to make use of any parallelism.
 
 The performance numbers are obtained with 100 repetitions for all functions, and we actually additionally use two different fitness functions (to answer RQ5), which results in `15*100*2 = 3000` individual runs.  On our hardware, this took just over 28 hours.
 
-The experiment can be run by invoking `make experiment`, which runs the following command
+The experiment can be run by invoking `make experiment`, which runs the following command (be aware that this will take a long time to complete)
 
     scripts/experiment.py --exp_name "main" -n 100 --metric "0,1"
 
@@ -58,7 +58,7 @@ It is possible to only reproduce some of the table (so that the experiment takes
 
     scripts/experiment.py --exp_name "pop_only" -n 10 --metric "0" --filter "pop"
 
-This should be significantly faster than the full run.  Note that `scripts/experiment.py` only collects the data and stores it in an output folder in `tests/out`, but does not analyze it.  For the analysis, we use `scripts/process.py`.
+This should be significantly faster than the full run, but might still take anywhere from minutes to hours (depending on the hardware).  Note that `scripts/experiment.py` only collects the data and stores it in an output folder in `tests/out`, but does not analyze it.  For the analysis, we use `scripts/process.py`.
 
 In our package we include the data gathered by our own experimental run, so the next step will work even if you have not (yet) run `scripts/experiment.py` yourself.  To analyze this data, run
 
