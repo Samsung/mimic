@@ -21,6 +21,8 @@ Finally build the project:
 
 You may want to make sure that all tests pass to verify the build by running `make test`.
 
+Note: We have mostly tried running this prototype on Ubuntu.  A quick test on OS X seemed to have trouble installing some of the dependencies.
+
 ## Usage
 
 To run the model synthesis, the script `mimic` can be used.  It's usage is as follows:
