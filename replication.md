@@ -64,7 +64,7 @@ In our package we include the data gathered by our own experimental run, so the 
 
     scripts/process.py --folder tests/out/2015-06-03_paper_data
 
-If you have generated your own experimental data, change the folder above accordingly.  This generates a table as well as some aggregate statistics on the console, and can also produce the LaTeX table in the paper (Table 1).
+If you have generated your own experimental data, change the folder above accordingly.  This generates a table as well as some aggregate statistics on the console, and can also produce the LaTeX table in the paper (Table 1).  The output also contains all other aggregate values found in the paper, like the average and maximum cleanup times reported in the paper.
 
 ### RQ3: Usefulness
 
