@@ -48,7 +48,7 @@ for all 15 different functions.  Note that depending on your hardware, it may ta
 
 Reproducing performance results requires the same hardware and likely `mimic` should be run natively (and not in a VM).  We used an Intel Xeon CPU E5-2697 (which has 28 physical cores).  On other machines the numbers may be different.  If you would like to reproduce these numbers, we urge you to run `mimic` natively (and not in a VM).  In particular, the VM likely has only one (virtual) CPU, which means that `mimic` will not be able to make use of any parallelism.
 
-The performance numbers are obtained with 100 repetitions for all functions, and we actually additionally use two different fitness functions (to answer RQ5), which results in `15*100*2 = 3000` individual runs.  On our hardware, this took just over 28 hours.
+The performance numbers are obtained with 100 repetitions for all functions, and we actually additionally use two different fitness functions (to answer RQ5), which results in `15*100*2 = 3000` individual runs.  On our hardware, this took just over 58 hours.
 
 The experiment can be run by invoking `make experiment`, which runs the following command (be aware that this will take a long time to complete)
 
@@ -62,7 +62,7 @@ This should be significantly faster than the full run, but might still take anyw
 
 In our package we include the data gathered by our own experimental run, so the next step will work even if you have not (yet) run `scripts/experiment.py` yourself.  To analyze this data, run
 
-    scripts/process.py --folder tests/out/2015-06-03_paper_data
+    scripts/process.py --folder tests/out/2015-06-05_paper_data
 
 If you have generated your own experimental data, change the folder above accordingly.  This generates a table as well as some aggregate statistics on the console, and can also produce the LaTeX table in the paper (Table 1).  The output also contains all other aggregate values found in the paper, like the average and maximum cleanup times reported in the paper.
 
