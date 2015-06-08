@@ -100,7 +100,7 @@ def main():
           cols[c].append("%.2f%%" % (sd))
           slowdowns.append(sd)
         c += 1
-    cols[c].append(str(fdata[0].loop_index))
+    cols[c].append(index_to_str(fdata[0].loop_index))
 
   print_table(header, cols)
   print ""
@@ -149,7 +149,8 @@ def main():
       times = map(lambda x: x.total_time, fdata)
       s += "\n" + avg_stats(times)
       s += "\n" + space
-      s += "\n" + str(fdata[0].loop_index)
+      index = fdata[0].loop_index
+      s += "\n" + index_to_str(index)
       s += "\n" + endline
   s += "\n" + "\\bottomrule"
   s += "\n" + "\\end{tabular}"
@@ -161,6 +162,11 @@ def main():
   except:
     print ""
     print "Failed to write latex table (specify a location with --out)"
+
+def index_to_str(i):
+  if i < 0:
+    return "loop-free"
+  return str(i)
 
 def filter_data(data, f, m=None):
   """
