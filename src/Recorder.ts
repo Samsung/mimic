@@ -29,7 +29,6 @@ import Random = require('./util/Random')
 // enable proxies
 var harmonyrefl = require('harmony-reflect');
 harmonyrefl;
-declare var Proxy: <T>(target: T, handler: Object) => T;
 declare var Reflect: any
 declare var global: any
 
@@ -323,13 +322,13 @@ function proxify<T>(o: T): T {
     if (state.object2proxy.has(o)) return <T>state.object2proxy.get(o)
     if (state.proxy2object.has(o)) return o
 
-    var p = Proxy(o, Handler)
+    var p = new Proxy(o, Handler)
     state.proxy2object.set(p, o)
     state.object2proxy.set(o, p)
     return p
 }
 
-var recv = Proxy({}, {
+var recv = new Proxy({}, {
     set: function(target, name: string, value, receiver) {
         if (state != null) {
             state.addStep()
@@ -459,7 +458,7 @@ export function proxifyWithLogger<T>(o: T, tag: string = " ", level: number = 0,
             return Reflect.ownKeys(target);
         }
     }
-    var p = Proxy(o, Handler)
+    var p = new Proxy(o, Handler)
     cache.set(o, p)
     return <T>p
 }

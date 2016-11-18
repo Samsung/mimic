@@ -23,7 +23,7 @@ module.exports = function(grunt) {
               outDir: 'bin',
               //watch: 'test',
               options: {
-                  target: 'es5',
+                  target: 'es6',
                   module: 'commonjs',
                   sourceMap: true,
                   declaration: false,
