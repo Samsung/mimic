@@ -23,6 +23,14 @@ You may want to make sure that all tests pass to verify the build by running `ma
 
 Note: We have mostly tried running this prototype on Ubuntu.  A quick test on OS X seemed to have trouble installing some of the dependencies.
 
+## Dockerfile
+
+See, [./build/BUILD.md](./build/BUILD.md), or:
+
+```sh
+$ ./build/docker-build.sh
+```
+
 ## Usage
 
 To run the model synthesis, the script `mimic` can be used.  It's usage is as follows:
